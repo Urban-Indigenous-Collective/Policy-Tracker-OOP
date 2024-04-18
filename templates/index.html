@@ -1,0 +1,102 @@
+<!-- templates/index.html -->
+<html>
+<head>
+    <title>Process LegiScan URLs</title>
+    <!-- Link to your CSS file -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fjalla+One&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            $("#submit").click(function(e) {
+                console.log("initiated!")
+                e.preventDefault();  // Prevent the default form submission
+                var links = $("#links").val();
+                
+                // AJAX POST request
+                $.ajax({
+                    url: "/process",
+                    type: "POST",
+                    data: { links: links },
+                    success: function(response) {
+                        // Check if processing was complete and a file URL was provided
+                        if (response.status === "Complete" && response.file_url) {
+                            console.log(response.file_url)
+                            window.location.href = response.file_url;  // Redirect to download URL
+                        } else {
+                            // Handle failure or continue to show the processing status
+                            $("#status").text(response.message || "Processing with ChatGPT...");
+                            if (response.status !== "Failed") {
+                                setTimeout(fetchUpdate, 1000);  // Continue polling for status updates
+                            }
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        // Handle AJAX request errors
+                        $("#status").text("Error processing request.");
+                    }
+                });
+                
+                fetchUpdate();  // Start polling for status updates
+            });
+        
+            // Function to poll for status updates
+            function fetchUpdate() {
+                $.ajax({
+                    url: "/status",
+                    type: "GET",
+                    success: function(response) {
+                        $("#status").text(response.status);
+                        if (response.status !== "Complete" && response.status !== "Failed") {
+                            setTimeout(fetchUpdate, 1000);  // Poll every second until complete or failed
+                        }
+                    }
+                });
+            }
+        });
+        </script>
+        
+</head>
+<body style="background-color: #000; color: #fff">
+    <div>
+        <h1 class="app-label" for="links">Enter LegiScan Links (comma separated):</h1>
+
+        <form class="app-form">
+            <textarea class="app-input" type="text" id="links" name="links"></textarea>
+            <button class="button" id="submit">Submit</button>
+        </form>
+
+        <div class="progress-container">
+            <div id="status">Idle</div>
+            <progress id="progressBar" value="0" max="100"></progress>
+        </div>
+    </div>
+
+
+
+    <script>
+        function updateProgress() {
+            fetch('/progress')
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Progress fetched:", data.progress); // Debugging: Log progress
+                    const progressBar = document.getElementById('progressBar');
+                    progressBar.value = data.progress;
+                    console.log("Progress bar updated to:", progressBar.value); // Debugging: Log progress bar value
+                })
+                .catch(error => console.error('Error fetching progress:', error));
+        }
+        
+        // Ensure updateProgress is only called once per interval, not on other actions
+        let intervalId = setInterval(updateProgress, 1000);
+        
+        // Additional debug: Log to check if interval is being cleared or reset unexpectedly
+        console.log("Interval set with ID:", intervalId);
+        </script>
+        
+        
+</body>
+</html>

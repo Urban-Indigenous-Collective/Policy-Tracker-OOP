@@ -1,0 +1,108 @@
+.fjalla-one-regular {
+    font-family: "Fjalla One", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+  }  
+
+body {
+    font-family: "Fjalla One", sans-serif;
+}
+
+.app-label {
+    text-align: center;
+    font-weight: 500;
+}
+
+.app-form, .progress-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.app-form {
+    margin-top: 50px;
+}
+
+.progress-container {
+    margin-top: 100px
+}
+
+.button {
+    height: 5vh;
+    width: 125px;
+    margin-left: 15px;
+    border: 0;
+    font-family: inherit;
+    background-color: #fff;
+}
+
+.button-dark {
+    background-color: #000;
+    color: #fff
+}
+.app-input {
+    min-width: 35vw;
+    max-width: 35vw;
+    min-height: 5vh;
+    font-family: inherit;
+    border: 0;
+    border-bottom: 4px rgb(165, 165, 165) solid;
+}
+
+.app-input-dark {
+    background-color: #000;
+    color: #fff;
+}
+
+#status {
+    padding-right: 32px
+}
+
+@media (max-width: 992px) {
+    /* CSS rules here */
+    
+    
+    .app-form {
+        width: 100%;
+        display: block;
+    }
+
+    .app-input {
+        min-width: 100%;
+        display: block;
+        min-height: 15vh;
+    }
+    
+    .button {
+        width: 100%;
+        margin-left: 0;
+        margin-top: 15px;
+    }
+
+    /* Additional responsive styles */
+}
+
+
+progress[value] {
+    /* Reset the default appearance */
+    -webkit-appearance: none;
+     appearance: none;
+
+}
+
+progress[value]::-webkit-progress-bar {
+    background-color: #eee;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25) inset;
+  }
+  
+  progress[value]::-webkit-progress-value {
+    background-image: linear-gradient(132deg, #31B8AA 0%, #7BC68A 48%, #99C771 82%, #C4C66D 100%);
+    border-radius: 10px; 
+  }
+
+
+  #results {
+    margin-top: 75px
+  }
+  
