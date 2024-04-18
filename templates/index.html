@@ -30,7 +30,7 @@
                             // Handle failure or continue to show the processing status
                             $("#status").text(response.message || "Processing with ChatGPT...");
                             if (response.status !== "Failed") {
-                                setTimeout(fetchUpdate, 5000);  // Continue polling for status updates
+                                setTimeout(fetchUpdate, 1000);  // Continue polling for status updates
                             }
                         }
                     },
@@ -51,14 +51,13 @@
                     success: function(response) {
                         $("#status").text(response.status);
                         if (response.status !== "Complete" && response.status !== "Failed") {
-                            setTimeout(fetchUpdate, 5000);  // Poll every 5 seconds until complete or failed
+                            setTimeout(fetchUpdate, 1000);  // Poll every second until complete or failed
                         }
                     }
                 });
             }
         });
-    </script>
-    
+        </script>
         
 </head>
 <body style="background-color: #000; color: #fff">
