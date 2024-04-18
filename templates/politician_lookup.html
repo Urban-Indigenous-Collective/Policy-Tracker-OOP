@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Politician Lookup</title>
+        <!-- Link to your CSS file -->
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Fjalla+One&display=swap" rel="stylesheet">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    <h1 class="app-label">Enter Politician Names (comma separated):</h1>
+    <form class="app-form" id="lookupForm">
+        <input type="text" class="app-input app-input-dark" id="politicians" name="politicians">
+        <button class="button button-dark" type="submit">Lookup</button>
+        <!-- Button to fetch and display Indigenous politicians -->
+        <button class="button button-dark" id="fetchAllIndigenous">Show All Indigenous Politicians</button>
+    </form>
+
+    <!-- Results for lookup -->
+    <div id="results"></div>
+
+    <!-- Prints Indigenous Politician Database-->
+    <div id="allIndigenousPoliticians"></div>
+
+
+    <script>
+    $(document).ready(function(){
+        $("#lookupForm").submit(function(e) {
+            e.preventDefault();
+            var politicians = $("#politicians").val();
+            
+            $.ajax({
+                url: "/politician_lookup",
+                type: "POST",
+                data: { politicians: politicians },
+                success: function(response) {
+                    $("#results").html(response);
+                },
+                error: function(xhr, status, error) {
+                    $("#results").html("Error during lookup.");
+                }
+            });
+        });
+
+            // Fetch and display all Indigenous politicians when the button is clicked
+            $("#fetchAllIndigenous").click(function() {
+                $.ajax({
+                    url: "/fetch_all_indigenous",
+                    type: "GET",
+                    success: function(response) {
+                        $("#allIndigenousPoliticians").html(response);
+                    },
+                    error: function() {
+                        $("#allIndigenousPoliticians").html("Error fetching data.");
+                    }
+                });
+            });
+    });
+    </script>
+</body>
+</html>
