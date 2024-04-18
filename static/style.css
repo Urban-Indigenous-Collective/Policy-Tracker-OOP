@@ -28,7 +28,7 @@ body {
 }
 
 .button {
-    height: 5vh;
+    height: 35px;
     width: 125px;
     margin-left: 15px;
     border: 0;
@@ -43,7 +43,7 @@ body {
 .app-input {
     min-width: 35vw;
     max-width: 35vw;
-    min-height: 5vh;
+    min-height: 35px;
     font-family: inherit;
     border: 0;
     border-bottom: 4px rgb(165, 165, 165) solid;
