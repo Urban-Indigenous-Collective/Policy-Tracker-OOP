@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 # Initialize MainApplication
 # Assuming MainApplication initializes API clients with hardcoded keys
-main_app = MainApplication(legiscan_key='4bbc7257ba2bbf01b636af5b19cc2212', openai_key='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')
+main_app = MainApplication(legiscan_key='4bbc7257ba2bbf01b636af5b19cc2212', openai_key='sk-proj-Vr6atYpHcM0kmWmAAD7QT3BlbkFJzFrOANKloNoUfTPaf3ya')
 
 @app.route('/')
 def home():
