@@ -15,20 +15,20 @@ def home():
 
 @app.route('/process', methods=['POST'])
 def process():
-    global process_status
-    process_status = "Processing..."
+    
+    main_app.status = "Processing..."
     
     urls_string = request.form['links']
     
     excel_file_path = main_app.process_urls_for_web(urls_string)
     
-    process_status = "Complete"
+    main_app.status = "Complete"
     if excel_file_path:
         # Construct a URL for the file
         file_url = '/download?path=' + excel_file_path
         return jsonify({'status': 'Complete', 'file_url': file_url})
     else:
-        process_status = "Failed"
+        main_app.status = "Failed"
         return jsonify({'status': 'Failed', 'message': 'No valid data to generate report.'})
 
 @app.route('/download')
@@ -41,7 +41,7 @@ def download_file():
 
 @app.route('/status')
 def status():
-    return jsonify({"status": process_status})
+    return jsonify({"status": main_app.status})
 
 @app.route('/progress')
 def get_progress():

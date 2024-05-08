@@ -20,6 +20,7 @@ class MainApplication:
         self.indigenous_db.build_database()
         self.bill_processor = BillProcessor(self.api_client, self.chat_client, self.document_processor, self.indigenous_db)
         self.progress = 0  # Add this line to initialize progress tracking
+        self.status = ""
 
 
 
