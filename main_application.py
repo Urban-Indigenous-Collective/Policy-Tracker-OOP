@@ -139,34 +139,34 @@ class MainApplication:
 
 
         for i, url in enumerate(urls):
-            # Here, you'd call your existing logic to process each URL
-            # For example, let's assume you have a method that does this and returns a dictionary of processed bill data
-            # Adapt this pseudocode to fit your application's structure and method names
-            bill_data = self.process_single_url(url)  # Pseudocode: replace with actual method call
-            # Update progress
-            self.progress = (i + 1) / total_urls * 100  # Progress as a percentage
+            result = self.process_single_url(url)
+            
+            # Whether it's successful data or an error message, append it to processed_data
+            processed_data.append(result)
 
-            # You might want to print progress or log it, depending on your setup
+            # Update and print progress
+            self.progress = (i + 1) / total_urls * 100
             print(f"Processed URL {i+1}/{total_urls}. Current progress: {self.progress}%")
-            if bill_data:  # Check if bill_data is not None or empty
-                processed_data.append(bill_data)
 
         # After processing all URLs, generate an Excel report
         if processed_data:
-            # Ensure your report generator can handle a list of dictionaries and returns the file path
             excel_file_path = self.report_generator.export_to_excel(processed_data)
             print(excel_file_path)
-            return excel_file_path  # Return the path for Flask to serve the file
+            return excel_file_path
         else:
-            return None  # Handle the case where no valid data was processed
+            return None  # Handle the case where no data was processed
+
 
     def get_progress(self):
         return self.progress
 
     def process_single_url(self, url):
-            print("proccessing single url!")
+        try:
+            # Attempt to unpack the expected number of values
+            print("Processing single url!")
             bill_id, bill_text, chat_summary, gender_inclusive_eval, gender_inclusive_expl, mechanisms_eval, mechanisms_expl, prevention_efforts_eval, prevention_efforts_expl, centering_indigenous_voices, survivor_relative_input_eval, categories_eval, uic_pros, uic_cons = self.bill_processor.summarize_bill_text(url)
-
+            
+            # Proceed if the correct number of items are unpacked
             if isinstance(bill_id, int):
                 bill_details = self.api_client.get_bill_details(bill_id)
                 if 'bill' in bill_details:
@@ -174,6 +174,12 @@ class MainApplication:
                     return bill_data
             else:
                 print(bill_id)
+                
+        except ValueError as e:
+            # Handle the error if the unpacking fails
+            print(f"Error processing URL {url}: {e}")
+            return {'url': url, 'error': f"Error processing URL: {str(e)}"}
+
 
 
 #Old Method
