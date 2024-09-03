@@ -25,8 +25,9 @@
                         // Check if processing was complete and a file URL was provided
                         if (response.status === "Complete" && response.file_url) {
                             console.log(response.file_url)
+                            // Code inside the iframe (policy.urbanindigenouscollective.org)
+                            window.parent.postMessage({ downloadUrl: response.file_url}, '*');
                             window.location.href = response.file_url;  // Redirect to download URL
-                            console.log(response.file_url)
                         } else {
                             // Handle failure or continue to show the processing status
                             $("#status").text(response.message || "Processing with ChatGPT...");
