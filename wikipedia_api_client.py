@@ -20,7 +20,7 @@ class WikipediaAPIClient:
         politicians = []
         current_state = "Unknown"
 
-        municipal_heading = soup.find('span', id='Municipal_offices').parent
+        municipal_heading = soup.find('h2', id='Municipal_offices').parent
         for element in municipal_heading.find_next_siblings():
             if element.name == 'h3':
                 current_state = element.find('span', class_='mw-headline').get_text(strip=True)
@@ -55,9 +55,9 @@ class WikipediaAPIClient:
         politicians_data = []
 
         # Process Federal and State Offices
-        for element in soup.find_all(['h3', 'table']):
-            if element.name == 'h3':
-                state_headline = element.find('span', class_='mw-headline')
+        for element in soup.find_all(['div', 'table']):
+            if element.name == 'div' and 'mw-heading' in element.get('class', []):
+                state_headline = element.find('h3')
                 if state_headline:
                     current_state = state_headline.get_text(strip=True)
 
@@ -86,7 +86,7 @@ class WikipediaAPIClient:
             # Split the string to create a dictionary
             name, rest = politician.split(" [N/A-")
             state, offices_held = rest.split("] - N/A: ")
-            
+
             politician_dict = {
                 "name": name,
                 "party": "N/A",
@@ -95,7 +95,6 @@ class WikipediaAPIClient:
                 "offices_held": offices_held
             }
             politicians_data.append(politician_dict)
-
 
         return politicians_data
 
