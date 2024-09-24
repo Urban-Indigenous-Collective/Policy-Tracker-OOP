@@ -6,7 +6,7 @@ from report_generator import ReportGenerator
 from chatgpt_client import ChatGPTClient
 from wikipedia_api_client import WikipediaAPIClient
 from indigenous_database import IndigenousDatabase  # Import the IndigenousDatabase class
-
+import time
 
 class MainApplication:
     def __init__(self, legiscan_key, openai_key):
@@ -147,6 +147,7 @@ class MainApplication:
             # Update and print progress
             self.progress = (i + 1) / total_urls * 100
             print(f"Processed URL {i+1}/{total_urls}. Current progress: {self.progress}%")
+            time.sleep(1)
 
         # After processing all URLs, generate an Excel report
         if processed_data:
