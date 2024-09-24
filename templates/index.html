@@ -52,6 +52,10 @@
                     type: "GET",
                     success: function(response) {
                         $("#status").text(response.status);
+                        console.log(response)
+                        $("#progressBar").val(response.progress);
+                        // const progressBar = document.getElementById('progressBar');
+                        // progressBar.value = response.progress;
                         if (response.status !== "Complete" && response.status !== "Failed") {
                             setTimeout(fetchUpdate, 1000);  // Poll every second until complete or failed
                         }
@@ -75,30 +79,7 @@
             <div id="status">Idle</div>
             <progress id="progressBar" value="0" max="100"></progress>
         </div>
-    </div>
-
-
-
-    <script>
-        function updateProgress() {
-            fetch('/progress')
-                .then(response => response.json())
-                .then(data => {
-                    console.log("Progress fetched:", data.progress); // Debugging: Log progress
-                    const progressBar = document.getElementById('progressBar');
-                    progressBar.value = data.progress;
-                    console.log("Progress bar updated to:", progressBar.value); // Debugging: Log progress bar value
-                })
-                .catch(error => console.error('Error fetching progress:', error));
-        }
-        
-        // Ensure updateProgress is only called once per interval, not on other actions
-        let intervalId = setInterval(updateProgress, 1000);
-        
-        // Additional debug: Log to check if interval is being cleared or reset unexpectedly
-        console.log("Interval set with ID:", intervalId);
-        </script>
-        
+    </div>    
         
 </body>
 </html>
