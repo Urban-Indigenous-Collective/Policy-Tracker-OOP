@@ -12,7 +12,7 @@ class ChatGPTClient:
 
             # Make the API call with the updated conversation history
             response = self.client.chat.completions.create(
-                model="gpt-3.5-turbo-0125",
+                model="o1-mini-2024-09-12",
                 messages=self.conversation_history
             )
 
