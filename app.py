@@ -12,7 +12,6 @@ main_app = MainApplication(legiscan_key='REDACTED_LEGISCAN_KEY', openai_key='RED
 def home():
     return render_template('index.html')  # Assuming you have an index.html template
 
-
 @app.route('/process', methods=['POST'])
 def process():
     global process_status
@@ -21,7 +20,7 @@ def process():
     urls_string = request.form['links']
     
     excel_file_path = main_app.process_urls_for_web(urls_string)
-    
+
     process_status = "Complete"
     if excel_file_path:
         # Construct a URL for the file
@@ -41,7 +40,9 @@ def download_file():
 
 @app.route('/status')
 def status():
-    return jsonify({"status": process_status})
+    progress = main_app.get_progress()
+    return jsonify({"status": process_status,
+                    "progress": progress})
 
 @app.route('/progress')
 def get_progress():
