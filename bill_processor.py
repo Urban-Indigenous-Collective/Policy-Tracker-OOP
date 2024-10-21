@@ -54,57 +54,58 @@ class BillProcessor:
 
     def summarize_bill_text(self, legiscan_url):
         """
-        Retrieves the bill ID from the LegiScan URL.
+        Retrieves and processes bill text from LegiScan.
         """
+        # Retrieve the bill ID
         bill_id = self.extract_bill_id(legiscan_url)
         if not bill_id:
             return "Invalid LegiScan URL", None
 
-        """
-        Retrieves the text from the LegiScan URL.
-        """
+        # Retrieve the bill text
         decoded_text = self.get_bill_id_and_text(bill_id)
 
-        bill_details = self.api_client.get_bill_details(self.bill_id)
+        # Retrieve the bill details
+        bill_details = self.api_client.get_bill_details(bill_id)
 
-        print("summarizing bill")
-        bill_text_data = self.api_client.get_bill_text(bill_id)
-        self.bill = bill_details['bill']
-        bill_sponsors = ', '.join([f"{s['role']} {s['name']} ({s['party']}) - District {s['district']}" for s in self.bill['sponsors']])
+        # Ensure bill is available in the details
+        self.bill = bill_details.get('bill', {})
+
+        # Extract sponsors
+        bill_sponsors = ', '.join([f"{s['role']} {s['name']} ({s['party']}) - District {s['district']}" for s in self.bill.get('sponsors', [])])
         self.indigenous_sponsors = self.identify_indigenous_sponsors(bill_sponsors, self.indigenous_db)
 
-        # Using the ChatGPTQuestionnaire class
-        chat_summary = self.questionnaire.ask_summary(decoded_text)
-        mechanisms_eval = self.questionnaire.ask_mechanisms_eval(decoded_text)
-        mechanisms_expl = self.questionnaire.ask_mechanisms_expl(decoded_text)
-        gender_inclusive_eval = self.questionnaire.ask_gender_inclusive_eval(decoded_text)
-        gender_inclusive_expl = self.questionnaire.ask_gender_inclusive_expl(decoded_text)
-        prevention_efforts_eval = self.questionnaire.ask_prevention_efforts_eval(decoded_text)
-        prevention_efforts_expl = self.questionnaire.ask_prevention_efforts_expl(decoded_text)
-        centering_indigenous_voices = self.questionnaire.ask_centering_indigenous_voices(decoded_text, self.indigenous_sponsors)
-        survivor_relative_input_eval = self.questionnaire.ask_survivor_relative_input_eval(decoded_text)
-        categories_eval = self.questionnaire.ask_categories_eval(decoded_text)
+        # Initialize all the return values with default None values to ensure there are no missing values
+        chat_summary = self.questionnaire.ask_summary(decoded_text) if decoded_text else None
+        gender_inclusive_eval = self.questionnaire.ask_gender_inclusive_eval(decoded_text) if decoded_text else None
+        gender_inclusive_expl = self.questionnaire.ask_gender_inclusive_expl(decoded_text) if decoded_text else None
+        mechanisms_eval = self.questionnaire.ask_mechanisms_eval(decoded_text) if decoded_text else None
+        mechanisms_expl = self.questionnaire.ask_mechanisms_expl(decoded_text) if decoded_text else None
+        prevention_efforts_eval = self.questionnaire.ask_prevention_efforts_eval(decoded_text) if decoded_text else None
+        prevention_efforts_expl = self.questionnaire.ask_prevention_efforts_expl(decoded_text) if decoded_text else None
+        centering_indigenous_voices = self.questionnaire.ask_centering_indigenous_voices(decoded_text, self.indigenous_sponsors) if decoded_text else None
+        survivor_relative_input_eval = self.questionnaire.ask_survivor_relative_input_eval(decoded_text) if decoded_text else None
+        categories_eval = self.questionnaire.ask_categories_eval(decoded_text) if decoded_text else None
+        uic_pros = self.questionnaire.ask_uic_pros(decoded_text) if decoded_text else None
+        uic_cons = self.questionnaire.ask_uic_cons(decoded_text) if decoded_text else None
 
-        # Summarize pros and cons
-        data_points = f"{chat_summary}, {mechanisms_expl}, {gender_inclusive_expl}, {prevention_efforts_expl}, {centering_indigenous_voices}, {categories_eval}"
-        uic_pros = self.questionnaire.ask_uic_pros(data_points)
-        uic_cons = self.questionnaire.ask_uic_cons(data_points)
+        # Debug: Print all values to see if any are missing or None
+        print(f"bill_id: {self.bill_id}")
+        print(f"decoded_text: {decoded_text}")
+        print(f"chat_summary: {chat_summary}")
+        print(f"gender_inclusive_eval: {gender_inclusive_eval}")
+        print(f"gender_inclusive_expl: {gender_inclusive_expl}")
+        print(f"mechanisms_eval: {mechanisms_eval}")
+        print(f"mechanisms_expl: {mechanisms_expl}")
+        print(f"prevention_efforts_eval: {prevention_efforts_eval}")
+        print(f"prevention_efforts_expl: {prevention_efforts_expl}")
+        print(f"centering_indigenous_voices: {centering_indigenous_voices}")
+        print(f"survivor_relative_input_eval: {survivor_relative_input_eval}")
+        print(f"categories_eval: {categories_eval}")
+        print(f"uic_pros: {uic_pros}")
+        print(f"uic_cons: {uic_cons}")
 
-        return {
-            'bill_id': bill_id,
-            'summary': chat_summary,
-            'mechanisms_eval': mechanisms_eval,
-            'mechanisms_expl': mechanisms_expl,
-            'gender_inclusive_eval': gender_inclusive_eval,
-            'gender_inclusive_expl': gender_inclusive_expl,
-            'prevention_efforts_eval': prevention_efforts_eval,
-            'prevention_efforts_expl': prevention_efforts_expl,
-            'centering_indigenous_voices': centering_indigenous_voices,
-            'survivor_relative_input_eval': survivor_relative_input_eval,
-            'categories_eval': categories_eval,
-            'uic_pros': uic_pros,
-            'uic_cons': uic_cons
-        }
+        # Correct return statement with all 14 values in the expected order
+        return self.bill_id, decoded_text, chat_summary, gender_inclusive_eval, gender_inclusive_expl, mechanisms_eval, mechanisms_expl, prevention_efforts_eval, prevention_efforts_expl, centering_indigenous_voices, survivor_relative_input_eval, categories_eval, uic_pros, uic_cons
 
     def check_bill_status(self, bill_details):
         """
