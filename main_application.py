@@ -4,14 +4,18 @@ from bill_processor import BillProcessor
 from document_processor import DocumentProcessor
 from report_generator import ReportGenerator
 from chatgpt_client import ChatGPTClient
+from airtable_client import Table
 from wikipedia_api_client import WikipediaAPIClient
 from indigenous_database import IndigenousDatabase  # Import the IndigenousDatabase class
 import time
 
 class MainApplication:
-    def __init__(self, legiscan_key, openai_key):
+    def __init__(self, legiscan_key, openai_key, airtable_api_key, airtable_base_id, airtable_table_name):
         self.api_client = APIClient(legiscan_key)
         self.chat_client = ChatGPTClient(openai_key)
+        # Initialize Airtable Table
+        airtable_table = Table(airtable_api_key, airtable_base_id, airtable_table_name)
+
         self.document_processor = DocumentProcessor()
         self.report_generator = ReportGenerator()
         self.wikipedia_client = WikipediaAPIClient()  # Initialize the WikipediaAPIClient
