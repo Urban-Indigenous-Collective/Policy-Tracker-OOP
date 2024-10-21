@@ -155,7 +155,7 @@ class MainApplication:
 
                 # Mark as duplicate and skip
                 state = record_data.get('State', 'Unknown')
-                title = record_data.get('Title', 'Unknown')
+                title = record_data.get('Name', 'Unknown')
                 bill_number = record_data.get('Bill Number', 'Unknown')
 
                 processed_data.append({
