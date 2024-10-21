@@ -6,7 +6,19 @@ app = Flask(__name__)
 
 # Initialize MainApplication
 # Assuming MainApplication initializes API clients with hardcoded keys
-main_app = MainApplication(legiscan_key='REDACTED_LEGISCAN_KEY', openai_key='REDACTED_OPENAI_KEY')
+
+# Initialize OpenAI and AirTable
+legiscan_key = 'REDACTED_LEGISCAN_KEY'
+openai_key = 'REDACTED_OPENAI_KEY'
+airtable_api_key = 'pat474Sk4etSoE1UO.96adc928e0d0082dc93459b20617ec93ed914124541a7e7d28f36996a18863a4'
+airtable_base_id = 'app0nHzjgm8HEKOCQ'
+airtable_table_name = 'Main v3'
+
+
+
+# Pass Airtable table and keys to MainApplication
+main_app = MainApplication(legiscan_key, openai_key, airtable_api_key, airtable_base_id, airtable_table_name)
+
 
 @app.route('/')
 def home():
