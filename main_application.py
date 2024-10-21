@@ -177,7 +177,7 @@ class MainApplication:
             processed_results.append(result)
 
         # Generate Excel report (assuming report generator handles a list of dicts)
-        excel_file_path = self.report_generator.generate_report(processed_results)
+        excel_file_path = self.report_generator.export_to_excel(processed_results)
         
         print(f"Excel report generated at: {excel_file_path}")
         return excel_file_path
