@@ -131,18 +131,18 @@ class MainApplication:
 
     
     def process_urls_for_web(self, urls_string):
-        # Split URLs
-        urls = urls_string.splitlines()
+        # Split URLs and trim spaces
+        urls = [url.strip() for url in urls_string.split(',')]
+        total_urls = len(urls)
 
-        # Airtable details
-        airtable_api_key = 'your_airtable_api_key'
-        base_id = 'your_airtable_base_id'
-        table_name = 'your_table_name'
+        # Reset progress at the start of processing
+        self.progress = 0
 
-        processed_results = []
-        
-        for url in urls:
-            url = url.strip()
+        # Initialize a list to store processed data for each URL
+        processed_data = []
+        print(f"Starting URL processing. Total URLs: {total_urls}")
+
+        for i, url in enumerate(urls):
             if not url:
                 continue
 
@@ -150,8 +150,8 @@ class MainApplication:
             print(f"Processing URL: {url}")
 
             # Check if URL is already in Airtable
-            is_duplicate, record_data =  self.airtable_client.check_url_in_airtable(url)
-            
+            is_duplicate, record_data = self.airtable_client.check_url_in_airtable(url)
+
             if is_duplicate:
                 # Log the duplicate detection
                 print(f"Duplicate found for URL: {url}")
@@ -160,27 +160,34 @@ class MainApplication:
                 state = record_data.get('State', 'Unknown')
                 title = record_data.get('Title', 'Unknown')
                 bill_number = record_data.get('Bill Number', 'Unknown')
-                
-                processed_results.append({
+
+                processed_data.append({
                     'State': state,
                     'Title': title,
                     'Bill Number': bill_number,
                     'Status': 'Duplicate -- Skipped'
                 })
-                continue
 
-            # Log non-duplicate URL processing
-            print(f"Processing new URL: {url}")
+            else:
+                # Log non-duplicate URL processing
+                print(f"Processing new URL: {url}")
 
-            # Process the URL (your existing URL processing logic)
-            result = self.bill_processor.process(url)
-            processed_results.append(result)
+                # Process the non-duplicate URL using your existing URL logic (e.g., process_single_url)
+                result = self.process_single_url(url)
+                processed_data.append(result)
 
-        # Generate Excel report (assuming report generator handles a list of dicts)
-        excel_file_path = self.report_generator.export_to_excel(processed_results)
-        
-        print(f"Excel report generated at: {excel_file_path}")
-        return excel_file_path
+            # Update and print progress
+            self.progress = (i + 1) / total_urls * 100
+            print(f"Processed URL {i+1}/{total_urls}. Current progress: {self.progress}%")
+            time.sleep(1)
+
+        # After processing all URLs, generate an Excel report
+        if processed_data:
+            excel_file_path = self.report_generator.export_to_excel(processed_data)
+            print(f"Excel report generated at: {excel_file_path}")
+            return excel_file_path
+        else:
+            return None  # Handle the case where no data was processed
 
     def get_progress(self):
         return self.progress
