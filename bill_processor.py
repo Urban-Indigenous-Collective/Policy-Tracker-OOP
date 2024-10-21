@@ -14,7 +14,7 @@ class BillProcessor:
         self.decoded_text = ""
         self.bill_id = ""
         self.bill = ""
-        self.questionnaire = gpt_questions(chat_client)
+        self.questionnaire = ChatGPTQuestionnaire(chat_client)
 
     def strip_html_tags(self, html_content):
         soup = BeautifulSoup(html_content, "html.parser")
