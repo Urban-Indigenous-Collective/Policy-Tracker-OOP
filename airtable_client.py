@@ -11,7 +11,7 @@ class AirtableClient:
 
     def check_url_in_airtable(self, url):
         # Search for the URL in the Airtable table
-        formula = f"{{URL}} = '{url}'"
+        formula = f"{{Bill Text}} = '{url}'"
         records = self.table.all(formula=formula)
         
         if records:
