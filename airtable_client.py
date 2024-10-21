@@ -3,8 +3,8 @@ from pyairtable import Table
 class AirtableClient:
     def __init__(self):
         # Initialize the Airtable connection with provided values
-        api_key='pat474Sk4etSoE1UO.96adc928e0d0082dc93459b20617ec93ed914124541a7e7d28f36996a18863a4.',
-        base_id='app0nHzjgm8HEKOCQ',
+        api_key='pat474Sk4etSoE1UO.96adc928e0d0082dc93459b20617ec93ed914124541a7e7d28f36996a18863a4.'
+        base_id='app0nHzjgm8HEKOCQ'
         table_name='Main v3'
         
         self.table = Table(api_key, base_id, table_name)
