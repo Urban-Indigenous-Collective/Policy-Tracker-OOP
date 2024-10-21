@@ -4,17 +4,17 @@ from bill_processor import BillProcessor
 from document_processor import DocumentProcessor
 from report_generator import ReportGenerator
 from chatgpt_client import ChatGPTClient
-from airtable_client import Table
+from airtable_client import AirtableClient
 from wikipedia_api_client import WikipediaAPIClient
 from indigenous_database import IndigenousDatabase  # Import the IndigenousDatabase class
 import time
 
 class MainApplication:
-    def __init__(self, legiscan_key, openai_key, airtable_api_key, airtable_base_id, airtable_table_name):
+    def __init__(self, legiscan_key, openai_key):
         self.api_client = APIClient(legiscan_key)
         self.chat_client = ChatGPTClient(openai_key)
         # Initialize Airtable Table
-        airtable_table = Table(airtable_api_key, airtable_base_id, airtable_table_name)
+        self.airtable_client = AirtableClient()
 
         self.document_processor = DocumentProcessor()
         self.report_generator = ReportGenerator()
@@ -131,36 +131,56 @@ class MainApplication:
 
     
     def process_urls_for_web(self, urls_string):
-        urls = [url.strip() for url in urls_string.split(',')]
-        total_urls = len(urls)
+        # Split URLs
+        urls = urls_string.splitlines()
 
-        # Reset progress at the start of processing
-        self.progress = 0
+        # Airtable details
+        airtable_api_key = 'your_airtable_api_key'
+        base_id = 'your_airtable_base_id'
+        table_name = 'your_table_name'
 
-        # Initialize a list to store processed data for each URL
-        processed_data = []
-        print(f"Starting URL processing. Total URLs: {total_urls}")
+        processed_results = []
+        
+        for url in urls:
+            url = url.strip()
+            if not url:
+                continue
 
+            # Log URL processing
+            print(f"Processing URL: {url}")
 
-        for i, url in enumerate(urls):
-            result = self.process_single_url(url)
+            # Check if URL is already in Airtable
+            is_duplicate, record_data =  self.airtable_client.check_url_in_airtable(url)
             
-            # Whether it's successful data or an error message, append it to processed_data
-            processed_data.append(result)
+            if is_duplicate:
+                # Log the duplicate detection
+                print(f"Duplicate found for URL: {url}")
 
-            # Update and print progress
-            self.progress = (i + 1) / total_urls * 100
-            print(f"Processed URL {i+1}/{total_urls}. Current progress: {self.progress}%")
-            time.sleep(1)
+                # Mark as duplicate and skip
+                state = record_data.get('State', 'Unknown')
+                title = record_data.get('Title', 'Unknown')
+                bill_number = record_data.get('Bill Number', 'Unknown')
+                
+                processed_results.append({
+                    'State': state,
+                    'Title': title,
+                    'Bill Number': bill_number,
+                    'Status': 'Duplicate -- Skipped'
+                })
+                continue
 
-        # After processing all URLs, generate an Excel report
-        if processed_data:
-            excel_file_path = self.report_generator.export_to_excel(processed_data)
-            print(excel_file_path)
-            return excel_file_path
-        else:
-            return None  # Handle the case where no data was processed
+            # Log non-duplicate URL processing
+            print(f"Processing new URL: {url}")
 
+            # Process the URL (your existing URL processing logic)
+            result = self.bill_processor.process(url)
+            processed_results.append(result)
+
+        # Generate Excel report (assuming report generator handles a list of dicts)
+        excel_file_path = self.report_generator.generate_report(processed_results)
+        
+        print(f"Excel report generated at: {excel_file_path}")
+        return excel_file_path
 
     def get_progress(self):
         return self.progress
