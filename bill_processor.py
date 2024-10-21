@@ -53,16 +53,27 @@ class BillProcessor:
 
 
     def summarize_bill_text(self, legiscan_url):
+        """
+        Retrieves the bill ID from the LegiScan URL.
+        """
         bill_id = self.extract_bill_id(legiscan_url)
         if not bill_id:
             return "Invalid LegiScan URL", None
 
+        """
+        Retrieves the text from the LegiScan URL.
+        """
         decoded_text = self.get_bill_id_and_text(bill_id)
-        bill_details = self.api_client.get_bill_details(bill_id)
-        bill_sponsors = ', '.join([f"{s['role']} {s['name']} ({s['party']}) - District {s['district']}" for s in bill_details['bill']['sponsors']])
-        indigenous_sponsors = self.identify_indigenous_sponsors(bill_sponsors, self.indigenous_db)
 
-        # Using the new ChatGPTQuestionnaire class
+        bill_details = self.api_client.get_bill_details(self.bill_id)
+
+        print("summarizing bill")
+        bill_text_data = self.api_client.get_bill_text(bill_id)
+        self.bill = bill_details['bill']
+        bill_sponsors = ', '.join([f"{s['role']} {s['name']} ({s['party']}) - District {s['district']}" for s in self.bill['sponsors']])
+        self.indigenous_sponsors = self.identify_indigenous_sponsors(bill_sponsors, self.indigenous_db)
+
+        # Using the ChatGPTQuestionnaire class
         chat_summary = self.questionnaire.ask_summary(decoded_text)
         mechanisms_eval = self.questionnaire.ask_mechanisms_eval(decoded_text)
         mechanisms_expl = self.questionnaire.ask_mechanisms_expl(decoded_text)
