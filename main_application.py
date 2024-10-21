@@ -157,12 +157,14 @@ class MainApplication:
                 state = record_data.get('State', 'Unknown')
                 title = record_data.get('Name', 'Unknown')
                 bill_number = record_data.get('Bill Number', 'Unknown')
+                bill_text_url = record_data.get('Bill Text', 'Unknown')
 
                 processed_data.append({
                     'State': state,
                     'Title': title,
                     'Bill Number': bill_number,
-                    'Status': 'Duplicate -- Skipped'
+                    'Status': 'Duplicate -- Skipped',
+                    'Bill Text': bill_text_url,
                 })
 
 
