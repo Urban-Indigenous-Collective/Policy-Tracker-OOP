@@ -131,7 +131,6 @@ class MainApplication:
 
     
     def process_urls_for_web(self, urls_string):
-        # Split URLs and trim spaces
         urls = [url.strip() for url in urls_string.split(',')]
         total_urls = len(urls)
 
@@ -142,39 +141,12 @@ class MainApplication:
         processed_data = []
         print(f"Starting URL processing. Total URLs: {total_urls}")
 
+
         for i, url in enumerate(urls):
-            if not url:
-                continue
-
-            # Log URL processing
-            print(f"Processing URL: {url}")
-
-            # Check if URL is already in Airtable
-            is_duplicate, record_data = self.airtable_client.check_url_in_airtable(url)
-
-            if is_duplicate:
-                # Log the duplicate detection
-                print(f"Duplicate found for URL: {url}")
-
-                # Mark as duplicate and skip
-                state = record_data.get('State', 'Unknown')
-                title = record_data.get('Title', 'Unknown')
-                bill_number = record_data.get('Bill Number', 'Unknown')
-
-                processed_data.append({
-                    'State': state,
-                    'Title': title,
-                    'Bill Number': bill_number,
-                    'Status': 'Duplicate -- Skipped'
-                })
-
-            else:
-                # Log non-duplicate URL processing
-                print(f"Processing new URL: {url}")
-
-                # Process the non-duplicate URL using your existing URL logic (e.g., process_single_url)
-                result = self.process_single_url(url)
-                processed_data.append(result)
+            result = self.process_single_url(url)
+            
+            # Whether it's successful data or an error message, append it to processed_data
+            processed_data.append(result)
 
             # Update and print progress
             self.progress = (i + 1) / total_urls * 100
@@ -184,10 +156,12 @@ class MainApplication:
         # After processing all URLs, generate an Excel report
         if processed_data:
             excel_file_path = self.report_generator.export_to_excel(processed_data)
-            print(f"Excel report generated at: {excel_file_path}")
+            print(excel_file_path)
             return excel_file_path
         else:
             return None  # Handle the case where no data was processed
+
+
 
     def get_progress(self):
         return self.progress
