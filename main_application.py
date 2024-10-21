@@ -143,10 +143,34 @@ class MainApplication:
 
 
         for i, url in enumerate(urls):
-            result = self.process_single_url(url)
-            
-            # Whether it's successful data or an error message, append it to processed_data
-            processed_data.append(result)
+            # Log URL processing
+            print(f"Processing URL: {url}")
+
+            # Check if URL is already in Airtable
+            is_duplicate, record_data = self.airtable_client.check_url_in_airtable(url)
+
+            if is_duplicate:
+                # Log the duplicate detection
+                print(f"Duplicate found for URL: {url}")
+
+                # Mark as duplicate and skip
+                state = record_data.get('State', 'Unknown')
+                title = record_data.get('Title', 'Unknown')
+                bill_number = record_data.get('Bill Number', 'Unknown')
+
+                processed_data.append({
+                    'State': state,
+                    'Title': title,
+                    'Bill Number': bill_number,
+                    'Status': 'Duplicate -- Skipped'
+                })
+
+
+            else:
+                result = self.process_single_url(url)
+                
+                # Whether it's successful data or an error message, append it to processed_data
+                processed_data.append(result)
 
             # Update and print progress
             self.progress = (i + 1) / total_urls * 100
