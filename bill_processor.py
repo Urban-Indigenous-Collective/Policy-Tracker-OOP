@@ -1,7 +1,7 @@
 import re
 import datetime
 from bs4 import BeautifulSoup
-
+from gpt_questions import ChatGPTQuestionnaire
 
 
 class BillProcessor:
@@ -14,6 +14,7 @@ class BillProcessor:
         self.decoded_text = ""
         self.bill_id = ""
         self.bill = ""
+        self.questionnaire = gpt_questions(chat_client)
 
     def strip_html_tags(self, html_content):
         soup = BeautifulSoup(html_content, "html.parser")
@@ -52,106 +53,47 @@ class BillProcessor:
 
 
     def summarize_bill_text(self, legiscan_url):
-
-        """
-        Retrieves the bill ID from the LegiScan URL.
-        """
         bill_id = self.extract_bill_id(legiscan_url)
         if not bill_id:
             return "Invalid LegiScan URL", None
 
-        """
-        Retrieves the text from the LegiScan URL.
-        """
         decoded_text = self.get_bill_id_and_text(bill_id)
+        bill_details = self.api_client.get_bill_details(bill_id)
+        bill_sponsors = ', '.join([f"{s['role']} {s['name']} ({s['party']}) - District {s['district']}" for s in bill_details['bill']['sponsors']])
+        indigenous_sponsors = self.identify_indigenous_sponsors(bill_sponsors, self.indigenous_db)
 
-        bill_details = self.api_client.get_bill_details(self.bill_id)
+        # Using the new ChatGPTQuestionnaire class
+        chat_summary = self.questionnaire.ask_summary(decoded_text)
+        mechanisms_eval = self.questionnaire.ask_mechanisms_eval(decoded_text)
+        mechanisms_expl = self.questionnaire.ask_mechanisms_expl(decoded_text)
+        gender_inclusive_eval = self.questionnaire.ask_gender_inclusive_eval(decoded_text)
+        gender_inclusive_expl = self.questionnaire.ask_gender_inclusive_expl(decoded_text)
+        prevention_efforts_eval = self.questionnaire.ask_prevention_efforts_eval(decoded_text)
+        prevention_efforts_expl = self.questionnaire.ask_prevention_efforts_expl(decoded_text)
+        centering_indigenous_voices = self.questionnaire.ask_centering_indigenous_voices(decoded_text, indigenous_sponsors)
+        survivor_relative_input_eval = self.questionnaire.ask_survivor_relative_input_eval(decoded_text)
+        categories_eval = self.questionnaire.ask_categories_eval(decoded_text)
 
-        print("summarizing bill")
-        bill_text_data = self.api_client.get_bill_text(bill_id)
-        self.bill = bill_details['bill']
-        bill_sponsors = ', '.join([f"{s['role']} {s['name']} ({s['party']}) - District {s['district']}" for s in self.bill['sponsors']])
-        self.indigenous_sponsors = self.identify_indigenous_sponsors(bill_sponsors, self.indigenous_db)
+        # Summarize pros and cons
+        data_points = f"{chat_summary}, {mechanisms_expl}, {gender_inclusive_expl}, {prevention_efforts_expl}, {centering_indigenous_voices}, {categories_eval}"
+        uic_pros = self.questionnaire.ask_uic_pros(data_points)
+        uic_cons = self.questionnaire.ask_uic_cons(data_points)
 
-        chat_summary = self.chat_client.get_chat_response(
-            f"Slow down and take your time. Accuracy is imperative. Please carefully evaluate the following legislation, and do not respond before analyzing it -- this pertains to each question I will ask. \n\n {decoded_text} \n\n Please summerize the aformentioned legislation in in 5 sentences or less."
-            )
-    
-        mechanisms_eval = self.chat_client.get_chat_response(
-            f"Do not decide if the text contains prevention efforts before reading the following question, and then carefully evaluating the legislation. Take your time. Can you quote the previously mentioned legislation includes mechanisms for evaluation? These could include but are not limited to a final report, consultation with community, tribal consulation, a Tribal Crisis Response Plan (TCRP), monitoring, or data collection. Do not include training as a mechanism for evaluation. Respond with only Yes or No. \n\n"
-            )
-        mechanisms_eval = mechanisms_eval.strip(".")
-
-        mechanisms_expl = self.chat_client.get_chat_response(
-            f"Based on your answer to the previous question, please quote the previously mentioned legislation where it mentions the specific mechanisms for evaluation (a final report, consultation with community, tribal consulation, a Tribal Crisis Response Plan (TCRP), monitoring, or data collection). Create a numbered list of ALL mechanisms of evaluation. \n\n"
-            )
-
-        
-        #self.chat_client.conversation_history = []
-
-        
-        gender_inclusive_eval = self.chat_client.get_chat_response(
-            f"Slow down and take your time. Accuracy is imperative. Do not respond before reading the following question and then reviewing this legislation: \n\n {decoded_text} \n\n Does the previously mentioned legislation use gender inclusive language? This may include expanding Missing and Murdered Indigenous Womens crisis to refer to missing Indigenous people in general, or simply using gender neutral language throughout. Reply simply with Yes or No \n\n"
-            )
-        gender_inclusive_eval = gender_inclusive_eval.strip(".")
-        gender_inclusive_expl = self.chat_client.get_chat_response(
-            f"Does the previously mentioned legislation use gender inclusive language? This may include expanding Missing and Murdered Indigenous Womens crisis to refer to missing Indigenous people in general, or simply using gender neutral language throughout. Explain why in 3 sentences or less. Do not restate the original question in your answer. \n\n"
-            )
-
-        
-        #self.chat_client.conversation_history = []
-
-
-
-        prevention_efforts_eval = self.chat_client.get_chat_response(
-            f"Slow down and take your time. Accuracy is imperative. Do not respond before fully reading the following question and then reviewing this legislation: \n\n {decoded_text} \n\n Take your time and be accurate. Please evaluate the previously mentioned legislation for any prevention efforts regarding Missing and Murdered Indigenous Persons, including but not limited to training or awareness efforts. Double check your work before answering. Please answer with just Yes or No \n\n"
-            )
-        prevention_efforts_eval = prevention_efforts_eval.strip(".")
-
-        prevention_efforts_expl = self.chat_client.get_chat_response(
-            f"Do not respond before reading the question, and then reviewing the legislation closely. Take your time and be accurate. Please evaluate the previously mentioned legislation for any prevention efforts regarding Missing and Murdered Indigenous Persons including but not limited to training or awareness efforts. If any prevention efforts are identified, please quote the text and return the quoted text. If no prevention efforts can be identified, please return \”No\”."
-            )                        
-        
-
-        #self.chat_client.conversation_history = []
-
-
-
-        centering_indigenous_voices = self.chat_client.get_chat_response(
-            f"Slow down and take your time. Accuracy is imperative. Do not respond before fully reading the following question and then reviewing this legislation: \n\n {decoded_text} \n\n Take your time and be accurate. Please evaluate the previously mentioned legislation for the level of input from MMIP survivors, relatives of MMIP survivors, Indigenous politicians, and Indigenous communities in general in the following legislation. The following Indigenous politicans are sponsoring the legislation: {self.indigenous_sponsors} \n\n Double check your work before answering. Please return either No, Somewhat, and Yes alongside a 3 sentence (or less) explaination. If no mention is made, return No. \n\n"
-            ) 
-
-        survivor_relative_input_eval = self.chat_client.get_chat_response(
-            f"Do not respond before fully reading the following question and then reviewing the previously mentioned legislation. Take your time and be accurate. Please evaluate the previously mentioned legislation for the level of input from MMIP survivors or relatives of MMIP survivors in the following legislation. Please return either No, Somewhat, or Yes. Do not include an explaination. If no mention is made, return No. \n\n"
-            ) 
-        survivor_relative_input_eval = survivor_relative_input_eval.strip(".")
-
-
-        categories_eval = self.chat_client.get_chat_response(
-            f"Please evaluate the previously mentioned legislation and return the most applicable categories in a comma seperated list: Taskforce, Day of Recognition, US Law Enforcement, Tribal Law Enforcement, Data Collection, MMIP Relatives \n\n"
-            ) 
-
-
-        uic_pros = self.chat_client.get_chat_response(
-            f"Using the following data points: \n\n {chat_summary} \n\n {mechanisms_expl} \n\n {gender_inclusive_expl} \n\n {prevention_efforts_expl} \n\n Indigenous sponsors: {self.indigenous_sponsors} \n\n {centering_indigenous_voices} \n\n legislation categories: {categories_eval} \n\n please summarize the benefits or pros of the the previously mentioned legislation."
-            )
-
-        uic_cons = self.chat_client.get_chat_response(
-            f"Using the following data points: \n\n {chat_summary} \n\n {mechanisms_expl} \n\n {gender_inclusive_expl} \n\n {prevention_efforts_expl} \n\n Indigenous sponsors: {self.indigenous_sponsors} \n\n {centering_indigenous_voices} \n\n legislation categories: {categories_eval} \n\n please summarize the drawbacks or cons of the previoisly memtioned legislation \n\n"
-            )
-
-
-        print("\n\nCenters Indigenous voices? " + centering_indigenous_voices)
-        print("\n\nIncludes survivor / relative input? " + survivor_relative_input_eval)
-        
-        self.chat_client.conversation_history = []
-
-
-
-        
-
-        return self.bill_id, decoded_text, chat_summary, gender_inclusive_eval, gender_inclusive_expl, mechanisms_eval, mechanisms_expl, prevention_efforts_eval, prevention_efforts_expl, centering_indigenous_voices, survivor_relative_input_eval, categories_eval, uic_pros, uic_cons
-
+        return {
+            'bill_id': bill_id,
+            'summary': chat_summary,
+            'mechanisms_eval': mechanisms_eval,
+            'mechanisms_expl': mechanisms_expl,
+            'gender_inclusive_eval': gender_inclusive_eval,
+            'gender_inclusive_expl': gender_inclusive_expl,
+            'prevention_efforts_eval': prevention_efforts_eval,
+            'prevention_efforts_expl': prevention_efforts_expl,
+            'centering_indigenous_voices': centering_indigenous_voices,
+            'survivor_relative_input_eval': survivor_relative_input_eval,
+            'categories_eval': categories_eval,
+            'uic_pros': uic_pros,
+            'uic_cons': uic_cons
+        }
 
     def check_bill_status(self, bill_details):
         """
