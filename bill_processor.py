@@ -81,7 +81,7 @@ class BillProcessor:
         gender_inclusive_expl = self.questionnaire.ask_gender_inclusive_expl(decoded_text)
         prevention_efforts_eval = self.questionnaire.ask_prevention_efforts_eval(decoded_text)
         prevention_efforts_expl = self.questionnaire.ask_prevention_efforts_expl(decoded_text)
-        centering_indigenous_voices = self.questionnaire.ask_centering_indigenous_voices(decoded_text, indigenous_sponsors)
+        centering_indigenous_voices = self.questionnaire.ask_centering_indigenous_voices(decoded_text, self.indigenous_sponsors)
         survivor_relative_input_eval = self.questionnaire.ask_survivor_relative_input_eval(decoded_text)
         categories_eval = self.questionnaire.ask_categories_eval(decoded_text)
 
