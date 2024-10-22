@@ -1,9 +1,13 @@
 import datetime
+import re
+import requests
 
 class LegiScanProcessor:
 
-    def __init__(self, indigenous_db):
+    def __init__(self, indigenous_db, api_client):
         self.indigenous_db = indigenous_db
+        self.api_client = api_client
+
         self.status_codes = {
             0: "Pre-filed or pre-introduction",
             1: "Introduced",
@@ -26,6 +30,108 @@ class LegiScanProcessor:
             'L': 'Legislative Body',  # Potentially for unicameral legislature
             'N/A': 'Not Available'  # Handle cases where chamber info is missing
         }
+
+    def extract_bill_id(self, url):
+        """
+        Extracts bill ID from a given URL.
+        """
+        match = re.search(r'/id/(\d+)', url)
+        if match:
+            return match.group(1)
+        else:
+            return None
+            
+    def is_legiscan_url(self, url):
+        """
+        Checks if the URL is a LegiScan link.
+        """
+        return "legiscan.com" in url
+
+    def get_latest_bill_id(self, state_code, session_year, bill_number):
+        """
+        Fetches the bill ID for a given state, session year, and bill number using the LegiScan API.
+        """
+        api_key = self.api_client.get_api_key()
+
+        # Step 1: Get the session list for the state
+        session_list_url = f"https://api.legiscan.com/?key={api_key}&op=getSessionList&state={state_code}"
+        print("Session URL requested " + session_list_url)
+        response = requests.get(session_list_url)
+        
+        if response.status_code == 200:
+            sessions = response.json().get('sessions', [])
+            if sessions:
+                # Find the session that matches the provided year
+                matching_session = None
+                for session in sessions:
+                    if session['year_start'] <= session_year <= session['year_end']:
+                        matching_session = session
+                        break
+
+                if matching_session:
+                    latest_session_id = matching_session['session_id']
+                    print(f"Found session ID: {latest_session_id} for {state_code} in year {session_year}")
+
+                    # Step 2: Get the master list for the selected session
+                    master_list_url = f"https://api.legiscan.com/?key={api_key}&op=getMasterList&id={latest_session_id}"
+                    print("MasterList URL requested " + master_list_url)
+                    response = requests.get(master_list_url)
+
+                    if response.status_code == 200:
+                        master_list = response.json().get('masterlist', {})
+
+                        # Step 3: Search for the bill number in the master list
+                        for key, bill_data in master_list.items():
+                            if isinstance(bill_data, dict) and bill_data.get('number') == bill_number:
+                                print(f"Found bill {bill_number} with bill_id: {bill_data['bill_id']}")
+                                return bill_data['bill_id']  # Return the matching bill ID and doc ID
+                        
+                        print(f"No matching bill found for {bill_number} in session {session_year}")
+                        return None
+                    else:
+                        print(f"Error fetching master list: {response.status_code}")
+                        return None
+                else:
+                    print(f"No matching session found for year {session_year} in state {state_code}.")
+                    return None
+            else:
+                print(f"No sessions found for the state: {state_code}")
+                return None
+        else:
+            print(f"Error fetching session list: {response.status_code}")
+            return None
+
+    def process_legiscan_url(self, url):
+        """
+        Processes the LegiScan URL to extract the session year and bill number, and pass them to find the correct session and bill ID.
+        """
+        # Extract bill ID if it's present in the URL
+        bill_id = self.extract_bill_id(url)
+        print(f"url attempted to extract: {url}")
+        print(f'attempted bill ID extraction: {bill_id}')
+        if bill_id:
+            return bill_id
+
+        # Extract other details like state and session year
+        match = re.search(r'legiscan\.com/([A-Z]{2})/bill/([A-Z]+[0-9]+)/([0-9]{4})', url)
+        if match:
+            state_code = match.group(1)  # e.g., 'AK'
+            bill_number = match.group(2)  # e.g., 'SB211'
+            session_year = int(match.group(3))  # e.g., 2022
+            
+            # Get the bill ID by passing the state, session year, and bill number
+            latest_bill_id = self.get_latest_bill_id(state_code, session_year, bill_number)
+            
+            if latest_bill_id:
+                print(f"Found bill ID: {latest_bill_id}")
+                return latest_bill_id
+            else:
+                print(f"No bill found for {bill_number} in {state_code} for year {session_year}")
+                return None
+        else:
+            print("Invalid LegiScan URL format.")
+            return None
+
 
     def identify_indigenous_sponsors(self, sponsors):
         """

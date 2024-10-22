@@ -197,10 +197,13 @@ class MainApplication:
             # Attempt to unpack the expected number of values
             print("Processing single url!")
             bill_id, bill_text, chat_summary, gender_inclusive_eval, gender_inclusive_expl, mechanisms_eval, mechanisms_expl, prevention_efforts_eval, prevention_efforts_expl, centering_indigenous_voices, survivor_relative_input_eval, categories_eval, uic_pros, uic_cons = self.bill_processor.summarize_bill_text(url)
-            
+            print(f"Bill ID returned from summarize bill text: {bill_id}")
+
             # Proceed if the correct number of items are unpacked
             if isinstance(bill_id, int):
                 bill_details = self.api_client.get_bill_details(bill_id)
+                print(f"Bill ID before final parsing bill object: {bill_id}")
+                
                 if 'bill' in bill_details:
                     bill_data = self.bill_processor.parse_bill_object(bill_details, bill_details['bill'], bill_text, url, chat_summary, gender_inclusive_eval, gender_inclusive_expl, mechanisms_eval, mechanisms_expl, prevention_efforts_eval, prevention_efforts_expl, centering_indigenous_voices, survivor_relative_input_eval, categories_eval, uic_pros, uic_cons)
                     return bill_data
@@ -213,19 +216,6 @@ class MainApplication:
             return {'url': url, 'error': f"Error processing URL: {str(e)}"}
 
 
-
-#Old Method
-    def process_legiscan_urls(self, urls):
-        for legiscan_url in urls:
-            bill_id, bill_text, chat_summary, gender_inclusive_eval, gender_inclusive_expl, mechanisms_eval, mechanisms_expl, prevention_efforts_eval, prevention_efforts_expl, centering_indigenous_voices, survivor_relative_input_eval, categories_eval, uic_pros, uic_cons = self.bill_processor.get_bill_id_and_text(legiscan_url)
-
-            if isinstance(bill_id, int):
-                bill_details = self.api_client.get_bill_details(bill_id)
-                if 'bill' in bill_details:
-                    bill_data = self.bill_processor.parse_bill_object(bill_details, bill_details['bill'], bill_text, legiscan_url, chat_summary, gender_inclusive_eval, gender_inclusive_expl, mechanisms_eval, mechanisms_expl, prevention_efforts_eval, prevention_efforts_expl, centering_indigenous_voices, survivor_relative_input_eval, categories_eval, uic_pros, uic_cons)
-                    self.report_generator.export_to_excel(bill_data)
-            else:
-                print(bill_id)
 
 # Main execution
 if __name__ == "__main__":
