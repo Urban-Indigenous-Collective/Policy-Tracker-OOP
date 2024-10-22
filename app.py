@@ -9,7 +9,7 @@ app = Flask(__name__)
 
 # Initialize OpenAI and AirTable
 legiscan_key = '4bbc7257ba2bbf01b636af5b19cc2212'
-openai_key = 'sk-proj-Vr6atYpHcM0kmWmAAD7QT3BlbkFJzFrOANKloNoUfTPaf3ya'
+openai_key = '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'
 
 
 # Pass Airtable table and keys to MainApplication
