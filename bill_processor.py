@@ -15,8 +15,9 @@ class BillProcessor:
         self.decoded_text = ""
         self.bill_id = ""
         self.bill = ""
+        self.doc_id = ""
         self.questionnaire = ChatGPTQuestionnaire(chat_client)
-        self.legiscan_processor = LegiScanProcessor(indigenous_db)
+        self.legiscan_processor = LegiScanProcessor(indigenous_db, self.api_client)
 
     def strip_html_tags(self, html_content):
         soup = BeautifulSoup(html_content, "html.parser")
@@ -30,44 +31,58 @@ class BillProcessor:
         return match.group(1) if match else None
 
     def get_bill_id_and_text(self, bill_id):
+        """
+        Fetches the bill text data using the bill ID and stores the document ID.
+        """
+        # Step 1: Fetch the bill details to find the document ID
+        bill_details = self.api_client.get_bill_details(bill_id)
         
-        bill_text_data = self.api_client.get_bill_text(bill_id)
-        #Switch bill id from bill text, to bill listing
-        self.bill_id = bill_text_data['bill_id']
+        # Check if bill_details is valid
+        if not bill_details or 'texts' not in bill_details or not bill_details['texts']:
+            return "Error: Bill text data not available", None
 
-        if bill_text_data:
-            # Determine document format and decode appropriately
-            if bill_text_data.get("mime") == "text/html":
-                html_text = self.document_processor.decode_base64(bill_text_data["doc"])
-                self.decoded_text = html_text.decode('latin-1')
-                self.decoded_text = self.strip_html_tags(self.decoded_text)
-                print(self.decoded_text)
-                return self.decoded_text
-            elif 'doc' in bill_text_data:
-                pdf_data = self.document_processor.decode_base64(bill_text_data['doc'])
-                self.decoded_text = self.document_processor.extract_text_from_pdf(pdf_data)
-                return self.decoded_text
+        # Extract the first document entry and store the document ID
+        first_doc = bill_details['texts'][0]
+        self.doc_id = first_doc.get('doc_id')
+        
+        # Now fetch the actual bill text using the document ID
+        bill_text_data = self.api_client.get_bill_text(self.doc_id)
+        
+        if not bill_text_data or 'doc' not in bill_text_data:
+            return "Error: Bill text data not available", None
 
-            else:
-                return "Error: Document format not supported or missing", None
+        # Process the document based on its MIME type
+        if bill_text_data.get("mime") == "text/html":
+            html_text = self.document_processor.decode_base64(bill_text_data["doc"])
+            self.decoded_text = html_text.decode('latin-1')
+            self.decoded_text = self.strip_html_tags(self.decoded_text)
+            return self.decoded_text
+        elif bill_text_data.get("mime") == "application/pdf":
+            pdf_data = self.document_processor.decode_base64(bill_text_data['doc'])
+            self.decoded_text = self.document_processor.extract_text_from_pdf(pdf_data)
+            return self.decoded_text
         else:
-            return "Bill text data not available", None
-
+            return "Error: Document format not supported or missing", None
 
     def summarize_bill_text(self, legiscan_url):
         """
         Retrieves and processes bill text from LegiScan.
         """
-        # Retrieve the bill ID
-        bill_id = self.extract_bill_id(legiscan_url)
-        if not bill_id:
-            return "Invalid LegiScan URL", None
+        # Retrieve the bill ID or fetch the latest bill ID if missing
+        self.bill_id = self.legiscan_processor.process_legiscan_url(legiscan_url)
+        print(f"Bill ID returned from initial fetch: {self.bill_id}")
+        if not self.bill_id:
+            return "Invalid or Unavailable LegiScan URL", None
 
+        print(f"Bill ID sent to get bill text: {self.bill_id}")
         # Retrieve the bill text
-        decoded_text = self.get_bill_id_and_text(bill_id)
+        decoded_text = self.get_bill_id_and_text(self.bill_id)
 
+        print(f"Bill ID sent to API for details: {self.bill_id}")
         # Retrieve the bill details
-        bill_details = self.api_client.get_bill_details(bill_id)
+        bill_details = self.api_client.get_bill_details(self.bill_id)
+
+
 
         # Ensure bill is available in the details
         self.bill = bill_details.get('bill', {})
@@ -90,10 +105,8 @@ class BillProcessor:
         uic_pros = self.questionnaire.ask_uic_pros(decoded_text) if decoded_text else None
         uic_cons = self.questionnaire.ask_uic_cons(decoded_text) if decoded_text else None
 
-
-        # Correct return statement with all 14 values in the expected order
+        # Return results
         return self.bill_id, decoded_text, chat_summary, gender_inclusive_eval, gender_inclusive_expl, mechanisms_eval, mechanisms_expl, prevention_efforts_eval, prevention_efforts_expl, centering_indigenous_voices, survivor_relative_input_eval, categories_eval, uic_pros, uic_cons
-
 
     def parse_bill_object(self, bill_details, bill, bill_text, bill_text_url, chat_response, gender_inclusive_response, gender_inclusive_explanation, mechanisms_eval,  mechanisms_expl, prevention_efforts_eval, prevention_efforts_expl, centering_indigenous_voices, survivor_relative_input_eval, categories_eval, uic_pros, uic_cons):
             
