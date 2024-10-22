@@ -8,6 +8,7 @@ from airtable_client import AirtableClient
 from wikipedia_api_client import WikipediaAPIClient
 from indigenous_database import IndigenousDatabase  # Import the IndigenousDatabase class
 import time
+from legiscan_processor import LegiScanProcessor
 
 class MainApplication:
     def __init__(self, legiscan_key, openai_key):
@@ -15,7 +16,6 @@ class MainApplication:
         self.chat_client = ChatGPTClient(openai_key)
         # Initialize Airtable Table
         self.airtable_client = AirtableClient()
-
         self.document_processor = DocumentProcessor()
         self.report_generator = ReportGenerator()
         self.wikipedia_client = WikipediaAPIClient()  # Initialize the WikipediaAPIClient
@@ -24,6 +24,9 @@ class MainApplication:
         self.indigenous_db.build_database()
         self.bill_processor = BillProcessor(self.api_client, self.chat_client, self.document_processor, self.indigenous_db)
         self.progress = 0  # Add this line to initialize progress tracking
+
+        self.legiscan_processor = LegiScanProcessor(self.indigenous_db, self.api_client)
+
 
 
 
@@ -141,17 +144,44 @@ class MainApplication:
         processed_data = []
         print(f"Starting URL processing. Total URLs: {total_urls}")
 
-
         for i, url in enumerate(urls):
             # Log URL processing
             print(f"Processing URL: {url}")
 
-            # Check if URL is already in Airtable
-            is_duplicate, record_data = self.airtable_client.check_url_in_airtable(url)
+            # Step 1: Check if the URL has a bill ID using LegiScan processing functions
+            bill_id = self.legiscan_processor.extract_bill_id(url)
+            
+            # Step 2: If a bill ID is found, fetch the bill text details to get the bill_id and then use it to get the full bill URL
+            if bill_id:
+                # Get bill text details using the extracted bill ID
+                bill_text_details = self.api_client.get_bill_text(bill_id)
+                extracted_bill_id = bill_text_details.get('bill_id')
+
+                print(f"Extracted bill ID: {extracted_bill_id}")
+                print(f"Extracted text field: {bill_text_details.get('state_link')}")
+                #print(f"Returned json object: {bill_text_details}")
+
+
+                if extracted_bill_id:
+                    # Fetch bill details using the extracted bill_id
+                    bill_details = self.api_client.get_bill_details(extracted_bill_id)
+                    full_url = bill_details.get('bill', {}).get('url')
+                    print(f"Bill ID found: {extracted_bill_id}. Full URL obtained: {full_url}")
+                else:
+                    # If no bill_id is found in the bill text details, fallback to the original URL
+                    print(f"No valid bill ID found in bill text details. Using original URL.")
+                    full_url = url
+            else:
+                # If no bill ID is found, use the original URL as the full URL
+                full_url = url
+                print(f"No bill ID found in URL. Using original URL: {full_url}")
+
+            # Step 3: Check if the full URL is already in Airtable in the Bill Overview (Link) category
+            is_duplicate, record_data = self.airtable_client.check_url_in_airtable(full_url, category="Bill Overview (Link)")
 
             if is_duplicate:
                 # Log the duplicate detection
-                print(f"Duplicate found for URL: {url}")
+                print(f"Duplicate found for URL: {full_url}")
 
                 # Mark as duplicate and skip
                 state = record_data.get('State', 'Unknown')
@@ -166,17 +196,14 @@ class MainApplication:
                     'Status': 'Duplicate -- Skipped',
                     'Bill Text': bill_text_url,
                 })
-
-
             else:
-                result = self.process_single_url(url)
-                
+                result = self.process_single_url(full_url)
                 # Whether it's successful data or an error message, append it to processed_data
                 processed_data.append(result)
 
             # Update and print progress
             self.progress = (i + 1) / total_urls * 100
-            print(f"Processed URL {i+1}/{total_urls}. Current progress: {self.progress}%")
+            print(f"Processed URL {i + 1}/{total_urls}. Current progress: {self.progress}%")
             time.sleep(1)
 
         # After processing all URLs, generate an Excel report
@@ -186,7 +213,6 @@ class MainApplication:
             return excel_file_path
         else:
             return None  # Handle the case where no data was processed
-
 
 
     def get_progress(self):
