@@ -9,9 +9,9 @@ class AirtableClient:
         
         self.table = Table(api_key, base_id, table_name)
 
-    def check_url_in_airtable(self, url):
-        # Search for the URL in the Airtable table
-        formula = f"{{Bill Text}} = '{url}'"
+    def check_url_in_airtable(self, url, category):
+        # Search for the URL in the Airtable table using the correct formula syntax
+        formula = f"{{{category}}} = '{url}'"
         records = self.table.all(formula=formula)
         
         if records:
