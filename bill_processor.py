@@ -2,6 +2,7 @@ import re
 import datetime
 from bs4 import BeautifulSoup
 from gpt_questions import ChatGPTQuestionnaire
+from legiscan_processor import LegiScanProcessor
 
 
 class BillProcessor:
@@ -15,6 +16,7 @@ class BillProcessor:
         self.bill_id = ""
         self.bill = ""
         self.questionnaire = ChatGPTQuestionnaire(chat_client)
+        self.legiscan_processor = LegiScanProcessor(indigenous_db)
 
     def strip_html_tags(self, html_content):
         soup = BeautifulSoup(html_content, "html.parser")
@@ -72,56 +74,26 @@ class BillProcessor:
 
         # Extract sponsors
         bill_sponsors = ', '.join([f"{s['role']} {s['name']} ({s['party']}) - District {s['district']}" for s in self.bill.get('sponsors', [])])
-        self.indigenous_sponsors = self.identify_indigenous_sponsors(bill_sponsors, self.indigenous_db)
+        self.indigenous_sponsors = self.legiscan_processor.identify_indigenous_sponsors(bill_sponsors)
 
         # Initialize all the return values with default None values to ensure there are no missing values
         chat_summary = self.questionnaire.ask_summary(decoded_text) if decoded_text else None
-        gender_inclusive_eval = self.questionnaire.ask_gender_inclusive_eval(decoded_text) if decoded_text else None
+        gender_inclusive_eval = self.questionnaire.ask_gender_inclusive_eval(decoded_text).strip(".") if decoded_text else None
         gender_inclusive_expl = self.questionnaire.ask_gender_inclusive_expl(decoded_text) if decoded_text else None
-        mechanisms_eval = self.questionnaire.ask_mechanisms_eval(decoded_text) if decoded_text else None
+        mechanisms_eval = self.questionnaire.ask_mechanisms_eval(decoded_text).strip(".") if decoded_text else None
         mechanisms_expl = self.questionnaire.ask_mechanisms_expl(decoded_text) if decoded_text else None
-        prevention_efforts_eval = self.questionnaire.ask_prevention_efforts_eval(decoded_text) if decoded_text else None
+        prevention_efforts_eval = self.questionnaire.ask_prevention_efforts_eval(decoded_text).strip(".") if decoded_text else None
         prevention_efforts_expl = self.questionnaire.ask_prevention_efforts_expl(decoded_text) if decoded_text else None
         centering_indigenous_voices = self.questionnaire.ask_centering_indigenous_voices(decoded_text, self.indigenous_sponsors) if decoded_text else None
-        survivor_relative_input_eval = self.questionnaire.ask_survivor_relative_input_eval(decoded_text) if decoded_text else None
+        survivor_relative_input_eval = self.questionnaire.ask_survivor_relative_input_eval(decoded_text).strip(".") if decoded_text else None
         categories_eval = self.questionnaire.ask_categories_eval(decoded_text) if decoded_text else None
         uic_pros = self.questionnaire.ask_uic_pros(decoded_text) if decoded_text else None
         uic_cons = self.questionnaire.ask_uic_cons(decoded_text) if decoded_text else None
 
-        # Debug: Print all values to see if any are missing or None
-        print(f"bill_id: {self.bill_id}")
-        print(f"decoded_text: {decoded_text}")
-        print(f"chat_summary: {chat_summary}")
-        print(f"gender_inclusive_eval: {gender_inclusive_eval}")
-        print(f"gender_inclusive_expl: {gender_inclusive_expl}")
-        print(f"mechanisms_eval: {mechanisms_eval}")
-        print(f"mechanisms_expl: {mechanisms_expl}")
-        print(f"prevention_efforts_eval: {prevention_efforts_eval}")
-        print(f"prevention_efforts_expl: {prevention_efforts_expl}")
-        print(f"centering_indigenous_voices: {centering_indigenous_voices}")
-        print(f"survivor_relative_input_eval: {survivor_relative_input_eval}")
-        print(f"categories_eval: {categories_eval}")
-        print(f"uic_pros: {uic_pros}")
-        print(f"uic_cons: {uic_cons}")
 
         # Correct return statement with all 14 values in the expected order
         return self.bill_id, decoded_text, chat_summary, gender_inclusive_eval, gender_inclusive_expl, mechanisms_eval, mechanisms_expl, prevention_efforts_eval, prevention_efforts_expl, centering_indigenous_voices, survivor_relative_input_eval, categories_eval, uic_pros, uic_cons
 
-    def check_bill_status(self, bill_details):
-        """
-        Checks the status of a bill.
-        """
-        if bill_details['bill']['completed'] == 1:
-            return "Passed"
-        else:
-            today = datetime.date.today()
-            session_end_year = bill_details['bill']['session']['year_end']
-            session_end_date = datetime.date(session_end_year, 12, 31)
-
-            if today > session_end_date:
-                return "Failed"
-            else:
-                return "Pending"
 
     def parse_response(self, text):
         # Normalize text to simplify matching
@@ -147,23 +119,12 @@ class BillProcessor:
 
 
 
-    def identify_indigenous_sponsors(self, sponsors, indigenous_db):
-        sponsors = [name.strip() for name in sponsors.split(',')]
-        indigenous_sponsors = []
-
-        for sponsor in sponsors:
-            print(sponsor)
-            print(indigenous_db.is_indigenous_sponsor(sponsor))
-            if indigenous_db.is_indigenous_sponsor(sponsor):
-                indigenous_sponsors.append(sponsor)
-        return indigenous_sponsors
-
-
     def parse_bill_object(self, bill_details, bill, bill_text, bill_text_url, chat_response, gender_inclusive_response, gender_inclusive_explanation, mechanisms_eval,  mechanisms_expl, prevention_efforts_eval, prevention_efforts_expl, centering_indigenous_voices, survivor_relative_input_eval, categories_eval, uic_pros, uic_cons):
         
         #get_bill_details = self.api_client.get_bill_details(bill_id)
 
-        bill_passed_status = self.check_bill_status(bill_details)  # For example usage
+        #bill_passed_status = self.check_bill_status(bill_details)  # For example usage
+        bill_passed_status = self.legiscan_processor.check_bill_status(bill_details)  # For example usage
 
 
         
