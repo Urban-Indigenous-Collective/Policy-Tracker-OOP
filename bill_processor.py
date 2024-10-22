@@ -95,96 +95,35 @@ class BillProcessor:
         return self.bill_id, decoded_text, chat_summary, gender_inclusive_eval, gender_inclusive_expl, mechanisms_eval, mechanisms_expl, prevention_efforts_eval, prevention_efforts_expl, centering_indigenous_voices, survivor_relative_input_eval, categories_eval, uic_pros, uic_cons
 
 
-    def parse_response(self, text):
-        # Normalize text to simplify matching
-        lower_text = text.lower()
-        
-        # Check for explicit mentions of "yes," "somewhat," or "no"
-        if " yes" in lower_text or lower_text.endswith("yes"):
-            return "Yes"
-        elif " somewhat" in lower_text or lower_text.endswith("somewhat"):
-            return "Somewhat"
-        elif " no" in lower_text or lower_text.endswith("no"):
-            return "No"
-        
-        # If none of the explicit keywords are found, you might add more sophisticated logic here
-        # For now, we'll return a default response indicating uncertainty
-
-        # Example usage
-        text = "It appears that the legislation does involve input from MMIP survivors or relatives, as it discusses the establishment of a study committee with members who are of indigenous descent or who actively work on issues relating to indigenous peoples. Therefore, the level of input from MMIP survivors or relatives in this legislation is Yes."
-        print(text)
-
-
-        return "Uncertain"
-
-
-
     def parse_bill_object(self, bill_details, bill, bill_text, bill_text_url, chat_response, gender_inclusive_response, gender_inclusive_explanation, mechanisms_eval,  mechanisms_expl, prevention_efforts_eval, prevention_efforts_expl, centering_indigenous_voices, survivor_relative_input_eval, categories_eval, uic_pros, uic_cons):
-        
-        #get_bill_details = self.api_client.get_bill_details(bill_id)
+            
+        # Use the LegiScanProcessor to get the bill status
+        bill_passed_status = self.legiscan_processor.check_bill_status(bill_details)
 
-        #bill_passed_status = self.check_bill_status(bill_details)  # For example usage
-        bill_passed_status = self.legiscan_processor.check_bill_status(bill_details)  # For example usage
+        # Use the LegiScanProcessor to get chamber details
+        chamber = self.legiscan_processor.get_chamber_details(bill)
 
+        # Use the LegiScanProcessor to get the latest action details
+        chamber_details = self.legiscan_processor.get_latest_action(bill)
 
-        
-        status_codes = {
-            0: "Pre-filed or pre-introduction",
-            1: "Introduced",
-            2: "Engrossed",
-            3: "Enrolled",
-            4: "Passed",
-            5: "Vetoed",
-            6: "Failed Limited support based on state",
-            7: "Override Progress",
-            8: "Chaptered Progress",
-            9: "Refer Progress",
-            10: "Report Pass Progress",
-            11: "Report DNP Progress",
-            12: "Draft Progress"
-        }
+        # Use the LegiScanProcessor to get the bill link
+        link = self.legiscan_processor.get_bill_link(bill)
 
-    # Extract chamber from the first vote
-        # Assuming 'bill' is the JSON object containing the bill information
-        current_body_short = bill.get('body', 'N/A')
+        # Define bill progression status
+        status_codes = self.legiscan_processor.status_codes
 
-        # Map the short code to the full name of the chamber
-        chamber_full_names = {
-            'A': 'House',  # Assuming 'A' stands for Assembly --> Standardize lower chamber to House
-            'S': 'Senate',
-            'H': 'House',  # Added this line to handle cases where the current_body is 'H'
-            'L': 'Legislative Body',  # Assuming 'U' could be used for unicameral (e.g., Nebraska)
-            'N/A': 'Not Available'  # Handle cases where chamber information is not available
-        }
-
-        # Get the full name of the chamber
-        chamber = chamber_full_names.get(current_body_short, 'Unknown')  # Default to 'Unknown' if the chamber is not recognized
-
-        print(chamber)
-
-        # Extract latest action from the history
-        history = bill.get('history', [])
-        chamber_details = 'N/A'
-        if history:
-            latest_action = history[-1]  # Get the last action in the history
-            action_text = latest_action.get('action', 'N/A')
-            action_chamber = latest_action.get('chamber', 'N/A')
-            action_date = latest_action.get('date', 'N/A')
-            chamber_details = f"{action_date} - {action_chamber}: {action_text}"
-
-        link = bill.get('url', 'N/A')  # Assuming 'url' is the correct field
-
+        # Construct the bill data dictionary
         bill_data = {
             'State': bill['state'],
             'Title': bill['title'],
             'Bill Number': bill['bill_number'],
-            'Status': bill_passed_status,  # This line is added
-            'Progression': status_codes.get(bill['status'], 'Unknown Status'),
+            'Status': bill_passed_status,  # Get status from the processor
+            'Progression': status_codes.get(bill['status'], 'Unknown Status'),  # Use status code mapping from processor
 
-            'Chamber': chamber,
-            'Chamber Details': chamber_details,
+            'Chamber': chamber,  # Get chamber name
+            'Chamber Details': chamber_details,  # Get latest action details
 
-            'Bill Overview': link,
+            'Bill Overview': link,  # Get bill link
             'Bill Text': bill_text_url,
             'Optional Link': "",
 
@@ -212,6 +151,5 @@ class BillProcessor:
             'Categories': categories_eval,
             'Last Update': bill['status_date'],
         }
-
 
         return bill_data
