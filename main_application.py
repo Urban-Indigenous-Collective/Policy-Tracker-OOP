@@ -220,26 +220,16 @@ class MainApplication:
     def process_single_url(self, url, doc_id=None):
         try:
             print("Processing single URL!")
-            # Call summarize_bill_text, which now stores data in compiled_bill
-            self.bill_processor.summarize_bill_text(url, doc_id=doc_id)
-            bill_id = self.bill_processor.compiled_bill.get('bill_id')
-            print(f"Bill ID returned from summarize_bill text: {bill_id}")
-
-            # Proceed if bill_id is valid
-            if isinstance(bill_id, int):
-                print(f"Bill ID before final parsing bill object: {bill_id}")
-
-                # Ensure the compiled_bill includes necessary data
-                if 'bill' in self.bill_processor.compiled_bill:
-                    # Call parse_bill_object with no arguments
-                    bill_data = self.bill_processor.parse_bill_object()
-                    return bill_data
-                else:
-                    return {'url': url, 'error': "Bill data missing in compiled_bill."}
+            # Call process_bill, which runs through all steps
+            success, message = self.bill_processor.process_bill(url, doc_id=doc_id)
+            if success:
+                bill_data = self.bill_processor.compiled_bill.get('bill_data')
+                print("Bill processing completed successfully.")
+                return bill_data
             else:
-                print(bill_id)
-                return {'url': url, 'error': f"Invalid bill ID: {bill_id}"}
-
+                error_msg = self.bill_processor.compiled_bill.get('error', 'Unknown error')
+                print(f"Error: {error_msg}")
+                return {'url': url, 'error': error_msg}
         except Exception as e:
             # Handle any exception
             print(f"Error processing URL {url}: {e}")
