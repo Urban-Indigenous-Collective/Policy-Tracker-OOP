@@ -27,30 +27,45 @@ class BillProcessor:
         """
         Extracts bill ID from a given URL.
         """
+        print(f"Extracting bill ID from URL: {url}")
         match = re.search(r'/id/(\d+)', url)
-        return match.group(1) if match else None
+        if match:
+            print(f"Found bill ID: {match.group(1)}")
+            return match.group(1)
+        else:
+            print("No bill ID found in URL.")
+            return None
 
-    def get_bill_id_and_text(self, bill_id):
+    def get_bill_id_and_text(self, bill_id, url=None):
         """
-        Fetches the bill text data using the bill ID and stores the document ID.
+        Fetches the bill text data using the bill ID and stores the document ID. If a document ID is present in the provided URL, it uses that instead.
         """
-        # Step 1: Fetch the bill details to find the document ID
-        bill_details = self.api_client.get_bill_details(bill_id)
+        # Step 1: Check if the URL contains a document ID
+        if url:
+            doc_id_from_url = self.extract_bill_id(url)
+            if doc_id_from_url:
+                print(f"Using provided document ID from URL: {doc_id_from_url}")
+                self.doc_id = doc_id_from_url
+            else:
+                print(f"No document ID found in URL, proceeding with fetched bill details.")
+        else:
+            print("No URL provided, proceeding with fetched bill details.")
         
-        # Print the bill details for debugging
+        # Step 2: Fetch the bill details to find the document ID if not using the URL-based doc ID
+        if not hasattr(self, 'doc_id') or not self.doc_id:
+            bill_details = self.api_client.get_bill_details(bill_id)
+            
+            # Check if bill_details contains the expected nested 'bill' and 'texts' keys
+            if not bill_details or 'bill' not in bill_details or 'texts' not in bill_details['bill']:
+                print("Error: Bill text data not available or no documents found.")
+                return "Error: Bill text data not available", None
 
-        # Check if bill_details contains the expected nested 'bill' and 'texts' keys
-        if not bill_details or 'bill' not in bill_details or 'texts' not in bill_details['bill']:
-            print("Error: Bill text data not available or no documents found.")
-            return "Error: Bill text data not available", None
+            # Extract the last document entry and store the document ID
+            last_doc = bill_details['bill']['texts'][-1]
+            self.doc_id = last_doc.get('doc_id')
+            print(f"Retrieved document ID from bill details: {self.doc_id}")
 
-        # Extract the last document entry and store the document ID
-        last_doc = bill_details['bill']['texts'][-1]
-        self.doc_id = last_doc.get('doc_id')
-
-        print(f"Retrieved document ID: {self.doc_id}")
-        
-        # Step 2: Fetch the actual bill text using the document ID
+        # Step 3: Fetch the actual bill text using the determined document ID
         bill_text_data = self.api_client.get_bill_text(self.doc_id)
         
         if not bill_text_data or 'doc' not in bill_text_data:
@@ -78,7 +93,7 @@ class BillProcessor:
             print("Error: Document format not supported or missing.")
             return "Error: Document format not supported or missing", None
 
-
+            
     def summarize_bill_text(self, legiscan_url):
         """
         Retrieves and processes bill text from LegiScan.
@@ -91,7 +106,7 @@ class BillProcessor:
 
         print(f"Bill ID sent to get bill text: {self.bill_id}")
         # Retrieve the bill text
-        decoded_text = self.get_bill_id_and_text(self.bill_id)
+        decoded_text = self.get_bill_id_and_text(self.bill_id, legiscan_url)
 
         print(f"Bill ID sent to API for details: {self.bill_id}")
         # Retrieve the bill details
