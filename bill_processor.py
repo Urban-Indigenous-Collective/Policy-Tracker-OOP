@@ -19,10 +19,6 @@ class BillProcessor:
         self.questionnaire = ChatGPTQuestionnaire(chat_client)
         self.legiscan_processor = LegiScanProcessor(indigenous_db, self.api_client)
 
-    def strip_html_tags(self, html_content):
-        soup = BeautifulSoup(html_content, "html.parser")
-        return soup.get_text()
-
             
     def summarize_bill_text(self, legiscan_url, doc_id=None):
         """

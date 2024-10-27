@@ -1,6 +1,8 @@
 import io
 import base64
 import PyPDF2
+from bs4 import BeautifulSoup
+
 
 class DocumentProcessor:
 
@@ -31,3 +33,10 @@ class DocumentProcessor:
             if text:
                 decoded_text += text + "\n"
         return decoded_text
+
+    def strip_html_tags(self, html_content):
+        """
+        Utility function to strip HTML tags from text.
+        """
+        soup = BeautifulSoup(html_content, "html.parser")
+        return soup.get_text()
