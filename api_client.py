@@ -26,7 +26,7 @@ class APIClient:
             return "Invalid Bill ID"
 
         url = f'https://api.legiscan.com/?key={self.api_key}&op=getBill&id={bill_id}'
-        print("Printing from inside Legiscan API call" + url)
+        print(f"Printing from inside Legiscan API call: {url}")
         response = requests.get(url)
         if response.status_code == 200:
             return response.json()

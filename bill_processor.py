@@ -37,38 +37,53 @@ class BillProcessor:
         # Step 1: Fetch the bill details to find the document ID
         bill_details = self.api_client.get_bill_details(bill_id)
         
-        # Check if bill_details is valid
-        if not bill_details or 'texts' not in bill_details or not bill_details['texts']:
+        # Print the bill details for debugging
+
+        # Check if bill_details contains the expected nested 'bill' and 'texts' keys
+        if not bill_details or 'bill' not in bill_details or 'texts' not in bill_details['bill']:
+            print("Error: Bill text data not available or no documents found.")
             return "Error: Bill text data not available", None
 
-        # Extract the first document entry and store the document ID
-        first_doc = bill_details['texts'][0]
-        self.doc_id = first_doc.get('doc_id')
+        # Extract the last document entry and store the document ID
+        last_doc = bill_details['bill']['texts'][-1]
+        self.doc_id = last_doc.get('doc_id')
+
+        print(f"Retrieved document ID: {self.doc_id}")
         
-        # Now fetch the actual bill text using the document ID
+        # Step 2: Fetch the actual bill text using the document ID
         bill_text_data = self.api_client.get_bill_text(self.doc_id)
         
         if not bill_text_data or 'doc' not in bill_text_data:
+            print("Error: Bill text data not available or document missing.")
             return "Error: Bill text data not available", None
 
         # Process the document based on its MIME type
-        if bill_text_data.get("mime") == "text/html":
+        mime_type = bill_text_data.get("mime")
+        print(f"MIME type of the document: {mime_type}")
+
+        if mime_type == "text/html":
+            # Decode and strip HTML tags
             html_text = self.document_processor.decode_base64(bill_text_data["doc"])
-            self.decoded_text = html_text.decode('latin-1')
+            self.decoded_text = html_text.decode('latin-1')  # Ensure correct decoding
             self.decoded_text = self.strip_html_tags(self.decoded_text)
-            return self.decoded_text
-        elif bill_text_data.get("mime") == "application/pdf":
+            return self.decoded_text, self.doc_id
+
+        elif mime_type == "application/pdf":
+            # Decode and extract text from PDF
             pdf_data = self.document_processor.decode_base64(bill_text_data['doc'])
             self.decoded_text = self.document_processor.extract_text_from_pdf(pdf_data)
-            return self.decoded_text
+            return self.decoded_text, self.doc_id
+
         else:
+            print("Error: Document format not supported or missing.")
             return "Error: Document format not supported or missing", None
+
 
     def summarize_bill_text(self, legiscan_url):
         """
         Retrieves and processes bill text from LegiScan.
         """
-        # Retrieve the bill ID or fetch the latest bill ID if missing
+        # Check for the doc ID or fetch the latest bill ID if missing
         self.bill_id = self.legiscan_processor.process_legiscan_url(legiscan_url)
         print(f"Bill ID returned from initial fetch: {self.bill_id}")
         if not self.bill_id:
