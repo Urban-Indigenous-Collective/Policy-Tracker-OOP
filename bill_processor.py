@@ -36,6 +36,7 @@ class BillProcessor:
             print("No bill ID found in URL.")
             return None
 
+
     def get_bill_id_and_text(self, bill_id, doc_id=None):
         """
         Fetches the bill text data using the bill ID and stores the document ID. If a document ID is provided, it uses that instead.
