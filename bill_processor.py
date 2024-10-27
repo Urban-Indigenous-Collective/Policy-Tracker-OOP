@@ -18,6 +18,7 @@ class BillProcessor:
         self.doc_id = ""
         self.questionnaire = ChatGPTQuestionnaire(chat_client)
         self.legiscan_processor = LegiScanProcessor(indigenous_db, self.api_client)
+        self.compiled_bill = {}
 
     def get_legiscan_text(self, legiscan_url, doc_id=None):
         """
@@ -26,6 +27,12 @@ class BillProcessor:
         decoded_text, bill_id, doc_id = self.legiscan_processor.get_legiscan_text(
             legiscan_url, doc_id=doc_id, document_processor=self.document_processor)
         
+        # Store results in compiled_bill
+        self.compiled_bill['decoded_text'] = decoded_text
+        self.compiled_bill['bill_id'] = bill_id
+        self.compiled_bill['doc_id'] = doc_id
+        self.compiled_bill['bill_text_url'] = legiscan_url
+
         return decoded_text, bill_id, doc_id
 
     def get_bill_details(self, bill_id):
@@ -55,6 +62,19 @@ class BillProcessor:
         status_codes = self.legiscan_processor.status_codes
         progression_status = status_codes.get(bill.get('status'), 'Unknown Status')
 
+        # Store results in compiled_bill
+        self.compiled_bill.update({
+            'bill_details': bill_details,
+            'bill': bill,
+            'indigenous_sponsors': indigenous_sponsors,
+            'bill_passed_status': bill_passed_status,
+            'chamber': chamber,
+            'chamber_details': chamber_details,
+            'link': link,
+            'progression_status': progression_status,
+            'bill_sponsors': bill_sponsors
+        })
+
         return {
             'bill_details': bill_details,
             'bill': bill,
@@ -78,7 +98,7 @@ class BillProcessor:
 
         print(f"Bill ID sent to API for details: {self.bill_id}")
 
-        # Retrieve the bill details and related info using the updated get_bill_details function
+        # Retrieve the bill details and related info
         bill_info = self.get_bill_details(self.bill_id)
 
         # Update instance variables with extracted data
@@ -86,6 +106,7 @@ class BillProcessor:
         self.indigenous_sponsors = bill_info['indigenous_sponsors']
 
         # Initialize all the return values with default None values to ensure there are no missing values
+        decoded_text = self.compiled_bill['decoded_text']
         chat_summary = self.questionnaire.ask_summary(decoded_text) if decoded_text else None
         gender_inclusive_eval = self.questionnaire.ask_gender_inclusive_eval(decoded_text).strip(".") if decoded_text else None
         gender_inclusive_expl = self.questionnaire.ask_gender_inclusive_expl(decoded_text) if decoded_text else None
@@ -99,56 +120,71 @@ class BillProcessor:
         uic_pros = self.questionnaire.ask_uic_pros(decoded_text) if decoded_text else None
         uic_cons = self.questionnaire.ask_uic_cons(decoded_text) if decoded_text else None
 
-        # Return results
+        # Store the results in compiled_bill
+        self.compiled_bill.update({
+            'chat_summary': chat_summary,
+            'gender_inclusive_eval': gender_inclusive_eval,
+            'gender_inclusive_expl': gender_inclusive_expl,
+            'mechanisms_eval': mechanisms_eval,
+            'mechanisms_expl': mechanisms_expl,
+            'prevention_efforts_eval': prevention_efforts_eval,
+            'prevention_efforts_expl': prevention_efforts_expl,
+            'centering_indigenous_voices': centering_indigenous_voices,
+            'survivor_relative_input_eval': survivor_relative_input_eval,
+            'categories_eval': categories_eval,
+            'uic_pros': uic_pros,
+            'uic_cons': uic_cons
+        })
+
+        # Return results (optional, since data is stored in compiled_bill)
         return self.bill_id, decoded_text, chat_summary, gender_inclusive_eval, gender_inclusive_expl, mechanisms_eval, mechanisms_expl, prevention_efforts_eval, prevention_efforts_expl, centering_indigenous_voices, survivor_relative_input_eval, categories_eval, uic_pros, uic_cons
 
-        
-    def parse_bill_object(self, bill_info, bill_text, bill_text_url, chat_response, gender_inclusive_response, gender_inclusive_explanation, mechanisms_eval, mechanisms_expl, prevention_efforts_eval, prevention_efforts_expl, centering_indigenous_voices, survivor_relative_input_eval, categories_eval, uic_pros, uic_cons):
+    def parse_bill_object(self):
         """
         Parses the bill object to create a dictionary containing all necessary information.
         """
-
-        # Extract the bill from bill_info
+        # Use the data stored in compiled_bill
+        bill_info = self.compiled_bill
         bill = bill_info['bill']
-        
+
         # Construct the bill data dictionary
         bill_data = {
-            'State': bill['state'],
-            'Title': bill['title'],
-            'Bill Number': bill['bill_number'],
-            'Status': bill_info['bill_passed_status'],  # Get status from the processor
-            'Progression': bill_info['progression_status'],  # Use status code mapping from processor
+            'State': bill.get('state', ''),
+            'Title': bill.get('title', ''),
+            'Bill Number': bill.get('bill_number', ''),
+            'Status': bill_info.get('bill_passed_status', ''),  # Get status from the processor
+            'Progression': bill_info.get('progression_status', ''),  # Use status code mapping from processor
 
-            'Chamber': bill_info['chamber'],  # Get chamber name
-            'Chamber Details': bill_info['chamber_details'],  # Get latest action details
+            'Chamber': bill_info.get('chamber', ''),  # Get chamber name
+            'Chamber Details': bill_info.get('chamber_details', ''),  # Get latest action details
 
-            'Bill Overview': bill_info['link'],  # Get bill link
-            'Bill Text': bill_text_url,
+            'Bill Overview': bill_info.get('link', ''),  # Get bill link
+            'Bill Text': bill_info.get('bill_text_url', ''),
             'Optional Link': "",
 
-            'Summary': chat_response,
+            'Summary': bill_info.get('chat_summary', ''),
 
-            'UIC Pros': uic_pros,
-            'UIC Cons': uic_cons,           
+            'UIC Pros': bill_info.get('uic_pros', ''),
+            'UIC Cons': bill_info.get('uic_cons', ''),
 
-            'Mechanisms for Evaluation?': mechanisms_eval,
-            'Mechanisms for Evaluation': mechanisms_expl,
+            'Mechanisms for Evaluation?': bill_info.get('mechanisms_eval', ''),
+            'Mechanisms for Evaluation': bill_info.get('mechanisms_expl', ''),
 
-            'Gender Inclusive Language?': gender_inclusive_response,
-            'Gender Inclusive Explanation': gender_inclusive_explanation,
+            'Gender Inclusive Language?': bill_info.get('gender_inclusive_eval', ''),
+            'Gender Inclusive Explanation': bill_info.get('gender_inclusive_expl', ''),
 
-            'Prevention Efforts?': prevention_efforts_eval,
-            'Prevention Efforts': prevention_efforts_expl,
+            'Prevention Efforts?': bill_info.get('prevention_efforts_eval', ''),
+            'Prevention Efforts': bill_info.get('prevention_efforts_expl', ''),
 
-            'Level of Survivor / Relative Input': survivor_relative_input_eval,
-            'Centering of Indigenous Voices': centering_indigenous_voices,
+            'Level of Survivor / Relative Input': bill_info.get('survivor_relative_input_eval', ''),
+            'Centering of Indigenous Voices': bill_info.get('centering_indigenous_voices', ''),
 
-            'Sponsors': ', '.join([f"{s['role']} {s['name']} ({s['party']}) - District {s['district']}" for s in bill['sponsors']]),
-            'Indigenous Sponsorship': ', '.join(bill_info['indigenous_sponsors']),
+            'Sponsors': bill_info.get('bill_sponsors', ''),
+            'Indigenous Sponsorship': ', '.join(bill_info.get('indigenous_sponsors', [])),
 
-            'Session': bill['session']['session_title'],
-            'Categories': categories_eval,
-            'Last Update': bill['status_date'],
+            'Session': bill.get('session', {}).get('session_title', ''),
+            'Categories': bill_info.get('categories_eval', ''),
+            'Last Update': bill.get('status_date', ''),
         }
 
         return bill_data
