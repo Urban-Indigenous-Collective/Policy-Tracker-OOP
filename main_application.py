@@ -132,7 +132,7 @@ class MainApplication:
 
 
 
-    
+        
     def process_urls_for_web(self, urls_string):
         urls = [url.strip() for url in urls_string.split(',')]
         total_urls = len(urls)
@@ -148,19 +148,17 @@ class MainApplication:
             # Log URL processing
             print(f"Processing URL: {url}")
 
-            # Step 1: Check if the URL has a bill ID using LegiScan processing functions
-            bill_id = self.legiscan_processor.extract_bill_id(url)
-            
-            # Step 2: If a bill ID is found, fetch the bill text details to get the bill_id and then use it to get the full bill URL
-            if bill_id:
-                # Get bill text details using the extracted bill ID
-                bill_text_details = self.api_client.get_bill_text(bill_id)
+            # Step 1: Check if the URL has a doc ID using LegiScan processing functions
+            doc_id = self.legiscan_processor.extract_doc_id(url)  # Assuming extract_doc_id method exists
+
+            # Step 2: If a doc ID is found, fetch the full bill URL
+            if doc_id:
+                # Get bill text details using the extracted doc ID
+                bill_text_details = self.api_client.get_bill_text(doc_id)
                 extracted_bill_id = bill_text_details.get('bill_id')
 
                 print(f"Extracted bill ID: {extracted_bill_id}")
                 print(f"Extracted text field: {bill_text_details.get('state_link')}")
-                #print(f"Returned json object: {bill_text_details}")
-
 
                 if extracted_bill_id:
                     # Fetch bill details using the extracted bill_id
@@ -172,9 +170,10 @@ class MainApplication:
                     print(f"No valid bill ID found in bill text details. Using original URL.")
                     full_url = url
             else:
-                # If no bill ID is found, use the original URL as the full URL
+                # If no doc ID is found, use the original URL as the full URL
                 full_url = url
-                print(f"No bill ID found in URL. Using original URL: {full_url}")
+                print(f"No doc ID found in URL. Using original URL: {full_url}")
+                doc_id = None  # Ensure doc_id is None when not found
 
             # Step 3: Check if the full URL is already in Airtable in the Bill Overview (Link) category
             is_duplicate, record_data = self.airtable_client.check_url_in_airtable(full_url, category="Bill Overview (Link)")
@@ -197,7 +196,7 @@ class MainApplication:
                     'Bill Text': bill_text_url,
                 })
             else:
-                result = self.process_single_url(full_url)
+                result = self.process_single_url(full_url, doc_id=doc_id)
                 # Whether it's successful data or an error message, append it to processed_data
                 processed_data.append(result)
 
@@ -218,29 +217,46 @@ class MainApplication:
     def get_progress(self):
         return self.progress
 
-    def process_single_url(self, url):
+    def process_single_url(self, url, doc_id=None):
         try:
             # Attempt to unpack the expected number of values
             print("Processing single url!")
-            bill_id, bill_text, chat_summary, gender_inclusive_eval, gender_inclusive_expl, mechanisms_eval, mechanisms_expl, prevention_efforts_eval, prevention_efforts_expl, centering_indigenous_voices, survivor_relative_input_eval, categories_eval, uic_pros, uic_cons = self.bill_processor.summarize_bill_text(url)
+            bill_id, bill_text, chat_summary, gender_inclusive_eval, gender_inclusive_expl, mechanisms_eval, mechanisms_expl, prevention_efforts_eval, prevention_efforts_expl, centering_indigenous_voices, survivor_relative_input_eval, categories_eval, uic_pros, uic_cons = self.bill_processor.summarize_bill_text(url, doc_id=doc_id)
             print(f"Bill ID returned from summarize bill text: {bill_id}")
 
             # Proceed if the correct number of items are unpacked
             if isinstance(bill_id, int):
                 bill_details = self.api_client.get_bill_details(bill_id)
                 print(f"Bill ID before final parsing bill object: {bill_id}")
-                
+
                 if 'bill' in bill_details:
-                    bill_data = self.bill_processor.parse_bill_object(bill_details, bill_details['bill'], bill_text, url, chat_summary, gender_inclusive_eval, gender_inclusive_expl, mechanisms_eval, mechanisms_expl, prevention_efforts_eval, prevention_efforts_expl, centering_indigenous_voices, survivor_relative_input_eval, categories_eval, uic_pros, uic_cons)
+                    bill_data = self.bill_processor.parse_bill_object(
+                        bill_details,
+                        bill_details['bill'],
+                        bill_text,
+                        url,
+                        chat_summary,
+                        gender_inclusive_eval,
+                        gender_inclusive_expl,
+                        mechanisms_eval,
+                        mechanisms_expl,
+                        prevention_efforts_eval,
+                        prevention_efforts_expl,
+                        centering_indigenous_voices,
+                        survivor_relative_input_eval,
+                        categories_eval,
+                        uic_pros,
+                        uic_cons
+                    )
                     return bill_data
             else:
                 print(bill_id)
-                
+                return {'url': url, 'error': f"Invalid bill ID: {bill_id}"}
+
         except ValueError as e:
             # Handle the error if the unpacking fails
             print(f"Error processing URL {url}: {e}")
             return {'url': url, 'error': f"Error processing URL: {str(e)}"}
-
 
 
 # Main execution

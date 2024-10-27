@@ -36,25 +36,18 @@ class BillProcessor:
             print("No bill ID found in URL.")
             return None
 
-    def get_bill_id_and_text(self, bill_id, url=None):
+    def get_bill_id_and_text(self, bill_id, doc_id=None):
         """
-        Fetches the bill text data using the bill ID and stores the document ID. If a document ID is present in the provided URL, it uses that instead.
+        Fetches the bill text data using the bill ID and stores the document ID. If a document ID is provided, it uses that instead.
         """
-        # Step 1: Check if the URL contains a document ID
-        if url:
-            doc_id_from_url = self.extract_bill_id(url)
-            if doc_id_from_url:
-                print(f"Using provided document ID from URL: {doc_id_from_url}")
-                self.doc_id = doc_id_from_url
-            else:
-                print(f"No document ID found in URL, proceeding with fetched bill details.")
+        # Step 1: Use the provided doc_id if available
+        if doc_id:
+            print(f"Using provided document ID: {doc_id}")
+            self.doc_id = doc_id
         else:
-            print("No URL provided, proceeding with fetched bill details.")
-        
-        # Step 2: Fetch the bill details to find the document ID if not using the URL-based doc ID
-        if not hasattr(self, 'doc_id') or not self.doc_id:
+            # Fetch the bill details to find the document ID
             bill_details = self.api_client.get_bill_details(bill_id)
-            
+
             # Check if bill_details contains the expected nested 'bill' and 'texts' keys
             if not bill_details or 'bill' not in bill_details or 'texts' not in bill_details['bill']:
                 print("Error: Bill text data not available or no documents found.")
@@ -65,9 +58,10 @@ class BillProcessor:
             self.doc_id = last_doc.get('doc_id')
             print(f"Retrieved document ID from bill details: {self.doc_id}")
 
-        # Step 3: Fetch the actual bill text using the determined document ID
+        print(f"Getting text with doc id: {self.doc_id}")
+        # Step 2: Fetch the actual bill text using the determined document ID
         bill_text_data = self.api_client.get_bill_text(self.doc_id)
-        
+
         if not bill_text_data or 'doc' not in bill_text_data:
             print("Error: Bill text data not available or document missing.")
             return "Error: Bill text data not available", None
@@ -94,25 +88,32 @@ class BillProcessor:
             return "Error: Document format not supported or missing", None
 
             
-    def summarize_bill_text(self, legiscan_url):
+    def summarize_bill_text(self, legiscan_url, doc_id=None):
         """
         Retrieves and processes bill text from LegiScan.
         """
-        # Check for the doc ID or fetch the latest bill ID if missing
-        self.bill_id = self.legiscan_processor.process_legiscan_url(legiscan_url)
-        print(f"Bill ID returned from initial fetch: {self.bill_id}")
-        if not self.bill_id:
-            return "Invalid or Unavailable LegiScan URL", None
+        # Use the passed-in doc_id if available
+        print(f"Retrieved doc ID: {doc_id}")
+        if doc_id:
+            # Get bill text details using the doc_id
+            bill_text_details = self.api_client.get_bill_text(doc_id)
+            self.bill_id = bill_text_details.get('bill_id')
+            print(f"Bill ID retrieved from bill text details: {self.bill_id}")
+            if not self.bill_id:
+                return "Invalid or Unavailable LegiScan URL", None
+        else:
+            # Retrieve bill_id from the URL
+            self.bill_id = self.legiscan_processor.process_legiscan_url(legiscan_url)
+            print(f"Bill ID returned from initial fetch: {self.bill_id}")
+            if not self.bill_id:
+                return "Invalid or Unavailable LegiScan URL", None
 
-        print(f"Bill ID sent to get bill text: {self.bill_id}")
-        # Retrieve the bill text
-        decoded_text = self.get_bill_id_and_text(self.bill_id, legiscan_url)
+        # Retrieve the bill text using the provided doc_id or fetch it
+        decoded_text, self.doc_id = self.get_bill_id_and_text(self.bill_id, doc_id=doc_id)
 
         print(f"Bill ID sent to API for details: {self.bill_id}")
         # Retrieve the bill details
         bill_details = self.api_client.get_bill_details(self.bill_id)
-
-
 
         # Ensure bill is available in the details
         self.bill = bill_details.get('bill', {})
