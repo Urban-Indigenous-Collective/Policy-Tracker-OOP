@@ -31,9 +31,9 @@ class LegiScanProcessor:
             'N/A': 'Not Available'  # Handle cases where chamber info is missing
         }
 
-    def extract_bill_id(self, url):
+    def extract_doc_id(self, url):
         """
-        Extracts bill ID from a given URL.
+        Extracts doc ID from a given URL.
         """
         print(f"Extracting bill ID from URL: {url}")
         match = re.search(r'/id/(\d+)', url)
