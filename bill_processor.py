@@ -10,7 +10,7 @@ class BillProcessor:
         self.api_client = api_client
         self.chat_client = chat_client
         self.document_processor = document_processor
-        self.indigenous_sponsosors = ""
+        self.indigenous_sponsors = ""
         self.indigenous_db = indigenous_db
         self.decoded_text = ""
         self.bill_id = ""
@@ -19,28 +19,71 @@ class BillProcessor:
         self.questionnaire = ChatGPTQuestionnaire(chat_client)
         self.legiscan_processor = LegiScanProcessor(indigenous_db, self.api_client)
 
-            
+    def get_legiscan_text(self, legiscan_url, doc_id=None):
+        """
+        Retrieves bill text and relevant identifiers from LegiScan.
+        """
+        decoded_text, bill_id, doc_id = self.legiscan_processor.get_legiscan_text(
+            legiscan_url, doc_id=doc_id, document_processor=self.document_processor)
+        
+        return decoded_text, bill_id, doc_id
+
+    def get_bill_details(self, bill_id):
+        """
+        Retrieves bill details using the bill ID and identifies Indigenous sponsors.
+        """
+        bill_details = self.api_client.get_bill_details(bill_id)
+        bill = bill_details.get('bill', {})
+
+        # Extract sponsors and identify Indigenous sponsors
+        bill_sponsors = ', '.join([f"{s['role']} {s['name']} ({s['party']}) - District {s['district']}" for s in bill.get('sponsors', [])])
+        indigenous_sponsors = self.legiscan_processor.identify_indigenous_sponsors(bill_sponsors)
+
+        # Use the LegiScanProcessor to get the bill status
+        bill_passed_status = self.legiscan_processor.check_bill_status(bill_details)
+
+        # Use the LegiScanProcessor to get chamber details
+        chamber = self.legiscan_processor.get_chamber_details(bill)
+
+        # Use the LegiScanProcessor to get the latest action details
+        chamber_details = self.legiscan_processor.get_latest_action(bill)
+
+        # Use the LegiScanProcessor to get the bill link
+        link = self.legiscan_processor.get_bill_link(bill)
+
+        # Define bill progression status
+        status_codes = self.legiscan_processor.status_codes
+        progression_status = status_codes.get(bill.get('status'), 'Unknown Status')
+
+        return {
+            'bill_details': bill_details,
+            'bill': bill,
+            'indigenous_sponsors': indigenous_sponsors,
+            'bill_passed_status': bill_passed_status,
+            'chamber': chamber,
+            'chamber_details': chamber_details,
+            'link': link,
+            'progression_status': progression_status
+        }
+
     def summarize_bill_text(self, legiscan_url, doc_id=None):
         """
         Retrieves and processes bill text from LegiScan.
         """
         # Call get_legiscan_text to retrieve decoded text and IDs
-        decoded_text, self.bill_id, self.doc_id = self.legiscan_processor.get_legiscan_text(
-            legiscan_url, doc_id=doc_id, document_processor=self.document_processor)
+        decoded_text, self.bill_id, self.doc_id = self.get_legiscan_text(legiscan_url, doc_id=doc_id)
 
         if not self.bill_id:
             return "Invalid or Unavailable LegiScan URL", None
 
         print(f"Bill ID sent to API for details: {self.bill_id}")
-        # Retrieve the bill details
-        bill_details = self.api_client.get_bill_details(self.bill_id)
 
-        # Ensure bill is available in the details
-        self.bill = bill_details.get('bill', {})
+        # Retrieve the bill details and related info using the updated get_bill_details function
+        bill_info = self.get_bill_details(self.bill_id)
 
-        # Extract sponsors
-        bill_sponsors = ', '.join([f"{s['role']} {s['name']} ({s['party']}) - District {s['district']}" for s in self.bill.get('sponsors', [])])
-        self.indigenous_sponsors = self.legiscan_processor.identify_indigenous_sponsors(bill_sponsors)
+        # Update instance variables with extracted data
+        self.bill = bill_info['bill']
+        self.indigenous_sponsors = bill_info['indigenous_sponsors']
 
         # Initialize all the return values with default None values to ensure there are no missing values
         chat_summary = self.questionnaire.ask_summary(decoded_text) if decoded_text else None
@@ -59,35 +102,27 @@ class BillProcessor:
         # Return results
         return self.bill_id, decoded_text, chat_summary, gender_inclusive_eval, gender_inclusive_expl, mechanisms_eval, mechanisms_expl, prevention_efforts_eval, prevention_efforts_expl, centering_indigenous_voices, survivor_relative_input_eval, categories_eval, uic_pros, uic_cons
 
-    def parse_bill_object(self, bill_details, bill, bill_text, bill_text_url, chat_response, gender_inclusive_response, gender_inclusive_explanation, mechanisms_eval,  mechanisms_expl, prevention_efforts_eval, prevention_efforts_expl, centering_indigenous_voices, survivor_relative_input_eval, categories_eval, uic_pros, uic_cons):
-            
-        # Use the LegiScanProcessor to get the bill status
-        bill_passed_status = self.legiscan_processor.check_bill_status(bill_details)
+        
+    def parse_bill_object(self, bill_info, bill_text, bill_text_url, chat_response, gender_inclusive_response, gender_inclusive_explanation, mechanisms_eval, mechanisms_expl, prevention_efforts_eval, prevention_efforts_expl, centering_indigenous_voices, survivor_relative_input_eval, categories_eval, uic_pros, uic_cons):
+        """
+        Parses the bill object to create a dictionary containing all necessary information.
+        """
 
-        # Use the LegiScanProcessor to get chamber details
-        chamber = self.legiscan_processor.get_chamber_details(bill)
-
-        # Use the LegiScanProcessor to get the latest action details
-        chamber_details = self.legiscan_processor.get_latest_action(bill)
-
-        # Use the LegiScanProcessor to get the bill link
-        link = self.legiscan_processor.get_bill_link(bill)
-
-        # Define bill progression status
-        status_codes = self.legiscan_processor.status_codes
-
+        # Extract the bill from bill_info
+        bill = bill_info['bill']
+        
         # Construct the bill data dictionary
         bill_data = {
             'State': bill['state'],
             'Title': bill['title'],
             'Bill Number': bill['bill_number'],
-            'Status': bill_passed_status,  # Get status from the processor
-            'Progression': status_codes.get(bill['status'], 'Unknown Status'),  # Use status code mapping from processor
+            'Status': bill_info['bill_passed_status'],  # Get status from the processor
+            'Progression': bill_info['progression_status'],  # Use status code mapping from processor
 
-            'Chamber': chamber,  # Get chamber name
-            'Chamber Details': chamber_details,  # Get latest action details
+            'Chamber': bill_info['chamber'],  # Get chamber name
+            'Chamber Details': bill_info['chamber_details'],  # Get latest action details
 
-            'Bill Overview': link,  # Get bill link
+            'Bill Overview': bill_info['link'],  # Get bill link
             'Bill Text': bill_text_url,
             'Optional Link': "",
 
@@ -109,7 +144,7 @@ class BillProcessor:
             'Centering of Indigenous Voices': centering_indigenous_voices,
 
             'Sponsors': ', '.join([f"{s['role']} {s['name']} ({s['party']}) - District {s['district']}" for s in bill['sponsors']]),
-            'Indigenous Sponsorship': ', '.join(self.indigenous_sponsors),
+            'Indigenous Sponsorship': ', '.join(bill_info['indigenous_sponsors']),
 
             'Session': bill['session']['session_title'],
             'Categories': categories_eval,
