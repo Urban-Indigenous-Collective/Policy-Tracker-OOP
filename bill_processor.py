@@ -1,6 +1,8 @@
 import re
 import datetime
+import requests
 from bs4 import BeautifulSoup
+from urllib.parse import urlparse
 from gpt_questions import ChatGPTQuestionnaire
 from legiscan_processor import LegiScanProcessor
 
@@ -20,35 +22,101 @@ class BillProcessor:
         self.legiscan_processor = LegiScanProcessor(indigenous_db, self.api_client)
         self.compiled_bill = {}
 
-    def get_legiscan_text(self, legiscan_url, doc_id=None):
+    def get_doc_text(self, url, doc_id=None):
         """
-        Retrieves bill text and relevant identifiers from LegiScan.
+        Retrieves document text and relevant identifiers.
+        Handles both LegiScan URLs and .gov URLs.
         """
         try:
-            decoded_text, bill_id, doc_id = self.legiscan_processor.get_legiscan_text(
-                legiscan_url, doc_id=doc_id, document_processor=self.document_processor)
-            
-            if not bill_id:
-                error_msg = "Invalid or Unavailable LegiScan URL"
-                self.compiled_bill['error'] = error_msg
-                return False, error_msg
+            print(f"Getting document text from URL: {url}")
+            if 'legiscan.com' in url:
+                print("URL identified as LegiScan URL.")
+                # Handle LegiScan URL
+                decoded_text, bill_id, doc_id = self.legiscan_processor.get_legiscan_text(
+                    url, doc_id=doc_id, document_processor=self.document_processor)
+                
+                if not bill_id:
+                    error_msg = "Invalid or Unavailable LegiScan URL"
+                    self.compiled_bill['error'] = error_msg
+                    print(error_msg)
+                    return False, error_msg
 
-            # Store results in compiled_bill
-            self.compiled_bill['decoded_text'] = decoded_text
-            self.compiled_bill['bill_id'] = bill_id
-            self.compiled_bill['doc_id'] = doc_id
-            self.compiled_bill['bill_text_url'] = legiscan_url
+                # Store results in compiled_bill
+                self.compiled_bill['decoded_text'] = decoded_text
+                self.compiled_bill['bill_id'] = bill_id
+                self.compiled_bill['doc_id'] = doc_id
+                self.compiled_bill['bill_text_url'] = url
 
-            return True, "LegiScan text retrieved successfully"
+                print("LegiScan text retrieved successfully.")
+                return True, "LegiScan text retrieved successfully"
+            else:
+                # Parse the URL to get the domain
+                parsed_url = urlparse(url)
+                domain = parsed_url.netloc
+                print(f"Parsed domain: {domain}")
+                if '.gov' in domain:
+                    print("URL identified as .gov URL.")
+                    # Handle .gov URL
+                    response = requests.get(url)
+                    print(f"Response status code: {response.status_code}")
+                    if response.status_code != 200:
+                        error_msg = f"Failed to retrieve .gov URL: HTTP {response.status_code}"
+                        self.compiled_bill['error'] = error_msg
+                        print(error_msg)
+                        return False, error_msg
+
+                    content_type = response.headers.get('Content-Type', '')
+                    print(f"Content-Type: {content_type}")
+                    if 'text/html' in content_type:
+                        # Handle HTML content
+                        print("Processing HTML content.")
+                        decoded_text = self.document_processor.strip_html_tags(response.content)
+                    elif 'application/pdf' in content_type:
+                        # Handle PDF content
+                        print("Processing PDF content.")
+                        decoded_text = self.document_processor.extract_text_from_pdf(response.content)
+                    else:
+                        # Attempt to guess content type based on URL
+                        if url.endswith('.pdf'):
+                            # Handle PDF content
+                            print("URL ends with .pdf, processing as PDF.")
+                            response = requests.get(url)
+                            decoded_text = self.document_processor.extract_text_from_pdf(response.content)
+                        else:
+                            # Default to treating as HTML
+                            print("Defaulting to processing as HTML.")
+                            decoded_text = self.document_processor.strip_html_tags(response.content)
+
+                    # Since it's an executive order, we may not have a bill_id or doc_id
+                    self.compiled_bill['decoded_text'] = decoded_text
+                    self.compiled_bill['bill_id'] = None
+                    self.compiled_bill['doc_id'] = None
+                    self.compiled_bill['bill_text_url'] = url
+
+                    print(".gov document text retrieved successfully.")
+                    return True, ".gov document text retrieved successfully"
+                else:
+                    error_msg = "Unsupported URL format"
+                    self.compiled_bill['error'] = error_msg
+                    print(error_msg)
+                    return False, error_msg
+
         except Exception as e:
-            error_msg = f"Error retrieving LegiScan text: {str(e)}"
+            error_msg = f"Error retrieving document text: {str(e)}"
             self.compiled_bill['error'] = error_msg
+            print(error_msg)
             return False, error_msg
+
 
     def get_bill_details(self, bill_id):
         """
         Retrieves bill details using the bill ID and identifies Indigenous sponsors.
         """
+        if not bill_id:
+            # For .gov URLs, bill_id may be None
+            self.compiled_bill['bill'] = None
+            return True, "No bill details needed for .gov URL"
+
         try:
             bill_details = self.api_client.get_bill_details(bill_id)
             bill = bill_details.get('bill', {})
@@ -151,20 +219,20 @@ class BillProcessor:
         try:
             # Use the data stored in compiled_bill
             bill_info = self.compiled_bill
-            bill = bill_info['bill']
+            bill = bill_info.get('bill') or {}
 
             # Construct the bill data dictionary
             bill_data = {
-                'State': bill.get('state', ''),
-                'Title': bill.get('title', ''),
-                'Bill Number': bill.get('bill_number', ''),
-                'Status': bill_info.get('bill_passed_status', ''),  # Get status from the processor
-                'Progression': bill_info.get('progression_status', ''),  # Use status code mapping from processor
+                'State': bill.get('state', '') or 'Unknown',
+                'Title': bill.get('title', '') or 'Executive Order',
+                'Bill Number': bill.get('bill_number', '') or 'Executive Order',
+                'Status': bill_info.get('bill_passed_status', 'Active'),  # Default to 'Active' for EOs
+                'Progression': bill_info.get('progression_status', 'N/A'),
 
-                'Chamber': bill_info.get('chamber', ''),  # Get chamber name
-                'Chamber Details': bill_info.get('chamber_details', ''),  # Get latest action details
+                'Chamber': bill_info.get('chamber', 'Executive'),
+                'Chamber Details': bill_info.get('chamber_details', ''),
 
-                'Bill Overview': bill_info.get('link', ''),  # Get bill link
+                'Bill Overview': bill_info.get('link', ''),
                 'Bill Text': bill_info.get('bill_text_url', ''),
                 'Optional Link': "",
 
@@ -185,12 +253,12 @@ class BillProcessor:
                 'Level of Survivor / Relative Input': bill_info.get('survivor_relative_input_eval', ''),
                 'Centering of Indigenous Voices': bill_info.get('centering_indigenous_voices', ''),
 
-                'Sponsors': bill_info.get('bill_sponsors', ''),
+                'Sponsors': bill_info.get('bill_sponsors', 'Executive Order'),
                 'Indigenous Sponsorship': ', '.join(bill_info.get('indigenous_sponsors', [])),
 
-                'Session': bill.get('session', {}).get('session_title', ''),
+                'Session': bill.get('session', {}).get('session_title', 'N/A'),
                 'Categories': bill_info.get('categories_eval', ''),
-                'Last Update': bill.get('status_date', ''),
+                'Last Update': bill.get('status_date', datetime.datetime.now().strftime('%Y-%m-%d')),
             }
 
             # Store the final bill data
@@ -200,19 +268,21 @@ class BillProcessor:
         except Exception as e:
             error_msg = f"Error parsing bill object: {str(e)}"
             self.compiled_bill['error'] = error_msg
+            print(error_msg)
             return False, error_msg
 
-    def process_bill(self, legiscan_url, doc_id=None):
+
+    def process_bill(self, url, doc_id=None):
         """
         Processes the bill through each step in order.
         """
-        # Step 1: Get LegiScan Text
-        success, message = self.get_legiscan_text(legiscan_url, doc_id=doc_id)
+        # Step 1: Get Document Text
+        success, message = self.get_doc_text(url, doc_id=doc_id)
         if not success:
             print(message)
             return False, message
 
-        # Step 2: Get Bill Details
+        # Step 2: Get Bill Details (if applicable)
         bill_id = self.compiled_bill.get('bill_id')
         success, message = self.get_bill_details(bill_id)
         if not success:
