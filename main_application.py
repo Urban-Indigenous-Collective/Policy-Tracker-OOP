@@ -219,44 +219,29 @@ class MainApplication:
 
     def process_single_url(self, url, doc_id=None):
         try:
-            # Attempt to unpack the expected number of values
             print("Processing single URL!")
-            bill_id, bill_text, chat_summary, gender_inclusive_eval, gender_inclusive_expl, mechanisms_eval, mechanisms_expl, prevention_efforts_eval, prevention_efforts_expl, centering_indigenous_voices, survivor_relative_input_eval, categories_eval, uic_pros, uic_cons = self.bill_processor.summarize_bill_text(url, doc_id=doc_id)
-            print(f"Bill ID returned from summarize bill text: {bill_id}")
+            # Call summarize_bill_text, which now stores data in compiled_bill
+            self.bill_processor.summarize_bill_text(url, doc_id=doc_id)
+            bill_id = self.bill_processor.compiled_bill.get('bill_id')
+            print(f"Bill ID returned from summarize_bill text: {bill_id}")
 
-            # Proceed if the correct number of items are unpacked
+            # Proceed if bill_id is valid
             if isinstance(bill_id, int):
-                # Retrieve bill details and related information using the new refactored method
-                bill_info = self.bill_processor.get_bill_details(bill_id)
                 print(f"Bill ID before final parsing bill object: {bill_id}")
 
-                # Ensure the bill information includes the 'bill' key before proceeding
-                if 'bill' in bill_info:
-                    # Pass bill_info as the first argument to parse_bill_object
-                    bill_data = self.bill_processor.parse_bill_object(
-                        bill_info,
-                        bill_text,
-                        url,
-                        chat_summary,
-                        gender_inclusive_eval,
-                        gender_inclusive_expl,
-                        mechanisms_eval,
-                        mechanisms_expl,
-                        prevention_efforts_eval,
-                        prevention_efforts_expl,
-                        centering_indigenous_voices,
-                        survivor_relative_input_eval,
-                        categories_eval,
-                        uic_pros,
-                        uic_cons
-                    )
+                # Ensure the compiled_bill includes necessary data
+                if 'bill' in self.bill_processor.compiled_bill:
+                    # Call parse_bill_object with no arguments
+                    bill_data = self.bill_processor.parse_bill_object()
                     return bill_data
+                else:
+                    return {'url': url, 'error': "Bill data missing in compiled_bill."}
             else:
                 print(bill_id)
                 return {'url': url, 'error': f"Invalid bill ID: {bill_id}"}
 
-        except ValueError as e:
-            # Handle the error if the unpacking fails
+        except Exception as e:
+            # Handle any exception
             print(f"Error processing URL {url}: {e}")
             return {'url': url, 'error': f"Error processing URL: {str(e)}"}
 
