@@ -22,95 +22,18 @@ class BillProcessor:
     def strip_html_tags(self, html_content):
         soup = BeautifulSoup(html_content, "html.parser")
         return soup.get_text()
-    
-    def extract_bill_id(self, url):
-        """
-        Extracts bill ID from a given URL.
-        """
-        print(f"Extracting bill ID from URL: {url}")
-        match = re.search(r'/id/(\d+)', url)
-        if match:
-            print(f"Found bill ID: {match.group(1)}")
-            return match.group(1)
-        else:
-            print("No bill ID found in URL.")
-            return None
-
-
-    def get_bill_id_and_text(self, bill_id, doc_id=None):
-        """
-        Fetches the bill text data using the bill ID and stores the document ID. If a document ID is provided, it uses that instead.
-        """
-        # Step 1: Use the provided doc_id if available
-        if doc_id:
-            print(f"Using provided document ID: {doc_id}")
-            self.doc_id = doc_id
-        else:
-            # Fetch the bill details to find the document ID
-            bill_details = self.api_client.get_bill_details(bill_id)
-
-            # Check if bill_details contains the expected nested 'bill' and 'texts' keys
-            if not bill_details or 'bill' not in bill_details or 'texts' not in bill_details['bill']:
-                print("Error: Bill text data not available or no documents found.")
-                return "Error: Bill text data not available", None
-
-            # Extract the last document entry and store the document ID
-            last_doc = bill_details['bill']['texts'][-1]
-            self.doc_id = last_doc.get('doc_id')
-            print(f"Retrieved document ID from bill details: {self.doc_id}")
-
-        print(f"Getting text with doc id: {self.doc_id}")
-        # Step 2: Fetch the actual bill text using the determined document ID
-        bill_text_data = self.api_client.get_bill_text(self.doc_id)
-
-        if not bill_text_data or 'doc' not in bill_text_data:
-            print("Error: Bill text data not available or document missing.")
-            return "Error: Bill text data not available", None
-
-        # Process the document based on its MIME type
-        mime_type = bill_text_data.get("mime")
-        print(f"MIME type of the document: {mime_type}")
-
-        if mime_type == "text/html":
-            # Decode and strip HTML tags
-            html_text = self.document_processor.decode_base64(bill_text_data["doc"])
-            self.decoded_text = html_text.decode('latin-1')  # Ensure correct decoding
-            self.decoded_text = self.strip_html_tags(self.decoded_text)
-            return self.decoded_text, self.doc_id
-
-        elif mime_type == "application/pdf":
-            # Decode and extract text from PDF
-            pdf_data = self.document_processor.decode_base64(bill_text_data['doc'])
-            self.decoded_text = self.document_processor.extract_text_from_pdf(pdf_data)
-            return self.decoded_text, self.doc_id
-
-        else:
-            print("Error: Document format not supported or missing.")
-            return "Error: Document format not supported or missing", None
 
             
     def summarize_bill_text(self, legiscan_url, doc_id=None):
         """
         Retrieves and processes bill text from LegiScan.
         """
-        # Use the passed-in doc_id if available
-        print(f"Retrieved doc ID: {doc_id}")
-        if doc_id:
-            # Get bill text details using the doc_id
-            bill_text_details = self.api_client.get_bill_text(doc_id)
-            self.bill_id = bill_text_details.get('bill_id')
-            print(f"Bill ID retrieved from bill text details: {self.bill_id}")
-            if not self.bill_id:
-                return "Invalid or Unavailable LegiScan URL", None
-        else:
-            # Retrieve bill_id from the URL
-            self.bill_id = self.legiscan_processor.process_legiscan_url(legiscan_url)
-            print(f"Bill ID returned from initial fetch: {self.bill_id}")
-            if not self.bill_id:
-                return "Invalid or Unavailable LegiScan URL", None
+        # Call get_legiscan_text to retrieve decoded text and IDs
+        decoded_text, self.bill_id, self.doc_id = self.legiscan_processor.get_legiscan_text(
+            legiscan_url, doc_id=doc_id, document_processor=self.document_processor)
 
-        # Retrieve the bill text using the provided doc_id or fetch it
-        decoded_text, self.doc_id = self.get_bill_id_and_text(self.bill_id, doc_id=doc_id)
+        if not self.bill_id:
+            return "Invalid or Unavailable LegiScan URL", None
 
         print(f"Bill ID sent to API for details: {self.bill_id}")
         # Retrieve the bill details
