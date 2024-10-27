@@ -35,10 +35,13 @@ class LegiScanProcessor:
         """
         Extracts bill ID from a given URL.
         """
+        print(f"Extracting bill ID from URL: {url}")
         match = re.search(r'/id/(\d+)', url)
         if match:
+            print(f"Found bill ID: {match.group(1)}")
             return match.group(1)
         else:
+            print("No bill ID found in URL.")
             return None
             
     def is_legiscan_url(self, url):
