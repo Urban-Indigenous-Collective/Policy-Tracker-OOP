@@ -105,7 +105,7 @@ class LegiScanProcessor:
         """
         Processes the LegiScan URL to extract the session year and bill number, and pass them to find the correct session and bill ID.
         """
-        # Extract bill ID if it's present in the URL
+        # Extract document ID if it's present in the URL
         bill_id = self.extract_bill_id(url)
         print(f"url attempted to extract: {url}")
         print(f'attempted bill ID extraction: {bill_id}')
