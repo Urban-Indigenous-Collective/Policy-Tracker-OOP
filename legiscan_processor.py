@@ -1,6 +1,8 @@
 import datetime
 import re
 import requests
+from bs4 import BeautifulSoup
+
 
 class LegiScanProcessor:
 
@@ -106,16 +108,15 @@ class LegiScanProcessor:
 
     def process_legiscan_url(self, url):
         """
-        Processes the LegiScan URL to extract the session year and bill number, and pass them to find the correct session and bill ID.
+        Processes the LegiScan URL to extract the bill ID if present.
+        If no bill ID is found, attempts to extract state, session year, and bill number.
         """
-        # Extract document ID if it's present in the URL
-        bill_id = self.extract_bill_id(url)
-        print(f"url attempted to extract: {url}")
-        print(f'attempted bill ID extraction: {bill_id}')
+        # Attempt to extract bill ID directly
+        bill_id = self.extract_doc_id(url)
         if bill_id:
             return bill_id
 
-        # Extract other details like state and session year
+        # Attempt to extract state, bill number, and session year if bill ID is not found
         match = re.search(r'legiscan\.com/([A-Z]{2})/bill/([A-Z]+[0-9]+)/([0-9]{4})', url)
         if match:
             state_code = match.group(1)  # e.g., 'AK'
@@ -194,3 +195,83 @@ class LegiScanProcessor:
         Extracts the URL link of the bill.
         """
         return bill.get('url', 'N/A')
+
+    def get_bill_id_and_text(self, bill_id, doc_id=None, document_processor=None):
+        """
+        Fetches the bill text data using the bill ID and stores the document ID.
+        If a document ID is provided, it uses that instead.
+        """
+        if doc_id:
+            print(f"Using provided document ID: {doc_id}")
+        else:
+            bill_details = self.api_client.get_bill_details(bill_id)
+
+            if not bill_details or 'bill' not in bill_details or 'texts' not in bill_details['bill']:
+                print("Error: Bill text data not available or no documents found.")
+                return "Error: Bill text data not available", None
+
+            last_doc = bill_details['bill']['texts'][-1]
+            doc_id = last_doc.get('doc_id')
+            print(f"Retrieved document ID from bill details: {doc_id}")
+
+        print(f"Getting text with doc id: {doc_id}")
+        bill_text_data = self.api_client.get_bill_text(doc_id)
+
+        if not bill_text_data or 'doc' not in bill_text_data:
+            print("Error: Bill text data not available or document missing.")
+            return "Error: Bill text data not available", None
+
+        mime_type = bill_text_data.get("mime")
+        print(f"MIME type of the document: {mime_type}")
+
+        if mime_type == "text/html":
+            html_text = document_processor.decode_base64(bill_text_data["doc"])
+            decoded_text = html_text.decode('latin-1')
+            decoded_text = self.strip_html_tags(decoded_text)
+            return decoded_text, doc_id
+
+        elif mime_type == "application/pdf":
+            pdf_data = document_processor.decode_base64(bill_text_data['doc'])
+            decoded_text = document_processor.extract_text_from_pdf(pdf_data)
+            return decoded_text, doc_id
+
+        else:
+            print("Error: Document format not supported or missing.")
+            return "Error: Document format not supported or missing", None
+
+
+    def strip_html_tags(self, html_content):
+        """
+        Utility function to strip HTML tags from text.
+        """
+        soup = BeautifulSoup(html_content, "html.parser")
+        return soup.get_text()
+
+
+    def get_legiscan_text(self, legiscan_url, doc_id=None, document_processor=None):
+        """
+        Retrieves the bill text from LegiScan using either a provided doc_id or by processing the URL to get the bill ID.
+        """
+        # Use the provided doc_id if available
+        print(f"Retrieved doc ID: {doc_id}")
+        bill_id = None
+
+        if doc_id:
+            # Get bill text details using the doc_id
+            bill_text_details = self.api_client.get_bill_text(doc_id)
+            bill_id = bill_text_details.get('bill_id')
+            print(f"Bill ID retrieved from bill text details: {bill_id}")
+            if not bill_id:
+                return "Invalid or Unavailable LegiScan URL", None
+        else:
+            # Retrieve bill_id from the URL
+            bill_id = self.process_legiscan_url(legiscan_url)
+            print(f"Bill ID returned from initial fetch: {bill_id}")
+            if not bill_id:
+                return "Invalid or Unavailable LegiScan URL", None
+
+        # Retrieve the bill text using the provided doc_id or fetch the doc_id and get the text
+        decoded_text, doc_id = self.get_bill_id_and_text(
+            bill_id, doc_id=doc_id, document_processor=document_processor)
+        
+        return decoded_text, bill_id, doc_id
