@@ -227,7 +227,7 @@ class LegiScanProcessor:
         if mime_type == "text/html":
             html_text = document_processor.decode_base64(bill_text_data["doc"])
             decoded_text = html_text.decode('latin-1')
-            decoded_text = self.strip_html_tags(decoded_text)
+            decoded_text = document_processor.strip_html_tags(decoded_text)
             return decoded_text, doc_id
 
         elif mime_type == "application/pdf":
@@ -238,14 +238,6 @@ class LegiScanProcessor:
         else:
             print("Error: Document format not supported or missing.")
             return "Error: Document format not supported or missing", None
-
-
-    def strip_html_tags(self, html_content):
-        """
-        Utility function to strip HTML tags from text.
-        """
-        soup = BeautifulSoup(html_content, "html.parser")
-        return soup.get_text()
 
 
     def get_legiscan_text(self, legiscan_url, doc_id=None, document_processor=None):
