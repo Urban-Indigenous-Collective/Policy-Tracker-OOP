@@ -1,11 +1,10 @@
 import re
 import datetime
-import requests
-from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 from gpt_questions import ChatGPTQuestionnaire
 from legiscan_processor import LegiScanProcessor
-
+from gov_processor import GovProcessor
+# Assume GovProcessor is imported or defined in the same file
 
 class BillProcessor:
     def __init__(self, api_client, chat_client, document_processor, indigenous_db):
@@ -20,6 +19,7 @@ class BillProcessor:
         self.doc_id = ""
         self.questionnaire = ChatGPTQuestionnaire(chat_client)
         self.legiscan_processor = LegiScanProcessor(indigenous_db, self.api_client)
+        self.gov_processor = GovProcessor(document_processor)
         self.compiled_bill = {}
 
     def get_doc_text(self, url, doc_id=None):
@@ -49,57 +49,27 @@ class BillProcessor:
 
                 print("LegiScan text retrieved successfully.")
                 return True, "LegiScan text retrieved successfully"
-            else:
-                # Parse the URL to get the domain
-                parsed_url = urlparse(url)
-                domain = parsed_url.netloc
-                print(f"Parsed domain: {domain}")
-                if '.gov' in domain:
-                    print("URL identified as .gov URL.")
-                    # Handle .gov URL
-                    response = requests.get(url)
-                    print(f"Response status code: {response.status_code}")
-                    if response.status_code != 200:
-                        error_msg = f"Failed to retrieve .gov URL: HTTP {response.status_code}"
-                        self.compiled_bill['error'] = error_msg
-                        print(error_msg)
-                        return False, error_msg
-
-                    content_type = response.headers.get('Content-Type', '')
-                    print(f"Content-Type: {content_type}")
-                    if 'text/html' in content_type:
-                        # Handle HTML content
-                        print("Processing HTML content.")
-                        decoded_text = self.document_processor.strip_html_tags(response.content)
-                    elif 'application/pdf' in content_type:
-                        # Handle PDF content
-                        print("Processing PDF content.")
-                        decoded_text = self.document_processor.extract_text_from_pdf(response.content)
-                    else:
-                        # Attempt to guess content type based on URL
-                        if url.endswith('.pdf'):
-                            # Handle PDF content
-                            print("URL ends with .pdf, processing as PDF.")
-                            response = requests.get(url)
-                            decoded_text = self.document_processor.extract_text_from_pdf(response.content)
-                        else:
-                            # Default to treating as HTML
-                            print("Defaulting to processing as HTML.")
-                            decoded_text = self.document_processor.strip_html_tags(response.content)
-
-                    # Since it's an executive order, we may not have a bill_id or doc_id
-                    self.compiled_bill['decoded_text'] = decoded_text
-                    self.compiled_bill['bill_id'] = None
-                    self.compiled_bill['doc_id'] = None
-                    self.compiled_bill['bill_text_url'] = url
-
-                    print(".gov document text retrieved successfully.")
-                    return True, ".gov document text retrieved successfully"
-                else:
-                    error_msg = "Unsupported URL format"
+            elif self.gov_processor.is_gov_url(url):
+                print("URL identified as .gov URL.")
+                # Handle .gov URL using GovProcessor
+                decoded_text, error_msg = self.gov_processor.get_gov_document_text(url)
+                if error_msg:
                     self.compiled_bill['error'] = error_msg
                     print(error_msg)
                     return False, error_msg
+
+                # Since it's an executive order, we may not have a bill_id or doc_id
+                self.compiled_bill['decoded_text'] = decoded_text
+                self.compiled_bill['bill_id'] = None
+                self.compiled_bill['doc_id'] = None
+                self.compiled_bill['bill_text_url'] = url
+
+                return True, ".gov document text retrieved successfully"
+            else:
+                error_msg = "Unsupported URL format"
+                self.compiled_bill['error'] = error_msg
+                print(error_msg)
+                return False, error_msg
 
         except Exception as e:
             error_msg = f"Error retrieving document text: {str(e)}"
