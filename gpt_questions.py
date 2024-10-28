@@ -15,7 +15,7 @@ class ChatGPTQuestionnaire:
 
     def ask_mechanisms_expl(self, text):
         return self.chat_client.get_chat_response(
-            f"Based on your answer to the previous question, please quote the previously mentioned legislation where it mentions the specific mechanisms for evaluation (a final report, consultation with community, tribal consulation, a Tribal Crisis Response Plan (TCRP), monitoring, or data collection). Create a numbered list of ALL mechanisms of evaluation. \n\n"
+            f"Based on your answer to the previous question, please quote the previously mentioned legislation where it mentions the specific mechanisms for evaluation (a final report, consultation with community, tribal consulation, a Tribal Crisis Response Plan (TCRP), monitoring, or data collection). Create a numbered list of ALL mechanisms of evaluation. Exclude the use of * or ** in your answer. \n\n"
         )
 
     def ask_gender_inclusive_eval(self, text):
@@ -58,10 +58,10 @@ class ChatGPTQuestionnaire:
 
     def ask_uic_pros(self, data_points):
         return self.chat_client.get_chat_response(
-            f"Using the following data points: \n\n {data_points} \n\n please summarize the benefits or pros of the the previously mentioned legislation."
+            f"Using the following data points: \n\n {data_points} \n\n please summarize the benefits or pros of the the previously mentioned legislation in a numbered list. Exclude the use of * or ** in your answer."
         )
 
     def ask_uic_cons(self, data_points):
         return self.chat_client.get_chat_response(
-            f"Using the following data points: \n\n {data_points} \n\n please summarize the drawbacks or cons of the previoisly memtioned legislation \n\n"
+            f"Using the following data points: \n\n {data_points} \n\n please summarize the drawbacks or cons of the previoisly memtioned legislation in a numbered list. Exclude the use of * or ** in your answer. \n\n"
         )
