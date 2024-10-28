@@ -50,6 +50,7 @@ class GovProcessor:
                     decoded_text = self.document_processor.strip_html_tags(response.content)
 
             print(".gov document text retrieved successfully.")
+            print(f"Current bill text retrieved: {decoded_text}")
             return decoded_text, None
         except Exception as e:
             error_msg = f"Error retrieving .gov document text: {str(e)}"

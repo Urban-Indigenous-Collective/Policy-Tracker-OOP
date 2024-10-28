@@ -157,8 +157,21 @@ class BillProcessor:
             centering_indigenous_voices = self.questionnaire.ask_centering_indigenous_voices(decoded_text, self.indigenous_sponsors)
             survivor_relative_input_eval = self.questionnaire.ask_survivor_relative_input_eval(decoded_text).strip(".")
             categories_eval = self.questionnaire.ask_categories_eval(decoded_text)
-            uic_pros = self.questionnaire.ask_uic_pros(decoded_text)
-            uic_cons = self.questionnaire.ask_uic_cons(decoded_text)
+
+            # Format data points string to be used in pros and cons analysis
+            data_points = (
+                f"Chat Summary: {chat_summary}\n"
+                f"Gender Inclusion: {gender_inclusive_expl}\n"
+                f"Mechanisms Explained: {mechanisms_expl}\n"
+                f"Prevention Efforts: {prevention_efforts_expl}\n"
+                f"Indigenous Sponsors: {self.indigenous_sponsors}\n"
+                f"Centering Indigenous Voices: {centering_indigenous_voices}\n"
+                f"Legislation Categories: {categories_eval}"
+            )
+
+            # Ask for pros and cons using formatted data points
+            uic_pros = self.questionnaire.ask_uic_pros(data_points)
+            uic_cons = self.questionnaire.ask_uic_cons(data_points)
 
             # Store the results in compiled_bill
             self.compiled_bill.update({
