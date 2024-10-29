@@ -81,11 +81,60 @@ class BillProcessor:
     def get_bill_details(self, bill_id):
         """
         Retrieves bill details using the bill ID and identifies Indigenous sponsors.
+        For .gov bills, retrieves additional state details.
         """
         if not bill_id:
-            # For .gov URLs, bill_id may be None
-            self.compiled_bill['bill'] = None
-            return True, "No bill details needed for .gov URL"
+            # For .gov URLs, check and process state and title details directly
+            print(f"No bill ID found, attempting to get details via GPT")
+            bill_link = self.compiled_bill.get('bill_text_url', '')
+            print(f"Link returned from compiled bill for IF check: {bill_link}")
+            bill_text = self.compiled_bill['decoded_text']
+
+            if '.gov' in bill_link:
+                try:
+                    # Get state details via GPT
+                    state_details = self.questionnaire.ask_state(bill_link)
+                    print(f"State returned from GPT: {state_details}")
+                    # Get title via GPT
+                    title = self.questionnaire.ask_title(bill_text)
+                    print(f"Title returned from GPT: {title}")
+                    # Save the state and title in the bill dictionary
+                    bill_number = self.questionnaire.ask_bill_number(bill_text)
+                    print(f"Bill number returned from GPT: {bill_number}")
+                    # Save the details in the bill dictionary
+                    self.compiled_bill['bill'] = {
+                        'state': state_details,
+                        'title': title,
+                        'bill_number': bill_number,
+                    }
+
+                    #Get chamber or department via GPT
+                    chamber = self.questionnaire.ask_chamber(bill_text)
+                    print(f"Bill number returned from GPT: {bill_number}")
+                    #Get chamber or department details via GPT
+                    chamber_details = self.questionnaire.ask_chamber_details(bill_text)
+                    print(f"Bill number returned from GPT: {bill_number}")
+                    #Store applicable data in compiled_bill
+                    self.compiled_bill.update({
+                        'bill_passed_status': 'Passed',
+                        'progression_status': 'Passed',
+                        'chamber': chamber,
+                        'chamber_details': chamber_details
+
+                    })
+
+                except Exception as e:
+                    error_msg = f"Error retrieving state or title via GPT: {str(e)}"
+                    self.compiled_bill['error'] = error_msg
+                    print(error_msg)
+                    return False, error_msg
+            else:
+                # Handle non-government bills appropriately
+                self.compiled_bill['bill'] = {
+                    'state': 'Not applicable',
+                    'title': 'Unknown Title'
+                }
+            return True, "No bill ID provided; processed .gov URL for state and title details if applicable."
 
         try:
             bill_details = self.api_client.get_bill_details(bill_id)

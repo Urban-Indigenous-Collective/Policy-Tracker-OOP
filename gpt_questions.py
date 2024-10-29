@@ -2,6 +2,56 @@ class ChatGPTQuestionnaire:
     def __init__(self, chat_client):
         self.chat_client = chat_client
 
+    #Collecting bill details for executive order links
+    def ask_state(self, text):
+        return self.chat_client.get_chat_response(
+            f"Slow down and take your time. Accuracy is imperative. Please carefully evaluate the following legislation, and do not respond before analyzing it -- this pertains to each question I will ask. \n\n {text} \n\n Please identify the state associated with this executive order or DOJ memo. Return the answer ONLY as the capitalized initials (ex: \"CT\", \"NY\", etc). If it’s a federal executive order, return \"National\". If it's a Justice Department press release, double check the entire body text to find the correct state. Return only state initials such as \"CT\" or \"NY\" or the word \"National\" with no explaination."
+        )
+
+    def ask_bill_number(self, text):
+        return self.chat_client.get_chat_response(
+            f"Return the following document's bill number. For DOJ press releases, look for the string \"Press Release Number:\" and get the numbers that follow the colon such ex: \"24-570\" and format it as \"DOJ24-570\". For executive orders find the string \"Executive Order\" and get the numbers that follow it ex:\"14053\" and format the final answer as \"EO14053\". Same instructions for a Presidental Proclaimation, which should be formatted as \"P12345\"  : \n\n {text} \n\n This is a search and return operation. The final answer should include no explaination."
+        )
+
+
+    def ask_title(self, text):
+        return self.chat_client.get_chat_response(
+            f"Return the following document's title and do not decide on what the title is before verifying your preposed string matches exactly what's in the source text: \n\n {text} \n\n  Be sure to return the exact title which can be long. This is a search and return operation. If you're having trouble finding the title on a Federal Register document, you can find it immediately after the executive order number ex: \"Executive Order 14053 of November 15, 2021\" or \"Proclamation 10752 of May 3, 2024\" (which you should not return in the final title) followed by the title \"Improving Public Safety and Criminal Justice for Native Americans and Addressing the Crisis of Missing or Murdered Indigenous People\".  Return just the full title, which you've verified actually exists, ex: \"Document Title and Name\" with no explaination."
+        )
+
+    def ask_chamber(self, text):
+        return self.chat_client.get_chat_response(
+            f"Which governmental branch or specific department is leading the iniaitive in the mentioned text? If it's an Executive Order or Proclaimation, return \"Executive\". If it's a proclaimation, return \"Proclaimation\". Otherwise, return a specific department such as \"Department of Justice\" or \"FCC\". Make sure your choice isn't just the organization which might be publishing or archiving the document, such as the Federal Register. If it's a collaboration between 2 departments or more, return a comma seperated list: \n\n {text} \n\n  "
+        )
+
+    def ask_chamber_details(self, text):
+        return self.chat_client.get_chat_response(
+            f"When was this document signed or released? If it's an executive order or proclaimation, return \"[signature date] - [return \"Executive Order\" or \"Proclaimation\"] signed and Enacted\". If it's a press release, return the \"Immediate release\" string and append the release date to the final return item as such: \"[date] - [Immadite release string (add comma and the office which may exist if its a DOJ press release)]\". \n\n {text} \n\n  "
+        )
+
+    def ask_session(self, text):
+        return self.chat_client.get_chat_response(
+            f"Identify which presidential administration is responsible for this initiative ex: \"Trump Administration, 2016 - 2020\" or \"Biden Administration, 2020-2024\" or \"Obama Administration, 2008 - 2016\" \n\n {text} \n\n  "
+        )
+    
+    def ask_sponsors(self, text):
+        return self.chat_client.get_chat_response(
+            f"Which tribal members, tribal representatives, tribal organizations, carrer civil servants, political appointees, and elected officals are supporting this initiative? Return your answer in a comma seperated list, with no explaination. \n\n {text} \n\n  "
+        )
+
+    def ask_indigenous_sponsors(self, text, sponsors):
+        return self.chat_client.get_chat_response(
+            f"Of the sponsors mentioned \n\n {sponsors} \n\n which are representing Indian Country? Which sponsors are tribal members, tribal representatives, tribal organizations, carrer civil servants, political appointees? Return your answer in a comma seperated list, with no explaination. \n\n {text} \n\n  "
+        )
+
+    def ask_last_updated(self, text):
+        return self.chat_client.get_chat_response(
+            f"Return the document's signature or release date in the following format YYYY-MM-DD. Do not return any explaination. \n\n {text} \n\n  "
+        )
+
+
+
+    #Culturally tailored UIC analysis
     def ask_summary(self, text):
         return self.chat_client.get_chat_response(
             f"Slow down and take your time. Accuracy is imperative. Please carefully evaluate the following legislation, and do not respond before analyzing it -- this pertains to each question I will ask. \n\n {text} \n\n Please summerize the aformentioned legislation in in 5 sentences or less."
