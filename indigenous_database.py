@@ -116,7 +116,6 @@ class IndigenousDatabase:
     def is_indigenous_sponsor(self, input_name):
         # Normalize the input name
         parsed_input_name = self.parse_name_from_input(input_name)
-        print(f"Input name: {input_name} vs Parsed name: {parsed_input_name}")
         normalized_input_name = self.normalize_hyphens_and_en_dashes(parsed_input_name).lower()
 
         for db_entry in self.database:

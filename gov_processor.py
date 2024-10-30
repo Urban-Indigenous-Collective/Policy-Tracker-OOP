@@ -3,9 +3,9 @@ from urllib.parse import urlparse
 import re
 
 class GovProcessor:
-    def __init__(self, document_processor):
+    def __init__(self, document_processor, indigenous_db):
         self.document_processor = document_processor
-        #self.indigenous_db = indigenous_db
+        self.indigenous_db = indigenous_db
 
     def is_gov_url(self, url):
         """
@@ -50,6 +50,12 @@ class GovProcessor:
                     # Default to treating as HTML
                     print("Defaulting to processing as HTML.")
                     decoded_text = self.document_processor.strip_html_tags(response.content)
+
+            # If the URL is from justice.gov, remove everything after "Related Content"
+            if 'justice.gov' in url:
+                print("URL is from justice.gov, removing content after 'Related Content'.")
+                # Split the text at "Related Content" and keep the part before it
+                decoded_text = decoded_text.split('Related Content')[0]
 
             print(".gov document text retrieved successfully.")
             return decoded_text, None
