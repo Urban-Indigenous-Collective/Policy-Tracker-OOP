@@ -46,14 +46,38 @@ class IndigenousDatabase:
                 }
                 break
         else:
-            # If not found, we add it directly
-            self.database.append({
-                "name": "Donald Olson",
-                "party": "Democratic",
+            # If not found, we add Donald Olson directly
+            self.database.append(
+                {
+                    "name": "Donald Olson",
+                    "party": "Democratic",
+                    "state": "Alaska",
+                    "ethnicity": "Iñupiat",
+                    "offices_held": "N/A"
+                }
+            )
+
+        # Add Ingrid Cumberlidge separately
+        self.database.append(
+            {
+                "name": "Ingrid Cumberlidge",
+                "party": "N/A",
                 "state": "Alaska",
-                "ethnicity": "Iñupiat",
-                "offices_held": "N/A"
-            })
+                "ethnicity": "Aleut, Tlingit",
+                "offices_held": "Missing and Murdered Indigenous Persons Coordinator, Tribal Judge"
+            }
+        )
+
+        # Add Ingrid Cumberlidge separately
+        self.database.append(
+            {
+                "name": "Cedar Wilkie Gillette",
+                "party": "N/A",
+                "state": "Oregon",
+                "ethnicity": "Mandan, Hidatsa, Arikara Nation, Turtle Mountain Band of Chippewa",
+                "offices_held": "MMIP Regional Coordinator"
+            }
+        )
 
 
     def print_database(self):
@@ -92,6 +116,7 @@ class IndigenousDatabase:
     def is_indigenous_sponsor(self, input_name):
         # Normalize the input name
         parsed_input_name = self.parse_name_from_input(input_name)
+        print(f"Input name: {input_name} vs Parsed name: {parsed_input_name}")
         normalized_input_name = self.normalize_hyphens_and_en_dashes(parsed_input_name).lower()
 
         for db_entry in self.database:
@@ -100,6 +125,7 @@ class IndigenousDatabase:
             
             # Use fuzzy matching to compare names
             match_score = fuzz.partial_ratio(normalized_input_name, db_name_for_comparison)
+
             if match_score > 90:  # You can adjust this threshold as needed
                 return True
         return False

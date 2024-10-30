@@ -41,11 +41,11 @@ class ChatGPTQuestionnaire:
 
     def ask_indigenous_sponsors(self, text, sponsors):
         return self.chat_client.get_chat_response(
-            f"Of the sponsors mentioned in the previous text:\n\n{sponsors}\n\n"
-            "Identify which of these are tribes representing Indian Country. "
-            "Only include those explicitly mentioned in the text. "
-            "Return your answer as a comma-separated list of tribes, without any extra text. "
-            "If no Indigenous sponsors can be identified, return an empty string."
+            f"Of the sponsors mentioned in the previous text"
+            "Identify which of these are tribes representing Indian Country. If there is a person's name associated with a tribe, include it with the tribal name. "
+            "Return your answer as a comma-separated list formatted as: 'Name [Tribe]' if a name is present, or just '[Tribe]' if no name is associated. "
+            "Only include those explicitly mentioned in the text. If no Indigenous sponsors can be identified, return an empty string."
+            "Review the following list closely: \n\n{sponsors}\n\n"
         )
 
     def ask_last_updated(self, text):

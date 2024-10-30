@@ -1,9 +1,11 @@
 import requests
 from urllib.parse import urlparse
+import re
 
 class GovProcessor:
     def __init__(self, document_processor):
         self.document_processor = document_processor
+        #self.indigenous_db = indigenous_db
 
     def is_gov_url(self, url):
         """
@@ -55,3 +57,19 @@ class GovProcessor:
             error_msg = f"Error retrieving .gov document text: {str(e)}"
             print(error_msg)
             return None, error_msg
+
+
+    def identify_indigenous_sponsors(self, sponsors_string):
+        # Split the sponsors string into individual sponsors
+        sponsor_list = re.split(r',\s*(?![^[]*[\]])', sponsors_string)
+
+        indigenous_sponsors = []
+        print(f"Indigenous sponsors list: {sponsor_list}")
+
+        for sponsor in sponsor_list:
+            if self.indigenous_db.is_indigenous_sponsor(sponsor):
+                print(f"Sponsor as pulled from DB: {sponsor}")
+                indigenous_sponsors.append(sponsor)
+
+        return indigenous_sponsors
+
