@@ -41,7 +41,11 @@ class ChatGPTQuestionnaire:
 
     def ask_indigenous_sponsors(self, text, sponsors):
         return self.chat_client.get_chat_response(
-            f"Of the sponsors mentioned in the previous text \n\n {sponsors} \n\n which are representing Indian Country? Which sponsors are tribal members, tribal representatives, tribal organizations, carrer civil servants, political appointees? This can also include any Indigenous politicians or Indigenous policital appointees mentioned which you can confirm are Indigenous. After compiling your list, double check that all people are Indigenous. Return your answer in a comma seperated list, with no explaination. If no Indigenous sponsors can be identified, it is okay to return an empty string instead of a past memory or guess with no explaination."
+            f"Of the sponsors mentioned in the previous text:\n\n{sponsors}\n\n"
+            "Identify which of these are tribes representing Indian Country. "
+            "Only include those explicitly mentioned in the text. "
+            "Return your answer as a comma-separated list of tribes, without any extra text. "
+            "If no Indigenous sponsors can be identified, return an empty string."
         )
 
     def ask_last_updated(self, text):
