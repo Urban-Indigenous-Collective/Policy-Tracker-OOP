@@ -4,6 +4,8 @@ from urllib.parse import urlparse
 from gpt_questions import ChatGPTQuestionnaire
 from legiscan_processor import LegiScanProcessor
 from gov_processor import GovProcessor
+from titlecase import titlecase
+
 # Assume GovProcessor is imported or defined in the same file
 
 class BillProcessor:
@@ -46,8 +48,9 @@ class BillProcessor:
                 self.compiled_bill['bill_id'] = bill_id
                 self.compiled_bill['doc_id'] = doc_id
                 self.compiled_bill['bill_text_url'] = url
-
+                print(f"Text retrieved: {decoded_text}")
                 print("LegiScan text retrieved successfully.")
+
                 return True, "LegiScan text retrieved successfully"
             elif self.gov_processor.is_gov_url(url):
                 print("URL identified as .gov URL.")
@@ -98,28 +101,76 @@ class BillProcessor:
                     # Get title via GPT
                     title = self.questionnaire.ask_title(bill_text)
                     print(f"Title returned from GPT: {title}")
+
+                    # Get the title from GPT
+                    raw_title = self.questionnaire.ask_title(bill_text)
+                    print(f"Title returned from GPT: {raw_title}")
+
+                    # Ensure title follows proper title case capitalization rules
+                    title = titlecase(raw_title)
+                    print(f"Formatted Title: {title}")
+
                     # Save the state and title in the bill dictionary
                     bill_number = self.questionnaire.ask_bill_number(bill_text)
                     print(f"Bill number returned from GPT: {bill_number}")
+
+                    chamber_details = self.questionnaire.ask_chamber_details(bill_text)
+                    print(f"Bill number returned from GPT: {bill_number}")
+
+                    session_title = self.questionnaire.ask_session(bill_text)
+                    print(f"Session number returned from GPT: {session_title}")
+                    session = {'session_title': session_title}
+
+                    last_updated = self.questionnaire.ask_last_updated(chamber_details)
+                    print(f"Last updated returned from GPT: {last_updated}")
+
                     # Save the details in the bill dictionary
                     self.compiled_bill['bill'] = {
                         'state': state_details,
                         'title': title,
                         'bill_number': bill_number,
+                        'session': session,
+                        'status_date': last_updated,
+
+
                     }
 
                     #Get chamber or department via GPT
                     chamber = self.questionnaire.ask_chamber(bill_text)
                     print(f"Bill number returned from GPT: {bill_number}")
                     #Get chamber or department details via GPT
-                    chamber_details = self.questionnaire.ask_chamber_details(bill_text)
-                    print(f"Bill number returned from GPT: {bill_number}")
+
+
+                    sponsors = self.questionnaire.ask_sponsors(bill_text)
+                    print(f"Sponsors returned from GPT: {sponsors}")
+
+                    # Get Indigenous sponsors as a string and split it into a list
+                    indigenous_sponsors_raw = self.questionnaire.ask_indigenous_sponsors(bill_text, sponsors)
+                    print(f"Indigenous Sponsors returned from GPT: {indigenous_sponsors_raw}")
+
+                    # Ensure the result is a proper list by splitting it on commas
+                    if isinstance(indigenous_sponsors_raw, str):
+                        # Split the string by commas and strip any extra whitespace from each item
+                        indigenous_sponsors = [sponsor.strip() for sponsor in indigenous_sponsors_raw.split(',')]
+                    else:
+                        # If it's not a string, assume it's already a list and use it directly (if it's in the correct format)
+                        indigenous_sponsors = indigenous_sponsors_raw
+
+                    # Store the list of Indigenous sponsors in the compiled bill
+                    self.compiled_bill['indigenous_sponsors'] = indigenous_sponsors
+                    self.indigenous_sponsors = indigenous_sponsors
+
+
+
                     #Store applicable data in compiled_bill
                     self.compiled_bill.update({
                         'bill_passed_status': 'Passed',
                         'progression_status': 'Passed',
                         'chamber': chamber,
-                        'chamber_details': chamber_details
+                        'chamber_details': chamber_details,
+                        'bill_sponsors': sponsors,
+                        'indigenous_sponsors': indigenous_sponsors,
+
 
                     })
 
