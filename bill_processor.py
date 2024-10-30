@@ -66,7 +66,7 @@ class BillProcessor:
                 self.compiled_bill['doc_id'] = None
                 self.compiled_bill['bill_text_url'] = url
 
-                print(f"Text retrieved: {decoded_text}")
+                #print(f"Text retrieved: {decoded_text}")
 
                 return True, ".gov document text retrieved successfully"
             else:
@@ -159,6 +159,7 @@ class BillProcessor:
 
                     # Store the list of Indigenous sponsors in the compiled bill
                     self.compiled_bill['indigenous_sponsors'] = indigenous_sponsors
+                    print(f"self.indigenous_sponsors before saving: {self.indigenous_sponsors}")
                     self.indigenous_sponsors = indigenous_sponsors
 
 
