@@ -7,6 +7,16 @@ class ReportGenerator:
         # Convert the list of dictionaries to a DataFrame
         df = pd.DataFrame(data)
 
+        # Handle 'Sponsors' column
+        if 'Sponsors' in df.columns:
+            df['Sponsors'] = df['Sponsors'].apply(lambda x: x if isinstance(x, str) else ', '.join(x))
+
+        # Handle 'Indigenous Sponsorship' column
+        if 'Indigenous Sponsorship' in df.columns:
+            df['Indigenous Sponsorship'] = df['Indigenous Sponsorship'].apply(
+                lambda x: x if isinstance(x, str) else ', '.join(x)
+            )
+
         # Ensure 'State' and 'Title' columns exist and replace NaNs with default values
         if 'State' not in df.columns:
             df['State'] = 'No State Info'  # Add column if not exist
@@ -20,9 +30,13 @@ class ReportGenerator:
         # Check for 'error' and 'url' in the DataFrame and modify 'State' and 'Title' accordingly
         if 'error' in df.columns and 'url' in df.columns:
             # Update 'State' column by appending error messages where available
-            df['State'] = df.apply(lambda row: f"{row['State']} - Error: {row['error']}" if pd.notna(row['error']) else row['State'], axis=1)
+            df['State'] = df.apply(
+                lambda row: f"{row['State']} - Error: {row['error']}" if pd.notna(row['error']) else row['State'], axis=1
+            )
             # Update 'Title' column by appending URL where available
-            df['Title'] = df.apply(lambda row: f"{row['Title']} - URL: {row['url']}" if pd.notna(row['url']) else row['Title'], axis=1)
+            df['Title'] = df.apply(
+                lambda row: f"{row['Title']} - URL: {row['url']}" if pd.notna(row['url']) else row['Title'], axis=1
+            )
             # Drop the 'error' and 'url' columns as they are no longer needed after merging
             df.drop(['error', 'url'], axis=1, inplace=True)
 
@@ -30,5 +44,3 @@ class ReportGenerator:
         df.to_excel(filename, index=False)
         print(f"Data exported to {filename}")
         return os.path.abspath(filename)
-
-
