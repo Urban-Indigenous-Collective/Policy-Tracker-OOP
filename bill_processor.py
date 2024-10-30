@@ -21,7 +21,7 @@ class BillProcessor:
         self.doc_id = ""
         self.questionnaire = ChatGPTQuestionnaire(chat_client)
         self.legiscan_processor = LegiScanProcessor(indigenous_db, self.api_client)
-        self.gov_processor = GovProcessor(document_processor)
+        self.gov_processor = GovProcessor(document_processor, indigenous_db)
         self.compiled_bill = {}
 
     def get_doc_text(self, url, doc_id=None):
@@ -132,48 +132,60 @@ class BillProcessor:
                         'bill_number': bill_number,
                         'session': session,
                         'status_date': last_updated,
-
-
                     }
 
-                    #Get chamber or department via GPT
+                    # Get chamber or department via GPT
                     chamber = self.questionnaire.ask_chamber(bill_text)
-                    print(f"Bill number returned from GPT: {bill_number}")
-                    #Get chamber or department details via GPT
+                    print(f"Chamber returned from GPT: {chamber}")
 
-
+                    # Get sponsors via GPT
                     sponsors = self.questionnaire.ask_sponsors(bill_text)
                     print(f"Sponsors returned from GPT: {sponsors}")
 
-                    # Get Indigenous sponsors as a string and split it into a list
-                    indigenous_sponsors_raw = self.questionnaire.ask_indigenous_sponsors(bill_text, sponsors)
-                    print(f"Indigenous Sponsors returned from GPT: {indigenous_sponsors_raw}")
+                    # Identify Indigenous sponsors using the provided method
+                    indigenous_sponsors = self.gov_processor.identify_indigenous_sponsors(sponsors)
+                    print(f"Indigenous Sponsors identified: {indigenous_sponsors}")
 
-                    # Ensure the result is a proper list by splitting it on commas
-                    if isinstance(indigenous_sponsors_raw, str):
-                        # Split the string by commas and strip any extra whitespace from each item
-                        indigenous_sponsors = [sponsor.strip() for sponsor in indigenous_sponsors_raw.split(',')]
-                    else:
-                        # If it's not a string, assume it's already a list and use it directly (if it's in the correct format)
-                        indigenous_sponsors = indigenous_sponsors_raw
+                    # Initialize a list to hold the processed sponsors
+                    processed_indigenous_sponsors = []
 
-                    # Store the list of Indigenous sponsors in the compiled bill
-                    self.compiled_bill['indigenous_sponsors'] = indigenous_sponsors
-                    print(f"self.indigenous_sponsors before saving: {self.indigenous_sponsors}")
-                    self.indigenous_sponsors = indigenous_sponsors
+                    # Iterate over each sponsor to update ethnicity if applicable
+                    for sponsor in indigenous_sponsors:
+                        # Extract the sponsor's name (assuming it's before any brackets)
+                        if '[' in sponsor and ']' in sponsor:
+                            name = sponsor.split('[')[0].strip()
+                        else:
+                            name = sponsor.strip()
 
+                        # Retrieve the ethnicity by searching the database
+                        ethnicity = next(
+                            (entry['ethnicity'] for entry in self.indigenous_db.database if entry['name'] == name),
+                            'N/A'
+                        )
 
+                        if ethnicity and ethnicity != 'N/A':
+                            # Replace what's in the brackets with the ethnicity
+                            sponsor = f"{name} [{ethnicity}]"
+                        else:
+                            # If ethnicity is 'N/A' or doesn't exist, keep the sponsor name without brackets
+                            sponsor = name
 
-                    #Store applicable data in compiled_bill
+                        # Append the processed sponsor to the list
+                        processed_indigenous_sponsors.append(sponsor)
+
+                    # Store the list of processed Indigenous sponsors in the compiled bill
+                    self.compiled_bill['indigenous_sponsors'] = processed_indigenous_sponsors
+                    print(f"Processed Indigenous Sponsors: {processed_indigenous_sponsors}")
+                    self.indigenous_sponsors = processed_indigenous_sponsors
+
+                    # Store applicable data in compiled_bill
                     self.compiled_bill.update({
                         'bill_passed_status': 'Passed',
                         'progression_status': 'Passed',
                         'chamber': chamber,
                         'chamber_details': chamber_details,
                         'bill_sponsors': sponsors,
-                        'indigenous_sponsors': indigenous_sponsors,
-
-
+                        'indigenous_sponsors': processed_indigenous_sponsors,
                     })
 
                 except Exception as e:
