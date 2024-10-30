@@ -48,7 +48,6 @@ class BillProcessor:
                 self.compiled_bill['bill_id'] = bill_id
                 self.compiled_bill['doc_id'] = doc_id
                 self.compiled_bill['bill_text_url'] = url
-                print(f"Text retrieved: {decoded_text}")
                 print("LegiScan text retrieved successfully.")
 
                 return True, "LegiScan text retrieved successfully"
@@ -66,6 +65,8 @@ class BillProcessor:
                 self.compiled_bill['bill_id'] = None
                 self.compiled_bill['doc_id'] = None
                 self.compiled_bill['bill_text_url'] = url
+
+                print(f"Text retrieved: {decoded_text}")
 
                 return True, ".gov document text retrieved successfully"
             else:
@@ -115,7 +116,7 @@ class BillProcessor:
                     print(f"Bill number returned from GPT: {bill_number}")
 
                     chamber_details = self.questionnaire.ask_chamber_details(bill_text)
-                    print(f"Bill number returned from GPT: {bill_number}")
+                    print(f"Chamber details returned from GPT: {chamber_details}")
 
                     session_title = self.questionnaire.ask_session(bill_text)
                     print(f"Session number returned from GPT: {session_title}")
@@ -308,7 +309,7 @@ class BillProcessor:
             bill_data = {
                 'State': bill.get('state', '') or 'Unknown',
                 'Title': bill.get('title', '') or 'Executive Order',
-                'Bill Number': bill.get('bill_number', '') or 'Executive Order',
+                'Bill Number': bill.get('bill_number', '') or '',
                 'Status': bill_info.get('bill_passed_status', 'Active'),  # Default to 'Active' for EOs
                 'Progression': bill_info.get('progression_status', 'N/A'),
 
