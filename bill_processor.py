@@ -103,12 +103,8 @@ class BillProcessor:
                     title = self.questionnaire.ask_title(bill_text)
                     print(f"Title returned from GPT: {title}")
 
-                    # Get the title from GPT
-                    raw_title = self.questionnaire.ask_title(bill_text)
-                    print(f"Title returned from GPT: {raw_title}")
-
                     # Ensure title follows proper title case capitalization rules
-                    title = titlecase(raw_title)
+                    title = titlecase(title)
                     print(f"Formatted Title: {title}")
 
                     # Save the state and title in the bill dictionary
@@ -142,17 +138,38 @@ class BillProcessor:
                     sponsors = self.questionnaire.ask_sponsors(bill_text)
                     print(f"Sponsors returned from GPT: {sponsors}")
 
-                    # Identify Indigenous sponsors using the provided method
-                    indigenous_sponsors = self.gov_processor.identify_indigenous_sponsors(sponsors)
-                    print(f"Indigenous Sponsors identified: {indigenous_sponsors}")
+                    # Define a function to split sponsors string, handling commas inside brackets
+                    def split_sponsors(sponsors_string):
+                        sponsors_list = []
+                        bracket_level = 0
+                        current_sponsor = ''
+                        for char in sponsors_string:
+                            if char == ',' and bracket_level == 0:
+                                sponsors_list.append(current_sponsor.strip())
+                                current_sponsor = ''
+                            else:
+                                if char == '[':
+                                    bracket_level += 1
+                                elif char == ']':
+                                    if bracket_level > 0:
+                                        bracket_level -= 1
+                                current_sponsor += char
+                        if current_sponsor:
+                            sponsors_list.append(current_sponsor.strip())
+                        return sponsors_list
 
-                    # Initialize a list to hold the processed sponsors
+                    # Use the function to split sponsors
+                    sponsors_list = split_sponsors(sponsors)
+                    print(f"Sponsors list after splitting: {sponsors_list}")
+
+                    # Initialize lists to hold the processed sponsors
+                    processed_sponsors = []
                     processed_indigenous_sponsors = []
 
-                    # Iterate over each sponsor to update ethnicity if applicable
-                    for sponsor in indigenous_sponsors:
-                        # Extract the sponsor's name (assuming it's before any brackets)
-                        if '[' in sponsor and ']' in sponsor:
+                    # Process each sponsor to update ethnicity where applicable
+                    for sponsor in sponsors_list:
+                        # Extract the sponsor's name (everything before the first '[')
+                        if '[' in sponsor:
                             name = sponsor.split('[')[0].strip()
                         else:
                             name = sponsor.strip()
@@ -160,23 +177,35 @@ class BillProcessor:
                         # Retrieve the ethnicity by searching the database
                         ethnicity = next(
                             (entry['ethnicity'] for entry in self.indigenous_db.database if entry['name'] == name),
-                            'N/A'
+                            None
                         )
 
                         if ethnicity and ethnicity != 'N/A':
-                            # Replace what's in the brackets with the ethnicity
-                            sponsor = f"{name} [{ethnicity}]"
+                            # Replace what's inside the brackets with the ethnicity
+                            sponsor_with_ethnicity = f"{name} [{ethnicity}]"
+                            # Add to Indigenous sponsors list
+                            processed_indigenous_sponsors.append(sponsor_with_ethnicity)
                         else:
-                            # If ethnicity is 'N/A' or doesn't exist, keep the sponsor name without brackets
-                            sponsor = name
+                            # Keep the sponsor as is
+                            sponsor_with_ethnicity = sponsor.strip()
 
-                        # Append the processed sponsor to the list
-                        processed_indigenous_sponsors.append(sponsor)
+                        # Append to processed_sponsors list
+                        processed_sponsors.append(sponsor_with_ethnicity)
 
-                    # Store the list of processed Indigenous sponsors in the compiled bill
-                    self.compiled_bill['indigenous_sponsors'] = processed_indigenous_sponsors
-                    print(f"Processed Indigenous Sponsors: {processed_indigenous_sponsors}")
-                    self.indigenous_sponsors = processed_indigenous_sponsors
+                    # Join the processed sponsors lists into strings
+                    processed_sponsors_string = ', '.join(processed_sponsors)
+                    processed_indigenous_sponsors_string = ', '.join(processed_indigenous_sponsors)
+
+                    # Store the strings in the compiled bill
+                    self.compiled_bill['bill_sponsors'] = processed_sponsors_string
+                    self.compiled_bill['indigenous_sponsors'] = processed_indigenous_sponsors_string
+
+                    # Print the processed sponsors
+                    print(f"Processed Sponsors: {processed_sponsors_string}")
+                    print(f"Processed Indigenous Sponsors: {processed_indigenous_sponsors_string}")
+
+                    # Update the class attributes if needed
+                    self.indigenous_sponsors = processed_indigenous_sponsors_string
 
                     # Store applicable data in compiled_bill
                     self.compiled_bill.update({
@@ -184,8 +213,7 @@ class BillProcessor:
                         'progression_status': 'Passed',
                         'chamber': chamber,
                         'chamber_details': chamber_details,
-                        'bill_sponsors': sponsors,
-                        'indigenous_sponsors': processed_indigenous_sponsors,
+                        # 'bill_sponsors' and 'indigenous_sponsors' already updated above
                     })
 
                 except Exception as e:
@@ -350,8 +378,8 @@ class BillProcessor:
                 'Level of Survivor / Relative Input': bill_info.get('survivor_relative_input_eval', ''),
                 'Centering of Indigenous Voices': bill_info.get('centering_indigenous_voices', ''),
 
-                'Sponsors': bill_info.get('bill_sponsors', 'Executive Order'),
-                'Indigenous Sponsorship': ', '.join(bill_info.get('indigenous_sponsors', [])),
+                'Sponsors': self.compiled_bill.get('bill_sponsors', 'Executive Order'),
+                'Indigenous Sponsorship': self.compiled_bill.get('indigenous_sponsors', ''),
 
                 'Session': bill.get('session', {}).get('session_title', 'N/A'),
                 'Categories': bill_info.get('categories_eval', ''),
