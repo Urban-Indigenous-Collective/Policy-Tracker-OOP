@@ -10,7 +10,7 @@ class ChatGPTQuestionnaire:
 
     def ask_bill_number(self, text):
         return self.chat_client.get_chat_response(
-            f"Return the following document's bill number. For DOJ press releases, look for the string \"Press Release Number:\" and get the numbers that follow the colon such ex: \"24-570\" and format it as \"DOJ24-570\". For executive orders find the string \"Executive Order\" and get the numbers that follow it ex:\"14053\" and format the final answer as \"EO14053\". Same instructions for a Presidental Proclaimation, which should be formatted as \"P12345\"  : \n\n {text} \n\n This is a search and return operation. The final answer should include no explaination."
+            f"Return the following document's bill number. For DOJ press releases, look for the string \"Press Release Number:\" and get the numbers that follow the colon such ex: \"24-570\" and format it as \"DOJ24-570\". For executive orders find the string \"Executive Order\" and get the numbers that follow it ex:\"14053\" and format the final answer as \"EO14053\". Same instructions for a Presidental Proclaimation, which should be formatted as \"P12345\"  : \n\n {text} \n\n This is a search and return operation. The final answer should include no explaination. If no press release number can be found in the text (which do happen sometimes) return an empty string."
         )
 
 
@@ -21,12 +21,12 @@ class ChatGPTQuestionnaire:
 
     def ask_chamber(self, text):
         return self.chat_client.get_chat_response(
-            f"Which governmental branch or specific department is leading the iniaitive in the mentioned text? If it's an Executive Order or Proclaimation, return \"Executive\". If it's a proclaimation, return \"Proclaimation\". Otherwise, return a specific department such as \"Department of Justice\" or \"FCC\". Make sure your choice isn't just the organization which might be publishing or archiving the document, such as the Federal Register. If it's a collaboration between 2 departments or more, return a comma seperated list: \n\n {text} \n\n  "
+            f"Which governmental branch or specific department is leading the initiative in the mentioned text? If it's an Executive Order or Proclaimation, return \"Executive\". If it's a proclaimation, return \"Proclaimation\". Otherwise, return a specific department such as \"Department of Justice\" or \"FCC\". Make sure your choice isn't just the organization which might be publishing or archiving the document, such as the Federal Register. If it's a collaboration between 2 departments or more, return a comma seperated list: \n\n {text} \n\n  "
         )
 
     def ask_chamber_details(self, text):
         return self.chat_client.get_chat_response(
-            f"When was this document signed or released? If it's an executive order or proclaimation, return \"[signature date] - [return \"Executive Order\" or \"Proclaimation\"] signed and Enacted\". If it's a press release, return the \"Immediate release\" string and append the release date to the final return item as such: \"[date] - [Immadite release string (add comma and the office which may exist if its a DOJ press release)]\". \n\n {text} \n\n  "
+            f"When was this document signed or released? If it's an executive order or proclaimation, return \"[signature date] - [return \"Executive Order\" or \"Proclaimation\"] signed and Enacted\". If it's a press release, especially a DOJ press release, return the \"Immediate release\" string and append the release date to the final return item as such: \"[date] - [Immadite release string (add comma and the office which may exist if its a DOJ press release)]\". If you're having trouble finding the date on a DOJ memo, it's always after \"Press Release\" and the following title.  \n\n {text} \n\n  "
         )
 
     def ask_session(self, text):
@@ -41,7 +41,7 @@ class ChatGPTQuestionnaire:
 
     def ask_indigenous_sponsors(self, text, sponsors):
         return self.chat_client.get_chat_response(
-            f"Of the sponsors mentioned in the previous text \n\n {sponsors} \n\n which are representing Indian Country? Which sponsors are tribal members, tribal representatives, tribal organizations, carrer civil servants, political appointees? This can also include any Indigenous politicians or Indigenous policital appointees mentioned which you can confirm are Indigenous. After compiling your list, double check that all people are Indigenous. Return your answer in a comma seperated list, with no explaination. If no Indigenous sponsors can be identified, return an empty string."
+            f"Of the sponsors mentioned in the previous text \n\n {sponsors} \n\n which are representing Indian Country? Which sponsors are tribal members, tribal representatives, tribal organizations, carrer civil servants, political appointees? This can also include any Indigenous politicians or Indigenous policital appointees mentioned which you can confirm are Indigenous. After compiling your list, double check that all people are Indigenous. Return your answer in a comma seperated list, with no explaination. If no Indigenous sponsors can be identified, it is okay to return an empty string instead of a past memory or guess with no explaination."
         )
 
     def ask_last_updated(self, text):
