@@ -109,6 +109,7 @@ srptools==1.0.1
 sslpsk-pmd3==1.0.3
 stack-data==0.6.3
 starlette==0.36.3
+titlecase
 termcolor==2.4.0
 tqdm==4.66.1
 traitlets==5.14.2
