@@ -36,12 +36,12 @@ class ChatGPTQuestionnaire:
     
     def ask_sponsors(self, text):
         return self.chat_client.get_chat_response(
-            f"Which tribal members, tribal representatives, tribal organizations, carrer civil servants, political appointees, and elected officals are supporting this initiative? Return your answer in a comma seperated list, with no explaination. \n\n {text} \n\n  "
+            f"Which tribal members, tribal representatives, tribal organizations, carrer civil servants, political appointees, and elected officals are supporting this initiative? When identifying Indigenous sponsors, be sure to be as specific as possible by listing their tribal affiliation if available. If given a general statement, like \"Supported by all 4 Federally recognized nations in Louisiana\", or \"each of the nine federally recognized Tribes in Oregon\" list look up and add each individual tribe to your list. If you can list all the tribes, then you don't need to include a general statement like \"representatives from 10 confederated nations [followed by comma seperated names]\". If listing an individual person who's Indigenous, and you have their specific tribal affiliations, return their entry as \"First Last [Tribe 1, Tribe 2, Tribe 3]\". For non-Indigenous sponsors, include their role similarly in brackets ex: \"First Last [United States Secretary of the Interior]\" Be sure to also include non-Indigenous advocates and Indigenous politicans in your answer if they are mentioned. Return your answer in a comma seperated list, capitalized as appropriate for a title ex: \"Here’s an Example of What Title Caps Should Look Like, See What I Mean?\". Do not include an explaination. \n\n {text} \n\n  "
         )
 
     def ask_indigenous_sponsors(self, text, sponsors):
         return self.chat_client.get_chat_response(
-            f"Of the sponsors mentioned \n\n {sponsors} \n\n which are representing Indian Country? Which sponsors are tribal members, tribal representatives, tribal organizations, carrer civil servants, political appointees? Return your answer in a comma seperated list, with no explaination. \n\n {text} \n\n  "
+            f"Of the sponsors mentioned in the previous text \n\n {sponsors} \n\n which are representing Indian Country? Which sponsors are tribal members, tribal representatives, tribal organizations, carrer civil servants, political appointees? This can also include any Indigenous politicians or Indigenous policital appointees mentioned which you can confirm are Indigenous. After compiling your list, double check that all people are Indigenous. Return your answer in a comma seperated list, with no explaination. If no Indigenous sponsors can be identified, return an empty string."
         )
 
     def ask_last_updated(self, text):
@@ -87,7 +87,7 @@ class ChatGPTQuestionnaire:
 
     def ask_prevention_efforts_expl(self, text):
         return self.chat_client.get_chat_response(
-            f"Do not respond before reading the question, and then reviewing the legislation closely. Take your time and be accurate. Please evaluate the previously mentioned legislation for any prevention efforts regarding Missing and Murdered Indigenous Persons including but not limited to training or awareness efforts. If any prevention efforts are identified, please quote the text and return the quoted text. If no prevention efforts can be identified, please return \”No\”."
+            f"Do not respond before reading the question, and then reviewing the legislation closely. Take your time and be accurate. Please evaluate the previously mentioned legislation for any prevention efforts regarding Missing and Murdered Indigenous Persons including but not limited to training or awareness efforts. If any prevention efforts are identified, please quote the text and return the quoted text. If there are multiple quotes to return, do so in a numbered list without * or **. If no prevention efforts can be identified, please return \”No\”."
         )
 
     def ask_centering_indigenous_voices(self, text, indigenous_sponsors):
