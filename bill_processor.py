@@ -427,4 +427,5 @@ class BillProcessor:
             return False, message
 
         print("Processing completed successfully.")
+        self.chat_client.reset_context()
         return True, "Processing completed successfully"

@@ -5,6 +5,9 @@ class ChatGPTClient:
         self.client = OpenAI(api_key=api_key)
         self.conversation_history = []
 
+    def reset_context(self):
+        self.conversation_history = []
+
     def get_chat_response(self, message):
         try:
             # Append user's message to conversation history
