@@ -94,14 +94,28 @@ class ChatGPTQuestionnaire:
             f"Do not respond before reading the question, and then reviewing the legislation closely. Take your time and be accurate. Please evaluate the previously mentioned legislation for any prevention efforts regarding Missing and Murdered Indigenous Persons including but not limited to training or awareness efforts. If any prevention efforts are identified, please quote the text and return the quoted text. If there are multiple quotes to return, do so in a numbered list without * or **. If no prevention efforts can be identified, please return \”No\”."
         )
 
-    def ask_centering_indigenous_voices(self, text, indigenous_sponsors):
+    def ask_centering_indigenous_voices_eval(self, text, indigenous_sponsors):
+        response = self.chat_client.get_chat_response(
+            f"Slow down and take your time. Accuracy is imperative. Do not respond before fully reading the following question and then reviewing this legislation: \n\n {text} \n\n Take your time and be accurate. Please evaluate the previously mentioned legislation for the level of input from MMIP survivors, relatives of MMIP survivors, Indigenous politicians, and Indigenous communities in general in the following legislation. The following Indigenous politicans are sponsoring the legislation: {indigenous_sponsors} \n\n Double check your work before answering. Please return either No, Somewhat, and Yes. Do not include an explaination. If no mention is made, return No. \n\n"
+        )
+    
+        return response.strip(".")
+
+
+    def ask_centering_indigenous_voices_expl(self, text, indigenous_sponsors):
         return self.chat_client.get_chat_response(
-            f"Slow down and take your time. Accuracy is imperative. Do not respond before fully reading the following question and then reviewing this legislation: \n\n {text} \n\n Take your time and be accurate. Please evaluate the previously mentioned legislation for the level of input from MMIP survivors, relatives of MMIP survivors, Indigenous politicians, and Indigenous communities in general in the following legislation. The following Indigenous politicans are sponsoring the legislation: {indigenous_sponsors} \n\n Double check your work before answering. Please return either No, Somewhat, and Yes alongside a 3 sentence (or less) explaination. If no mention is made, return No. \n\n"
+            f"Slow down and take your time. Accuracy is imperative. Please share a 3 sentence (or less) explaination about the inclusion of how you determined the previously mentioned legislation's level and nature of input from MMIP survivors, relatives of MMIP survivors, Indigenous politicians, and Indigenous communities in general. The following Indigenous politicans are sponsoring the legislation: {indigenous_sponsors} \n\n Double check your work before answering. If no mention is made, return No. \n\n"
         )
 
     def ask_survivor_relative_input_eval(self, text):
         response = self.chat_client.get_chat_response(
-            f"Do not respond before fully reading the following question and then reviewing the previously mentioned legislation. Take your time and be accurate. Please evaluate the previously mentioned legislation for the level of input from MMIP survivors or relatives of MMIP survivors in the following legislation. Please return either No, Somewhat, or Yes. Do not include an explaination. If no mention is made, return No. \n\n"
+            f"Do not respond before fully reading the following question and then reviewing the previously mentioned legislation. Take your time and be accurate. Please evaluate the previously mentioned legislation for the level of input from MMIP survivors or relatives of MMIP survivors in the following legislation. If you identify any Indigenous organizations mentioned in the legislation, you should use your web access to look up the organization and determine if they focus on supporting MMIP survivors. Do not skip this step. The inclusion of an organization which supports MMIP should trigger a yes answer. Please return either No, Somewhat, or Yes. Do not include an explaination. If no mention is made, return No. \n\n"
+        )
+        return response.strip(".")
+    
+    def ask_survivor_relative_input_expl(self, text):
+        response = self.chat_client.get_chat_response(
+            f"Do not respond before fully reading the following question and then reviewing the previously mentioned legislation. Take your time and be accurate. Please share your explaination for how you determined why the legislation does or does not include input from MMIP survivors or relatives of MMIP survivors in the following legislation. If no mention is made, return No. \n\n"
         )
         return response.strip(".")
 

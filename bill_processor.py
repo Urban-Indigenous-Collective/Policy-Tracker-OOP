@@ -296,8 +296,16 @@ class BillProcessor:
             mechanisms_expl = self.questionnaire.ask_mechanisms_expl(decoded_text)
             prevention_efforts_eval = self.questionnaire.ask_prevention_efforts_eval(decoded_text).strip(".")
             prevention_efforts_expl = self.questionnaire.ask_prevention_efforts_expl(decoded_text)
-            centering_indigenous_voices = self.questionnaire.ask_centering_indigenous_voices(decoded_text, self.indigenous_sponsors)
+
+            centering_indigenous_voices_eval = self.questionnaire.ask_centering_indigenous_voices_eval(decoded_text, self.indigenous_sponsors)
+            centering_indigenous_voices_expl = self.questionnaire.ask_centering_indigenous_voices_expl(decoded_text, self.indigenous_sponsors)
+
+            print(f"FROM GPT -- Centering Indigenous Voices Evaluation: {centering_indigenous_voices_eval}")
+            print(f"FROM GPT -- Centering Indigenous Voices Explaination: {centering_indigenous_voices_expl}")
+
             survivor_relative_input_eval = self.questionnaire.ask_survivor_relative_input_eval(decoded_text).strip(".")
+            survivor_relative_input_expl = self.questionnaire.ask_survivor_relative_input_expl(decoded_text).strip(".")
+
             categories_eval = self.questionnaire.ask_categories_eval(decoded_text)
 
             # Format data points string to be used in pros and cons analysis
@@ -307,7 +315,16 @@ class BillProcessor:
                 f"Mechanisms Explained: {mechanisms_expl}\n"
                 f"Prevention Efforts: {prevention_efforts_expl}\n"
                 f"Indigenous Sponsors: {self.indigenous_sponsors}\n"
-                f"Centering Indigenous Voices: {centering_indigenous_voices}\n"
+
+                f"Centering Indigenous Voices?: {centering_indigenous_voices_eval}\n"
+                f"Centering Indigenous Voices: {centering_indigenous_voices_expl}\n"
+
+
+
+
+                f"Level of Survivor / Relative Input?: {survivor_relative_input_eval}\n"
+                f"Level of Survivor / Relative Input: {survivor_relative_input_expl}\n"
+
                 f"Legislation Categories: {categories_eval}"
             )
 
@@ -324,12 +341,19 @@ class BillProcessor:
                 'mechanisms_expl': mechanisms_expl,
                 'prevention_efforts_eval': prevention_efforts_eval,
                 'prevention_efforts_expl': prevention_efforts_expl,
-                'centering_indigenous_voices': centering_indigenous_voices,
+                'centering_indigenous_voices_eval': centering_indigenous_voices_eval,
+                'centering_indigenous_voices_expl': centering_indigenous_voices_expl,
+
                 'survivor_relative_input_eval': survivor_relative_input_eval,
+                'survivor_relative_input_expl': survivor_relative_input_expl,
+
                 'categories_eval': categories_eval,
                 'uic_pros': uic_pros,
                 'uic_cons': uic_cons
             })
+
+            print(f"FROM BILL OBJ -- Centering Indigenous Voices Evaluation: {self.compiled_bill.get("centering_indigenous_voices_eval")}")
+            print(f"FROM BILL OBJ -- Centering Indigenous Voices Explaination: {self.compiled_bill.get("centering_indigenous_voices_expl")}")
 
             return True, "Bill text summarized successfully"
         except Exception as e:
@@ -375,8 +399,11 @@ class BillProcessor:
                 'Prevention Efforts?': bill_info.get('prevention_efforts_eval', ''),
                 'Prevention Efforts': bill_info.get('prevention_efforts_expl', ''),
 
-                'Level of Survivor / Relative Input': bill_info.get('survivor_relative_input_eval', ''),
-                'Centering of Indigenous Voices': bill_info.get('centering_indigenous_voices', ''),
+                'Level of Survivor / Relative Input?': bill_info.get('survivor_relative_input_eval', ''),
+                'Level of Survivor / Relative Input': bill_info.get('survivor_relative_input_expl', ''),
+
+                'Centering of Indigenous Voices?': bill_info.get('centering_indigenous_voices_eval', ''),
+                'Centering of Indigenous Voices': bill_info.get('centering_indigenous_voices_expl', ''),
 
                 'Sponsors': self.compiled_bill.get('bill_sponsors', 'Executive Order'),
                 'Indigenous Sponsorship': self.compiled_bill.get('indigenous_sponsors', ''),
