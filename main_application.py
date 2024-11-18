@@ -9,6 +9,7 @@ from wikipedia_api_client import WikipediaAPIClient
 from indigenous_database import IndigenousDatabase  # Import the IndigenousDatabase class
 import time
 from legiscan_processor import LegiScanProcessor
+import re
 
 class MainApplication:
     def __init__(self, legiscan_key, openai_key):
@@ -134,15 +135,36 @@ class MainApplication:
 
         
     def process_urls_for_web(self, urls_string):
-        urls = [url.strip() for url in urls_string.split(',')]
+        # Step 1: Clean up the input string
+        urls_string = urls_string.strip()  # Remove leading/trailing whitespace
+
+        # Split by both commas and whitespace using a regular expression
+        urls = [url.strip() for url in re.split(r'[,\s]+', urls_string) if url.strip()]  # Split and filter empty entries
         total_urls = len(urls)
+
+        # Step 2: Validate URLs
+        def is_valid_url(url):
+            url_regex = re.compile(
+                r'^(http|https)://'  # Start with http or https
+                r'([A-Za-z0-9-]+\.)+[A-Za-z]{2,6}'  # Domain
+                r'(:[0-9]{1,5})?'  # Optional port
+                r'(/.*)?$'  # Optional path
+            )
+            return re.match(url_regex, url) is not None
+
+        valid_urls = [url for url in urls if is_valid_url(url)]
+        invalid_urls = [url for url in urls if url not in valid_urls]
+
+        # Log invalid URLs and proceed only with valid ones
+        if invalid_urls:
+            print(f"Invalid URLs skipped: {invalid_urls}")
+        print(f"Starting URL processing. Total valid URLs: {len(valid_urls)}")
 
         # Reset progress at the start of processing
         self.progress = 0
 
         # Initialize a list to store processed data for each URL
         processed_data = []
-        print(f"Starting URL processing. Total URLs: {total_urls}")
 
         for i, url in enumerate(urls):
             # Log URL processing
