@@ -352,8 +352,8 @@ class BillProcessor:
                 'uic_cons': uic_cons
             })
 
-            print(f"FROM BILL OBJ -- Centering Indigenous Voices Evaluation: {self.compiled_bill.get("centering_indigenous_voices_eval")}")
-            print(f"FROM BILL OBJ -- Centering Indigenous Voices Explaination: {self.compiled_bill.get("centering_indigenous_voices_expl")}")
+            print(f"FROM BILL OBJ -- Centering Indigenous Voices Evaluation: {self.compiled_bill.get('centering_indigenous_voices_eval')}")
+            print(f"FROM BILL OBJ -- Centering Indigenous Voices Explaination: {self.compiled_bill.get('centering_indigenous_voices_expl')}")
 
             return True, "Bill text summarized successfully"
         except Exception as e:
