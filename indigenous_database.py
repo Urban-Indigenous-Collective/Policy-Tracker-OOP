@@ -64,18 +64,74 @@ class IndigenousDatabase:
                 "party": "N/A",
                 "state": "Alaska",
                 "ethnicity": "Aleut, Tlingit",
-                "offices_held": "Missing and Murdered Indigenous Persons Coordinator, Tribal Judge"
+                "offices_held": "MMIP Coordinator (District of Alaska), Tribal Judge"
             }
         )
 
         # Add Ingrid Cumberlidge separately
         self.database.append(
             {
+                "name": "Ingrid Goodyear",
+                "party": "N/A",
+                "state": "Alaska",
+                "ethnicity": "Aleut, Tlingit",
+                "offices_held": "MMIP Coordinator (Districts of Alaska & Great Plains)"
+            }
+        )
+
+        # Add MMIP Coordinators separately
+        self.database.append(
+            {
                 "name": "Cedar Wilkie Gillette",
                 "party": "N/A",
                 "state": "Oregon",
                 "ethnicity": "Mandan, Hidatsa, Arikara Nation, Turtle Mountain Band of Chippewa",
-                "offices_held": "MMIP Regional Coordinator"
+                "offices_held": "MMIP Coordinator (Northwest Region), MMIP Coordinator (District of Oregon)"
+            }
+        )
+
+        # Add MMIP Coordinators separately
+        self.database.append(
+            {
+                "name": "Shaniya Decker",
+                "party": "N/A",
+                "state": "New Mexico",
+                "ethnicity": "Salish, Nakoda, Turtle Mountain Band of Chippewa",
+                "offices_held": "MMIP Coordinator (District of New Mexico)"
+            }
+        )
+
+        # Add MMIP Coordinators separately
+        self.database.append(
+            {
+                "name": "Patti Buhl",
+                "party": "N/A",
+                "state": "Oklahoma",
+                "ethnicity": "Citizen of the Cherokee Nation",
+                "offices_held": "MMIP Coordinator (District of Northern Oklahoma)"
+            }
+        )
+
+        # Add MMIP Coordinators separately
+        self.database.append(
+            {
+                "name": "Bree Black Horse",
+                "party": "N/A",
+                "state": "Washington",
+                "ethnicity": "Seminole Nation of Oklahoma",
+                "offices_held": "MMIP Coordinator (District of Eastern Washington)"
+            }
+        )
+
+
+        # Add MMIP Coordinators separately
+        self.database.append(
+            {
+                "name": "Allison Morrisette",
+                "party": "N/A",
+                "state": "South Dakota",
+                "ethnicity": "Oglala Lakota",
+                "offices_held": "MMIP Coordinator (South Dakota)"
             }
         )
 
