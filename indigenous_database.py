@@ -64,7 +64,7 @@ class IndigenousDatabase:
                 "party": "N/A",
                 "state": "Alaska",
                 "ethnicity": "Aleut, Tlingit",
-                "offices_held": "MMIP Coordinator (District of Alaska), Tribal Judge"
+                "offices_held": "MMIP Coordinator (District of Alaska)"
             }
         )
 

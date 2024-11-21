@@ -166,35 +166,65 @@ class BillProcessor:
                     processed_sponsors = []
                     processed_indigenous_sponsors = []
 
-                    # Process each sponsor to update ethnicity where applicable
+                    # Process each sponsor to update ethnicity and replace role with `offices_held` if Indigenous
                     for sponsor in sponsors_list:
-                        # Extract the sponsor's name (everything before the first '[')
-                        if '[' in sponsor:
-                            name = sponsor.split('[')[0].strip()
-                            # Keep the original content inside the brackets
-                            original_content = sponsor[sponsor.find('[') + 1:sponsor.find(']')].strip()
+                        # Split the sponsor string into name and details using ' - ' as the delimiter
+                        if ' - ' in sponsor:
+                            parts = sponsor.split(' - ', 1)  # Split into two parts: name and details
+                            name = parts[0].strip()
+                            details = parts[1].strip()
                         else:
+                            # If no ' - ', treat the entire string as the name with no details
                             name = sponsor.strip()
-                            original_content = ''
+                            details = ''
 
-                        # Retrieve the ethnicity by searching the database
-                        ethnicity = next(
-                            (entry['ethnicity'] for entry in self.indigenous_db.database if entry['name'] == name),
+                        # Extract additional details from parentheses if present
+                        if '(' in details and ')' in details:
+                            role = details.split('(')[0].strip()  # Role is before the first '('
+                            additional_details = details[details.find('(') + 1:details.find(')')].strip()
+                        else:
+                            role = details
+                            additional_details = ''
+
+                        # Retrieve the ethnicity and offices_held by searching the database
+                        indigenous_data = next(
+                            (entry for entry in self.indigenous_db.database if entry['name'] == name),
                             None
                         )
+                        ethnicity = indigenous_data.get('ethnicity') if indigenous_data else None
+                        offices_held = indigenous_data.get('offices_held') if indigenous_data else None
 
                         if ethnicity and ethnicity != 'N/A':
-                            # Append ethnicity data to the existing content in the brackets
-                            if original_content:
-                                updated_content = f"{original_content} - {ethnicity}"
+                            # Replace the role with `offices_held` if available
+                            if offices_held:
+                                role = offices_held
+
+                            # Move ethnicity after the name in parentheses
+                            name_with_ethnicity = f"{name} ({ethnicity})"
+
+                            # Build the complete sponsor string
+                            if role and additional_details:
+                                sponsor_with_ethnicity = f"{name_with_ethnicity} - {role} ({additional_details})"
+                            elif role:
+                                sponsor_with_ethnicity = f"{name_with_ethnicity} - {role}"
+                            elif additional_details:
+                                sponsor_with_ethnicity = f"{name_with_ethnicity} ({additional_details})"
                             else:
-                                updated_content = ethnicity
-                            sponsor_with_ethnicity = f"{name} [{updated_content}]"
+                                sponsor_with_ethnicity = name_with_ethnicity
+
                             # Add to Indigenous sponsors list
                             processed_indigenous_sponsors.append(sponsor_with_ethnicity)
                         else:
                             # Keep the sponsor as is
-                            sponsor_with_ethnicity = sponsor.strip()
+                            name_with_ethnicity = name  # No ethnicity for non-Indigenous sponsors
+                            if role and additional_details:
+                                sponsor_with_ethnicity = f"{name_with_ethnicity} - {role} ({additional_details})"
+                            elif role:
+                                sponsor_with_ethnicity = f"{name_with_ethnicity} - {role}"
+                            elif additional_details:
+                                sponsor_with_ethnicity = f"{name_with_ethnicity} ({additional_details})"
+                            else:
+                                sponsor_with_ethnicity = name_with_ethnicity
 
                         # Append to processed_sponsors list
                         processed_sponsors.append(sponsor_with_ethnicity)
