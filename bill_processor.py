@@ -171,8 +171,11 @@ class BillProcessor:
                         # Extract the sponsor's name (everything before the first '[')
                         if '[' in sponsor:
                             name = sponsor.split('[')[0].strip()
+                            # Keep the original content inside the brackets
+                            original_content = sponsor[sponsor.find('[') + 1:sponsor.find(']')].strip()
                         else:
                             name = sponsor.strip()
+                            original_content = ''
 
                         # Retrieve the ethnicity by searching the database
                         ethnicity = next(
@@ -181,8 +184,12 @@ class BillProcessor:
                         )
 
                         if ethnicity and ethnicity != 'N/A':
-                            # Replace what's inside the brackets with the ethnicity
-                            sponsor_with_ethnicity = f"{name} [{ethnicity}]"
+                            # Append ethnicity data to the existing content in the brackets
+                            if original_content:
+                                updated_content = f"{original_content} - {ethnicity}"
+                            else:
+                                updated_content = ethnicity
+                            sponsor_with_ethnicity = f"{name} [{updated_content}]"
                             # Add to Indigenous sponsors list
                             processed_indigenous_sponsors.append(sponsor_with_ethnicity)
                         else:
