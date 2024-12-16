@@ -130,3 +130,5 @@ Werkzeug==3.0.1
 wsproto==1.2.0
 xonsh==0.15.1
 zeroconf==0.131.0
+pdf2image
+python-dotenv

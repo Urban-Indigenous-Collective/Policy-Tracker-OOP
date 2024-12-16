@@ -1,15 +1,18 @@
 from flask import Flask, request, send_from_directory, jsonify, render_template
 import os
 from main_application import MainApplication
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 
 # Initialize MainApplication
 # Assuming MainApplication initializes API clients with hardcoded keys
+load_dotenv()
+
 
 # Initialize OpenAI and AirTable
-legiscan_key = 'REDACTED_LEGISCAN_KEY'
-openai_key = 'REDACTED_OPENAI_KEY'
+legiscan_key = os.getenv("LEGISCAN_KEY")
+openai_key = os.getenv("OPENAI_API_KEY")
 
 
 # Pass Airtable table and keys to MainApplication
