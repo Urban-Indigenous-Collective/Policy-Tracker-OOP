@@ -62,6 +62,7 @@ class BillProcessor:
 
                 # Since it's an executive order, we may not have a bill_id or doc_id
                 self.compiled_bill['decoded_text'] = decoded_text
+                print(f"Decoded text assigned to bill object: {decoded_text}")
                 self.compiled_bill['bill_id'] = None
                 self.compiled_bill['doc_id'] = None
                 self.compiled_bill['bill_text_url'] = url
@@ -186,11 +187,19 @@ class BillProcessor:
                             role = details
                             additional_details = ''
 
+
+
+                        # Remove any text inside parentheses along with the parentheses
+                        name = re.sub(r'\(.*?\)', '', name).strip()
+                        # Remove any text after a dash (if one exists)
+                        name = name.split('-', 1)[0].strip()
+                        print(f"Name of sponsor to be checked in Indigenous DB: {name}")
                         # Retrieve the ethnicity and offices_held by searching the database
                         indigenous_data = next(
                             (entry for entry in self.indigenous_db.database if entry['name'] == name),
                             None
                         )
+                        print(f"Indigenous data returned: {indigenous_data}")
                         ethnicity = indigenous_data.get('ethnicity') if indigenous_data else None
                         offices_held = indigenous_data.get('offices_held') if indigenous_data else None
 
@@ -213,6 +222,7 @@ class BillProcessor:
                                 sponsor_with_ethnicity = name_with_ethnicity
 
                             # Add to Indigenous sponsors list
+                            print(f"Processed indigenous sponsor: {name}")
                             processed_indigenous_sponsors.append(sponsor_with_ethnicity)
                         else:
                             # Keep the sponsor as is
