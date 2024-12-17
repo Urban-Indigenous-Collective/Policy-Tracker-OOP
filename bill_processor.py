@@ -189,16 +189,10 @@ class BillProcessor:
 
 
 
-                        # Remove any text inside parentheses along with the parentheses
-                        name = re.sub(r'\(.*?\)', '', name).strip()
-                        # Remove any text after a dash (if one exists)
-                        name = name.split('-', 1)[0].strip()
+
                         print(f"Name of sponsor to be checked in Indigenous DB: {name}")
                         # Retrieve the ethnicity and offices_held by searching the database
-                        indigenous_data = next(
-                            (entry for entry in self.indigenous_db.database if entry['name'] == name),
-                            None
-                        )
+                        indigenous_data = self.indigenous_db.get_indigenous_sponsor_entry(name)
                         print(f"Indigenous data returned: {indigenous_data}")
                         ethnicity = indigenous_data.get('ethnicity') if indigenous_data else None
                         offices_held = indigenous_data.get('offices_held') if indigenous_data else None
