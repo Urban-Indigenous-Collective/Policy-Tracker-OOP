@@ -185,3 +185,47 @@ class IndigenousDatabase:
                 return True
         return False
 
+
+    def get_indigenous_sponsor_entry(self, input_name):
+        """
+        Retrieves the Indigenous sponsor's data from the database based on a robust search logic.
+        """
+        # Step 1: Clean the input name
+        def clean_name(name):
+            # Remove any text inside parentheses along with the parentheses
+            name = re.sub(r'\(.*?\)', '', name).strip()
+            # Remove any text after a dash (if one exists)
+            name = name.split('-', 1)[0].strip()
+            return name
+
+        parsed_input_name = self.parse_name_from_input(input_name)
+        cleaned_input_name = clean_name(parsed_input_name)
+        normalized_input_name = self.normalize_hyphens_and_en_dashes(cleaned_input_name).lower()
+
+        print(f"Name of sponsor to be checked in Indigenous DB: {normalized_input_name}")
+
+        # Step 2: Search the database for a robust match
+        best_match = None
+        highest_score = 0
+        threshold = 90  # Adjust this threshold for fuzzy matching tolerance
+
+        for db_entry in self.database:
+            # Normalize the database entry name
+            db_name = db_entry['name']
+            cleaned_db_name = clean_name(self.parse_name_from_input(db_name))
+            normalized_db_name = self.normalize_hyphens_and_en_dashes(cleaned_db_name).lower()
+
+            # Perform fuzzy matching
+            match_score = fuzz.partial_ratio(normalized_input_name, normalized_db_name)
+            
+            if match_score > threshold and match_score > highest_score:
+                best_match = db_entry
+                highest_score = match_score
+
+        # Step 3: Return the matched entry with debug logs
+        if best_match:
+            print(f"Best Indigenous data match found: {best_match} (Score: {highest_score})")
+            return best_match
+        else:
+            print("No match found in Indigenous DB.")
+            return None
