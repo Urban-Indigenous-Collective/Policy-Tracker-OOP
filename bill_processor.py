@@ -1,5 +1,6 @@
 import re
 import datetime
+import time
 from urllib.parse import urlparse
 from gpt_questions import ChatGPTQuestionnaire
 from legiscan_processor import LegiScanProcessor
@@ -24,6 +25,27 @@ class BillProcessor:
         self.gov_processor = GovProcessor(document_processor, indigenous_db)
         self.compiled_bill = {}
 
+    def _retry_request(self, func, *args, **kwargs):
+        """
+        Wrapper to retry an API call with exponential backoff if a rate limit error is detected.
+        """
+        max_retries = 5
+        delay = 1  # initial delay in seconds
+        for attempt in range(max_retries):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                error_str = str(e).lower()
+                # Check for rate limit error in exception message
+                if "rate limit" in error_str or "429" in error_str or "rate_limit_exceeded" in error_str:
+                    print(f"Rate limit error encountered in {func.__name__}: {e}. Retrying in {delay} seconds (attempt {attempt + 1}/{max_retries})...")
+                    time.sleep(delay)
+                    delay *= 2  # Exponential backoff
+                else:
+                    raise e
+        raise Exception(f"Max retries exceeded for {func.__name__}")
+
+
     def get_doc_text(self, url, doc_id=None):
         """
         Retrieves document text and relevant identifiers.
@@ -43,31 +65,24 @@ class BillProcessor:
                     print(error_msg)
                     return False, error_msg
 
-                # Store results in compiled_bill
                 self.compiled_bill['decoded_text'] = decoded_text
                 self.compiled_bill['bill_id'] = bill_id
                 self.compiled_bill['doc_id'] = doc_id
                 self.compiled_bill['bill_text_url'] = url
                 print("LegiScan text retrieved successfully.")
-
                 return True, "LegiScan text retrieved successfully"
             elif self.gov_processor.is_gov_url(url):
                 print("URL identified as .gov URL.")
-                # Handle .gov URL using GovProcessor
                 decoded_text, error_msg = self.gov_processor.get_gov_document_text(url)
                 if error_msg:
                     self.compiled_bill['error'] = error_msg
                     print(error_msg)
                     return False, error_msg
 
-                # Since it's an executive order, we may not have a bill_id or doc_id
                 self.compiled_bill['decoded_text'] = decoded_text
-                print(f"Decoded text assigned to bill object: {decoded_text}")
                 self.compiled_bill['bill_id'] = None
                 self.compiled_bill['doc_id'] = None
                 self.compiled_bill['bill_text_url'] = url
-
-                #print(f"Text retrieved: {decoded_text}")
 
                 return True, ".gov document text retrieved successfully"
             else:
@@ -82,47 +97,39 @@ class BillProcessor:
             print(error_msg)
             return False, error_msg
 
-
     def get_bill_details(self, bill_id):
         """
         Retrieves bill details using the bill ID and identifies Indigenous sponsors.
         For .gov bills, retrieves additional state details.
         """
         if not bill_id:
-            # For .gov URLs, check and process state and title details directly
-            print(f"No bill ID found, attempting to get details via GPT")
+            print("No bill ID found, attempting to get details via GPT")
             bill_link = self.compiled_bill.get('bill_text_url', '')
-            print(f"Link returned from compiled bill for IF check: {bill_link}")
             bill_text = self.compiled_bill['decoded_text']
 
             if '.gov' in bill_link:
                 try:
-                    # Get state details via GPT
-                    state_details = self.questionnaire.ask_state(bill_link)
+                    # Use the retry wrapper for each API call
+                    state_details = self._retry_request(self.questionnaire.ask_state, bill_link)
                     print(f"State returned from GPT: {state_details}")
-                    # Get title via GPT
-                    title = self.questionnaire.ask_title(bill_text)
-                    print(f"Title returned from GPT: {title}")
 
-                    # Ensure title follows proper title case capitalization rules
+                    title = self._retry_request(self.questionnaire.ask_title, bill_text)
                     title = titlecase(title)
                     print(f"Formatted Title: {title}")
 
-                    # Save the state and title in the bill dictionary
-                    bill_number = self.questionnaire.ask_bill_number(bill_text)
+                    bill_number = self._retry_request(self.questionnaire.ask_bill_number, bill_text)
                     print(f"Bill number returned from GPT: {bill_number}")
 
-                    chamber_details = self.questionnaire.ask_chamber_details(bill_text)
+                    chamber_details = self._retry_request(self.questionnaire.ask_chamber_details, bill_text)
                     print(f"Chamber details returned from GPT: {chamber_details}")
 
-                    session_title = self.questionnaire.ask_session(bill_text)
+                    session_title = self._retry_request(self.questionnaire.ask_session, bill_text)
                     print(f"Session number returned from GPT: {session_title}")
                     session = {'session_title': session_title}
 
-                    last_updated = self.questionnaire.ask_last_updated(chamber_details)
+                    last_updated = self._retry_request(self.questionnaire.ask_last_updated, chamber_details)
                     print(f"Last updated returned from GPT: {last_updated}")
 
-                    # Save the details in the bill dictionary
                     self.compiled_bill['bill'] = {
                         'state': state_details,
                         'title': title,
@@ -131,12 +138,10 @@ class BillProcessor:
                         'status_date': last_updated,
                     }
 
-                    # Get chamber or department via GPT
-                    chamber = self.questionnaire.ask_chamber(bill_text)
+                    chamber = self._retry_request(self.questionnaire.ask_chamber, bill_text)
                     print(f"Chamber returned from GPT: {chamber}")
 
-                    # Get sponsors via GPT
-                    sponsors = self.questionnaire.ask_sponsors(bill_text)
+                    sponsors = self._retry_request(self.questionnaire.ask_sponsors, bill_text)
                     print(f"Sponsors returned from GPT: {sponsors}")
 
                     # Define a function to split sponsors string, handling commas inside brackets
@@ -320,7 +325,6 @@ class BillProcessor:
     def summarize_bill_text(self):
         """
         Processes the bill text using the questionnaire.
-        Assumes that 'decoded_text' and 'indigenous_sponsors' are already available in compiled_bill.
         """
         decoded_text = self.compiled_bill.get('decoded_text')
         if not decoded_text:
@@ -329,51 +333,50 @@ class BillProcessor:
             return False, error_msg
 
         try:
-            # Initialize all the return values with default None values to ensure there are no missing values
-            chat_summary = self.questionnaire.ask_summary(decoded_text)
-            gender_inclusive_eval = self.questionnaire.ask_gender_inclusive_eval(decoded_text).strip(".")
-            gender_inclusive_expl = self.questionnaire.ask_gender_inclusive_expl(decoded_text)
-            mechanisms_eval = self.questionnaire.ask_mechanisms_eval(decoded_text).strip(".")
-            mechanisms_expl = self.questionnaire.ask_mechanisms_expl(decoded_text)
-            prevention_efforts_eval = self.questionnaire.ask_prevention_efforts_eval(decoded_text).strip(".")
-            prevention_efforts_expl = self.questionnaire.ask_prevention_efforts_expl(decoded_text)
+            # Use the retry wrapper for each API call in summarization
+            chat_summary = self._retry_request(self.questionnaire.ask_summary, decoded_text)
+            gender_inclusive_eval = self._retry_request(self.questionnaire.ask_gender_inclusive_eval, decoded_text).strip(".")
+            gender_inclusive_expl = self._retry_request(self.questionnaire.ask_gender_inclusive_expl, decoded_text)
+            mechanisms_eval = self._retry_request(self.questionnaire.ask_mechanisms_eval, decoded_text).strip(".")
+            mechanisms_expl = self._retry_request(self.questionnaire.ask_mechanisms_expl, decoded_text)
+            prevention_efforts_eval = self._retry_request(self.questionnaire.ask_prevention_efforts_eval, decoded_text).strip(".")
+            prevention_efforts_expl = self._retry_request(self.questionnaire.ask_prevention_efforts_expl, decoded_text)
 
-            centering_indigenous_voices_eval = self.questionnaire.ask_centering_indigenous_voices_eval(decoded_text, self.indigenous_sponsors)
-            centering_indigenous_voices_expl = self.questionnaire.ask_centering_indigenous_voices_expl(decoded_text, self.indigenous_sponsors)
+            centering_indigenous_voices_eval = self._retry_request(
+                self.questionnaire.ask_centering_indigenous_voices_eval, decoded_text, self.indigenous_sponsors
+            )
+            centering_indigenous_voices_expl = self._retry_request(
+                self.questionnaire.ask_centering_indigenous_voices_expl, decoded_text, self.indigenous_sponsors
+            )
 
             print(f"FROM GPT -- Centering Indigenous Voices Evaluation: {centering_indigenous_voices_eval}")
-            print(f"FROM GPT -- Centering Indigenous Voices Explaination: {centering_indigenous_voices_expl}")
+            print(f"FROM GPT -- Centering Indigenous Voices Explanation: {centering_indigenous_voices_expl}")
 
-            survivor_relative_input_eval = self.questionnaire.ask_survivor_relative_input_eval(decoded_text).strip(".")
-            survivor_relative_input_expl = self.questionnaire.ask_survivor_relative_input_expl(decoded_text).strip(".")
+            survivor_relative_input_eval = self._retry_request(
+                self.questionnaire.ask_survivor_relative_input_eval, decoded_text
+            ).strip(".")
+            survivor_relative_input_expl = self._retry_request(
+                self.questionnaire.ask_survivor_relative_input_expl, decoded_text
+            ).strip(".")
 
-            categories_eval = self.questionnaire.ask_categories_eval(decoded_text)
+            categories_eval = self._retry_request(self.questionnaire.ask_categories_eval, decoded_text)
 
-            # Format data points string to be used in pros and cons analysis
             data_points = (
                 f"Chat Summary: {chat_summary}\n"
                 f"Gender Inclusion: {gender_inclusive_expl}\n"
                 f"Mechanisms Explained: {mechanisms_expl}\n"
                 f"Prevention Efforts: {prevention_efforts_expl}\n"
                 f"Indigenous Sponsors: {self.indigenous_sponsors}\n"
-
                 f"Centering Indigenous Voices?: {centering_indigenous_voices_eval}\n"
                 f"Centering Indigenous Voices: {centering_indigenous_voices_expl}\n"
-
-
-
-
                 f"Level of Survivor / Relative Input?: {survivor_relative_input_eval}\n"
                 f"Level of Survivor / Relative Input: {survivor_relative_input_expl}\n"
-
                 f"Legislation Categories: {categories_eval}"
             )
 
-            # Ask for pros and cons using formatted data points
-            uic_pros = self.questionnaire.ask_uic_pros(data_points)
-            uic_cons = self.questionnaire.ask_uic_cons(data_points)
+            uic_pros = self._retry_request(self.questionnaire.ask_uic_pros, data_points)
+            uic_cons = self._retry_request(self.questionnaire.ask_uic_cons, data_points)
 
-            # Store the results in compiled_bill
             self.compiled_bill.update({
                 'chat_summary': chat_summary,
                 'gender_inclusive_eval': gender_inclusive_eval,
@@ -384,23 +387,22 @@ class BillProcessor:
                 'prevention_efforts_expl': prevention_efforts_expl,
                 'centering_indigenous_voices_eval': centering_indigenous_voices_eval,
                 'centering_indigenous_voices_expl': centering_indigenous_voices_expl,
-
                 'survivor_relative_input_eval': survivor_relative_input_eval,
                 'survivor_relative_input_expl': survivor_relative_input_expl,
-
                 'categories_eval': categories_eval,
                 'uic_pros': uic_pros,
                 'uic_cons': uic_cons
             })
 
             print(f"FROM BILL OBJ -- Centering Indigenous Voices Evaluation: {self.compiled_bill.get('centering_indigenous_voices_eval')}")
-            print(f"FROM BILL OBJ -- Centering Indigenous Voices Explaination: {self.compiled_bill.get('centering_indigenous_voices_expl')}")
+            print(f"FROM BILL OBJ -- Centering Indigenous Voices Explanation: {self.compiled_bill.get('centering_indigenous_voices_expl')}")
 
             return True, "Bill text summarized successfully"
         except Exception as e:
             error_msg = f"Error during summarization: {str(e)}"
             self.compiled_bill['error'] = error_msg
             return False, error_msg
+
 
     def parse_bill_object(self):
         """
