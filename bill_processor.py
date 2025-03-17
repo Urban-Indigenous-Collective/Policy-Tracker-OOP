@@ -1,5 +1,6 @@
 import re
 import datetime
+import traceback
 import time
 from urllib.parse import urlparse
 from gpt_questions import ChatGPTQuestionnaire
@@ -29,7 +30,7 @@ class BillProcessor:
         """
         Wrapper to retry an API call with exponential backoff if a rate limit error is detected.
         """
-        max_retries = 5
+        max_retries = 7
         delay = 1  # initial delay in seconds
         for attempt in range(max_retries):
             try:
@@ -322,6 +323,7 @@ class BillProcessor:
             self.compiled_bill['error'] = error_msg
             return False, error_msg
 
+
     def summarize_bill_text(self):
         """
         Processes the bill text using the questionnaire.
@@ -330,6 +332,7 @@ class BillProcessor:
         if not decoded_text:
             error_msg = "No decoded text available for summarization."
             self.compiled_bill['error'] = error_msg
+            print(f"❌ ERROR: {error_msg}")
             return False, error_msg
 
         try:
@@ -349,8 +352,8 @@ class BillProcessor:
                 self.questionnaire.ask_centering_indigenous_voices_expl, decoded_text, self.indigenous_sponsors
             )
 
-            print(f"FROM GPT -- Centering Indigenous Voices Evaluation: {centering_indigenous_voices_eval}")
-            print(f"FROM GPT -- Centering Indigenous Voices Explanation: {centering_indigenous_voices_expl}")
+            print(f"✅ FROM GPT -- Centering Indigenous Voices Evaluation: {centering_indigenous_voices_eval}")
+            print(f"✅ FROM GPT -- Centering Indigenous Voices Explanation: {centering_indigenous_voices_expl}")
 
             survivor_relative_input_eval = self._retry_request(
                 self.questionnaire.ask_survivor_relative_input_eval, decoded_text
@@ -394,13 +397,19 @@ class BillProcessor:
                 'uic_cons': uic_cons
             })
 
-            print(f"FROM BILL OBJ -- Centering Indigenous Voices Evaluation: {self.compiled_bill.get('centering_indigenous_voices_eval')}")
-            print(f"FROM BILL OBJ -- Centering Indigenous Voices Explanation: {self.compiled_bill.get('centering_indigenous_voices_expl')}")
+            print(f"✅ FROM BILL OBJ -- Centering Indigenous Voices Evaluation: {self.compiled_bill.get('centering_indigenous_voices_eval')}")
+            print(f"✅ FROM BILL OBJ -- Centering Indigenous Voices Explanation: {self.compiled_bill.get('centering_indigenous_voices_expl')}")
+
+            # Ensure no error flag is left behind from previous runs
+            if 'error' in self.compiled_bill:
+                del self.compiled_bill['error']
 
             return True, "Bill text summarized successfully"
+
         except Exception as e:
-            error_msg = f"Error during summarization: {str(e)}"
+            error_msg = f"❌ ERROR during summarization: {str(e)}\n{traceback.format_exc()}"
             self.compiled_bill['error'] = error_msg
+            print(error_msg)
             return False, error_msg
 
 
