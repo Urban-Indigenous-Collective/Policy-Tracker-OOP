@@ -26,6 +26,11 @@ main_app = MainApplication(legiscan_key, openai_key)
 def home():
     return render_template('index.html')  # Assuming you have an index.html template
 
+@app.route('/health')
+def health_check():
+    # Optionally, perform additional readiness checks here.
+    return jsonify({"status": "ok"}), 200
+
 @app.route('/process', methods=['POST'])
 def process():
     global process_status
