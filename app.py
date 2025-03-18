@@ -2,8 +2,11 @@ from flask import Flask, request, send_from_directory, jsonify, render_template
 import os
 from main_application import MainApplication
 from dotenv import load_dotenv
+from flask_cors import CORS
+
 
 app = Flask(__name__)
+CORS(app)
 
 # Initialize MainApplication
 # Assuming MainApplication initializes API clients with hardcoded keys
