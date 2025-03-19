@@ -1,4 +1,4 @@
-from flask import Flask, request, send_from_directory, jsonify, render_template
+from flask import Flask, request, send_from_directory, jsonify, render_template, redirect
 import os
 from main_application import MainApplication
 from dotenv import load_dotenv
@@ -21,9 +21,12 @@ openai_key = os.getenv("OPENAI_API_KEY")
 # Pass Airtable table and keys to MainApplication
 main_app = MainApplication(legiscan_key, openai_key)
 
+@app.route("/")
+def home():
+    return redirect('/analyzer')
 
 @app.route('/analyzer')
-def home():
+def analyzer():
     return render_template('index.html')  # Assuming you have an index.html template
 
 @app.route('/health-check')
