@@ -22,11 +22,11 @@ openai_key = os.getenv("OPENAI_API_KEY")
 main_app = MainApplication(legiscan_key, openai_key)
 
 
-@app.route('/')
+@app.route('/analyzer')
 def home():
     return render_template('index.html')  # Assuming you have an index.html template
 
-@app.route('/health')
+@app.route('/health-check')
 def health_check():
     # Optionally, perform additional readiness checks here.
     return jsonify({"status": "ok"}), 200
