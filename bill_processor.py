@@ -8,6 +8,7 @@ from bill_analyzer import BillAnalyzer
 from legiscan_processor import LegiScanProcessor
 from gov_processor import GovProcessor
 from sponsor_utils import process_sponsors
+from processing_log import log as plog, set_phase
 
 
 class BillProcessor:
@@ -49,7 +50,9 @@ class BillProcessor:
     def get_doc_text(self, url, doc_id=None):
         try:
             print(f"Getting document text from URL: {url}")
+            plog(f"Fetching document text...")
             self._set_phase_progress("fetch", 0.1)
+            set_phase("fetch", url[:80])
             if "legiscan.com" in url:
                 print("URL identified as LegiScan URL.")
                 decoded_text, bill_id, doc_id = self.legiscan_processor.get_legiscan_text(
@@ -69,6 +72,7 @@ class BillProcessor:
                     }
                 )
                 self._set_phase_progress("fetch", 0.35)
+                plog("Document text retrieved")
                 return True, "LegiScan text retrieved successfully"
 
             if self.gov_processor.is_gov_url(url):
@@ -161,6 +165,9 @@ class BillProcessor:
                 ]
             )
             indigenous_sponsors = self.legiscan_processor.identify_indigenous_sponsors(bill_sponsors)
+            if isinstance(indigenous_sponsors, list):
+                indigenous_sponsors = ", ".join(indigenous_sponsors)
+            plog(f"Metadata loaded: {bill.get('bill_number', 'unknown')}")
 
             self.compiled_bill.update(
                 {

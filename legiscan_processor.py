@@ -148,7 +148,7 @@ class LegiScanProcessor:
             if self.indigenous_db.is_indigenous_sponsor(sponsor):
                 indigenous_sponsors.append(sponsor)
 
-        return indigenous_sponsors
+        return ", ".join(indigenous_sponsors)
 
     def check_bill_status(self, bill_details):
         """

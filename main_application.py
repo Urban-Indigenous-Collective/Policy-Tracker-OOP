@@ -12,6 +12,7 @@ from wikipedia_api_client import WikipediaAPIClient
 from indigenous_database import IndigenousDatabase
 from legiscan_processor import LegiScanProcessor
 from constants import PROMPT_VERSION
+from processing_log import log as plog, reset as plog_reset, set_phase
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,8 @@ class MainApplication:
         self._url_progress_base = 0.0
         self._url_progress_span = 100.0
         self.progress = 0
+        self.current_phase = "Idle"
+        self.current_detail = ""
         self.bill_processor = None
         self._init_bill_processor()
 
@@ -57,6 +60,10 @@ class MainApplication:
         start, end = phase_weights.get(phase, (0.0, 1.0))
         inner = start + (end - start) * min(max(fraction, 0.0), 1.0)
         self.progress = self._url_progress_base + inner * self._url_progress_span
+        self.current_phase = phase
+        pct = int(inner * 100)
+        self.current_detail = f"{pct}%"
+        set_phase(phase, self.current_detail)
         logger.info(
             "progress phase=%s fraction=%.2f overall=%.1f",
             phase,
@@ -109,6 +116,8 @@ class MainApplication:
 
         for i, (original_url, full_url, doc_id) in enumerate(resolved):
             print(f"Processing URL: {original_url} (canonical: {full_url})")
+            plog(f"Bill {i + 1}/{total_urls}: {full_url}")
+            set_phase("batch", f"bill {i + 1} of {total_urls}")
             span = 100.0 / total_urls if total_urls else 100.0
             self._url_progress_base = i * span
             self._url_progress_span = span
@@ -143,8 +152,9 @@ class MainApplication:
                 processed_data.append(result)
 
             self.progress = (i + 1) / total_urls * 100
+            plog(f"Finished bill {i + 1}/{total_urls} ({self.progress:.0f}%)")
             print(f"Processed URL {i + 1}/{total_urls}. Current progress: {self.progress}%")
-            time.sleep(0.5)
+            time.sleep(0.2)
 
         if processed_data:
             excel_file_path = self.report_generator.export_to_excel(processed_data)
@@ -154,6 +164,12 @@ class MainApplication:
 
     def get_progress(self):
         return self.progress
+
+    def get_status_detail(self):
+        return {
+            "phase": self.current_phase,
+            "detail": self.current_detail,
+        }
 
     def process_single_url(self, url, doc_id=None, cached_analysis=None):
         try:
