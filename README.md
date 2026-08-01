@@ -30,22 +30,32 @@ GitHub push → Tailscale → SSH/rsync → docker compose up
 
 Public URL: https://policy.urbanindigenouscollective.org
 
-## LLM (Ollama)
+## LLM (provider-agnostic)
 
-Policy Tracker uses a single local model for bill analysis and scanned-PDF OCR:
+Policy Tracker uses structured JSON analysis via a pluggable LLM backend:
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `OLLAMA_BASE_URL` | `http://localhost:11434/v1` | Ollama OpenAI-compatible API |
-| `OLLAMA_MODEL` | `qwen2.5vl:32b` | Text questionnaire + vision OCR |
+| `LLM_BASE_URL` | `http://localhost:11434/v1` | OpenAI-compatible API (Ollama, vLLM, etc.) |
+| `LLM_MODEL` | `qwen2.5vl:32b` | Model name |
+| `LLM_TEMPERATURE` | `0` | Deterministic inference |
+| `LLM_SEED` | `42` | Reproducibility seed |
+| `LLM_CACHE_ENABLED` | `true` | Cache analysis results on disk |
 
 For Docker on the server, point at the host running Ollama:
 
 ```bash
-OLLAMA_BASE_URL=http://host.docker.internal:11434/v1
+LLM_BASE_URL=http://host.docker.internal:11434/v1
 ```
 
-Ollama must be running and reachable from the app container before processing URLs.
+Optional shared gateway for multiple apps (wocconwaker, etc.):
+
+```bash
+docker compose --profile gateway up -d
+LLM_GATEWAY_URL=http://inference-gateway:8090
+```
+
+Run tests: `pytest tests/`
 
 ## Deploy manually
 

@@ -1,9 +1,12 @@
 from flask import Flask, request, send_from_directory, jsonify, render_template, redirect
+import logging
 import os
 import threading
 from main_application import MainApplication
 from dotenv import load_dotenv
 from flask_cors import CORS
+
+logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
 
 
 app = Flask(__name__)

@@ -14,3 +14,5 @@ pyairtable>=2.2,<4
 fuzzywuzzy>=0.18,<1
 python-Levenshtein>=0.25,<1
 titlecase>=2.4,<3
+pydantic>=2.0,<3
+redis>=5.0,<6
