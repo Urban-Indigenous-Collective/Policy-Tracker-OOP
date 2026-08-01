@@ -20,7 +20,11 @@ class WikipediaAPIClient:
         politicians = []
         current_state = "Unknown"
 
-        municipal_heading = soup.find('h2', id='Municipal_offices').parent
+        municipal_heading_tag = soup.find('h2', id='Municipal_offices')
+        if municipal_heading_tag is None:
+            return politicians
+
+        municipal_heading = municipal_heading_tag.parent
         for element in municipal_heading.find_next_siblings():
             if element.name == 'h3':
                 current_state = element.find('span', class_='mw-headline').get_text(strip=True)
@@ -53,6 +57,7 @@ class WikipediaAPIClient:
         soup = BeautifulSoup(content, 'html.parser')
 
         politicians_data = []
+        current_state = "Unknown"
 
         # Process Federal and State Offices
         for element in soup.find_all(['div', 'table']):

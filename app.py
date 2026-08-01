@@ -8,6 +8,8 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
+process_status = "Idle"
+
 # Initialize MainApplication
 # Assuming MainApplication initializes API clients with hardcoded keys
 load_dotenv()
@@ -55,9 +57,11 @@ def process():
 @app.route('/download')
 def download_file():
     file_path = request.args.get('path')
-    directory = os.path.dirname(file_path)
+    if not file_path or not os.path.isfile(file_path):
+        return jsonify({'error': 'File not found'}), 404
+    directory = os.path.dirname(file_path) or '.'
     filename = os.path.basename(file_path)
-    return send_from_directory(os.path.dirname(file_path), 'bill_details.xlsx', as_attachment=True)
+    return send_from_directory(directory, filename, as_attachment=True)
 
 
 @app.route('/status')
@@ -117,4 +121,5 @@ def fetch_all_indigenous():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    debug = os.getenv('FLASK_DEBUG', '').lower() in ('1', 'true', 'yes')
+    app.run(debug=debug)
