@@ -52,10 +52,7 @@
                     type: "GET",
                     success: function(response) {
                         $("#status").text(response.status);
-                        console.log(response)
-                        $("#progressBar").val(response.progress);
-                        // const progressBar = document.getElementById('progressBar');
-                        // progressBar.value = response.progress;
+                        $("#progressBar").prop('value', response.progress);
                         if (response.status !== "Complete" && response.status !== "Failed") {
                             setTimeout(fetchUpdate, 1000);  // Poll every second until complete or failed
                         }
