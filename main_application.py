@@ -11,7 +11,6 @@ from airtable_client import AirtableClient
 from wikipedia_api_client import WikipediaAPIClient
 from indigenous_database import IndigenousDatabase
 from legiscan_processor import LegiScanProcessor
-from constants import PROMPT_VERSION
 from processing_log import log as plog, reset as plog_reset, set_phase
 
 logger = logging.getLogger(__name__)
@@ -38,7 +37,6 @@ class MainApplication:
         self._init_bill_processor()
 
         self.legiscan_processor = LegiScanProcessor(self.indigenous_db, self.api_client)
-        self._batch_analysis_cache = {}
 
     def _init_bill_processor(self):
         self.bill_processor = BillProcessor(
@@ -99,25 +97,18 @@ class MainApplication:
             print(f"Invalid URLs skipped: {invalid_urls}")
 
         resolved = []
-        seen_canonical = set()
         for url in valid_urls:
             canonical, doc_id = self.resolve_canonical_url(url)
-            if canonical in seen_canonical:
-                msg = f"Skipped duplicate link (same bill): {url}"
-                print(msg)
-                plog(msg)
-                continue
-            seen_canonical.add(canonical)
             resolved.append((url, canonical, doc_id))
 
         total_urls = len(resolved)
-        skipped_dupes = len(valid_urls) - len(resolved)
-        if skipped_dupes:
-            plog(f"{skipped_dupes} duplicate link(s) skipped — processing {total_urls} unique bill(s)")
-        print(f"Starting URL processing. Total unique URLs: {total_urls}")
+        print(f"Starting URL processing. Total URLs: {total_urls}")
         self.progress = 0
-        self._batch_analysis_cache = {}
         processed_data = []
+
+        # Disable caches so repeated links get independent LLM runs (comparison testing).
+        prior_cache_setting = self.bill_processor.analyzer.cache_enabled
+        self.bill_processor.analyzer.cache_enabled = False
 
         for i, (original_url, full_url, doc_id) in enumerate(resolved):
             print(f"Processing URL: {original_url} (canonical: {full_url})")
@@ -142,24 +133,15 @@ class MainApplication:
                     }
                 )
             else:
-                cache_key = (full_url, PROMPT_VERSION)
-                cached_analysis = self._batch_analysis_cache.get(cache_key)
-
-                result = self.process_single_url(
-                    full_url, doc_id=doc_id, cached_analysis=cached_analysis
-                )
-
-                if not cached_analysis and cache_key not in self._batch_analysis_cache:
-                    payload = self.bill_processor.get_analysis_cache_payload()
-                    if payload.get("chat_summary"):
-                        self._batch_analysis_cache[cache_key] = payload
-
+                result = self.process_single_url(full_url, doc_id=doc_id)
                 processed_data.append(result)
 
             self.progress = (i + 1) / total_urls * 100
             plog(f"Finished bill {i + 1}/{total_urls} ({self.progress:.0f}%)")
             print(f"Processed URL {i + 1}/{total_urls}. Current progress: {self.progress}%")
             time.sleep(0.2)
+
+        self.bill_processor.analyzer.cache_enabled = prior_cache_setting
 
         if processed_data:
             excel_file_path = self.report_generator.export_to_excel(processed_data)
