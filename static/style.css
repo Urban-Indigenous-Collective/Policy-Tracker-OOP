@@ -24,7 +24,15 @@ body {
 }
 
 .progress-container {
-    margin-top: 100px
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    margin-top: 100px;
+    width: min(35vw, 100%);
+    margin-left: auto;
+    margin-right: auto;
+    gap: 0.75rem;
 }
 
 .button {
@@ -55,7 +63,13 @@ body {
 }
 
 #status {
-    padding-right: 32px
+    text-align: center;
+    width: 100%;
+}
+
+#progressBar {
+    width: 100%;
+    height: 1.25rem;
 }
 
 @media (max-width: 992px) {
@@ -102,7 +116,9 @@ progress[value]::-webkit-progress-bar {
   }
 
   #activityLog {
-    margin-top: 1rem;
+    display: block;
+    width: min(35vw, 100%);
+    margin: 1rem auto 0;
     max-height: 220px;
     overflow-y: auto;
     padding: 0.75rem 1rem;
