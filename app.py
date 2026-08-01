@@ -40,6 +40,7 @@ def health_check():
 def process():
     global process_status
     process_status = "Processing..."
+    main_app.progress = 0
     
     urls_string = request.form['links']
     
