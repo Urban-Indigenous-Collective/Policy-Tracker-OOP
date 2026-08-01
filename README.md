@@ -1,6 +1,6 @@
 # Policy Tracker
 
-Flask app for processing LegiScan bills and executive orders with OpenAI-assisted analysis, deployed on UIC's self-hosted server via Docker and Cloudflare Tunnel.
+Flask app for processing LegiScan bills and executive orders with local Qwen analysis via Ollama, deployed on UIC's self-hosted server via Docker and Cloudflare Tunnel.
 
 ## Local development
 
@@ -10,9 +10,10 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 cp .env.example .env
-# Edit .env with LEGISCAN_KEY, OPENAI_API_KEY, AIRTABLE_* keys
+# Edit .env with LEGISCAN_KEY, AIRTABLE_* keys, and Ollama settings
 
 brew install poppler   # required for pdf2image OCR
+ollama pull qwen2.5vl:32b
 
 python app.py
 # Open http://127.0.0.1:5000/analyzer
@@ -28,6 +29,23 @@ GitHub push → Tailscale → SSH/rsync → docker compose up
 ```
 
 Public URL: https://policy.urbanindigenouscollective.org
+
+## LLM (Ollama)
+
+Policy Tracker uses a single local model for bill analysis and scanned-PDF OCR:
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `OLLAMA_BASE_URL` | `http://localhost:11434/v1` | Ollama OpenAI-compatible API |
+| `OLLAMA_MODEL` | `qwen2.5vl:32b` | Text questionnaire + vision OCR |
+
+For Docker on the server, point at the host running Ollama:
+
+```bash
+OLLAMA_BASE_URL=http://host.docker.internal:11434/v1
+```
+
+Ollama must be running and reachable from the app container before processing URLs.
 
 ## Deploy manually
 

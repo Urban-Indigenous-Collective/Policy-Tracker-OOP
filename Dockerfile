@@ -15,4 +15,4 @@ ENV FLASK_DEBUG=0
 
 EXPOSE 8000
 
-CMD ["gunicorn", "-b", "0.0.0.0:8000", "--timeout", "120", "--workers", "1", "--threads", "4", "--worker-class", "gthread", "app:app"]
+CMD ["gunicorn", "-b", "0.0.0.0:8000", "--timeout", "600", "--workers", "1", "--threads", "4", "--worker-class", "gthread", "app:app"]

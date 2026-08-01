@@ -30,7 +30,7 @@
                             window.location.href = response.file_url;  // Redirect to download URL
                         } else {
                             // Handle failure or continue to show the processing status
-                            $("#status").text(response.message || "Processing with ChatGPT...");
+                            $("#status").text(response.message || "Processing with local model...");
                             if (response.status !== "Failed") {
                                 setTimeout(fetchUpdate, 1000);  // Continue polling for status updates
                             }

@@ -15,13 +15,8 @@ process_status = "Idle"
 load_dotenv()
 
 
-# Initialize OpenAI and AirTable
 legiscan_key = os.getenv("LEGISCAN_KEY")
-openai_key = os.getenv("OPENAI_API_KEY")
-
-
-# Pass Airtable table and keys to MainApplication
-main_app = MainApplication(legiscan_key, openai_key)
+main_app = MainApplication(legiscan_key)
 
 @app.route("/")
 def home():
