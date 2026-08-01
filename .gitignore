@@ -7,3 +7,5 @@ __pycache__/
 bill_details.xlsx
 report.xlsx
 cloudflared/credentials.json
+data/
+cache/
