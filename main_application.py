@@ -3,7 +3,7 @@ from api_client import APIClient
 from bill_processor import BillProcessor
 from document_processor import DocumentProcessor
 from report_generator import ReportGenerator
-from chatgpt_client import ChatGPTClient
+from llm_client import LLMClient
 from airtable_client import AirtableClient
 from wikipedia_api_client import WikipediaAPIClient
 from indigenous_database import IndigenousDatabase  # Import the IndigenousDatabase class
@@ -12,12 +12,12 @@ from legiscan_processor import LegiScanProcessor
 import re
 
 class MainApplication:
-    def __init__(self, legiscan_key, openai_key):
+    def __init__(self, legiscan_key):
         self.api_client = APIClient(legiscan_key)
-        self.chat_client = ChatGPTClient(openai_key)
+        self.chat_client = LLMClient()
         # Initialize Airtable Table
         self.airtable_client = AirtableClient()
-        self.document_processor = DocumentProcessor()
+        self.document_processor = DocumentProcessor(self.chat_client)
         self.report_generator = ReportGenerator()
         self.wikipedia_client = WikipediaAPIClient()  # Initialize the WikipediaAPIClient
         self.indigenous_db = IndigenousDatabase()  # Initialize IndigenousDatabase
@@ -259,7 +259,9 @@ class MainApplication:
 
 # Main execution
 if __name__ == "__main__":
-    legiscan_key = '4bbc7257ba2bbf01b636af5b19cc2212'
-    openai_key = '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'
-    app = MainApplication(legiscan_key, openai_key)
+    import os
+    from dotenv import load_dotenv
+
+    load_dotenv()
+    app = MainApplication(os.getenv("LEGISCAN_KEY"))
     app.run()
