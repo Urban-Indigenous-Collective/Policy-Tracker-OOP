@@ -1,2 +1,9 @@
 .venv/
 __pycache__/
+*.pyc
+*.pyo
+.env
+.DS_Store
+bill_details.xlsx
+report.xlsx
+cloudflared/credentials.json

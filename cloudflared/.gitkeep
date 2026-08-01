@@ -1,0 +1,2 @@
+# Place tunnel credentials here on the server:
+# cp ~/.cloudflared/<tunnel-id>.json cloudflared/credentials.json

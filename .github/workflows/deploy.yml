@@ -1,0 +1,66 @@
+name: Deploy Policy Tracker
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-policy-tracker
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+          ping: ${{ secrets.DEPLOY_HOST || '100.71.124.8' }}
+
+      - name: Setup SSH key
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keygen -y -f ~/.ssh/deploy_key > /dev/null
+          HOST="${DEPLOY_HOST:-100.71.124.8}"
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Deploy over SSH
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+          HOST="${DEPLOY_HOST:-100.71.124.8}"
+          USER="${DEPLOY_USER:-info@urbanindigenouscollective.org}"
+          WSL_PATH="/opt/policy-tracker"
+          SSH_OPTS=(-i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new -o BatchMode=yes)
+
+          rsync -az --delete \
+            --exclude '.git' \
+            --exclude '.env' \
+            --exclude '.venv' \
+            --exclude '__pycache__' \
+            --exclude 'cloudflared/credentials.json' \
+            --exclude '.DS_Store' \
+            --exclude 'bill_details.xlsx' \
+            -e "ssh ${SSH_OPTS[*]}" \
+            --rsync-path="wsl -d Ubuntu -u root -- rsync" \
+            ./ "${USER}@${HOST}:${WSL_PATH}/"
+
+          ssh "${SSH_OPTS[@]}" "${USER}@${HOST}" \
+            "wsl -d Ubuntu -u root -- bash ${WSL_PATH}/scripts/wsl-deploy-remote.sh ${WSL_PATH}"

@@ -1,0 +1,7 @@
+tunnel: 6a78d749-4526-43e2-86e4-e02b4c7d12a3
+credentials-file: /etc/cloudflared/credentials.json
+
+ingress:
+  - hostname: policy.urbanindigenouscollective.org
+    service: http://web:8000
+  - service: http_status:404

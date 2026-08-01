@@ -1,0 +1,3 @@
+name = "render-redirect"
+main = "cloudflare/worker-passthrough.js"
+compatibility_date = "2024-01-01"
