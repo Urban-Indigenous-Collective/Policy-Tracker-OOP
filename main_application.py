@@ -1,267 +1,201 @@
-# Import statements for each class
+import logging
+import re
+import time
+
 from api_client import APIClient
 from bill_processor import BillProcessor
 from document_processor import DocumentProcessor
 from report_generator import ReportGenerator
-from llm_client import LLMClient
+from llm.factory import get_llm_provider
 from airtable_client import AirtableClient
 from wikipedia_api_client import WikipediaAPIClient
-from indigenous_database import IndigenousDatabase  # Import the IndigenousDatabase class
-import time
+from indigenous_database import IndigenousDatabase
 from legiscan_processor import LegiScanProcessor
-import re
+from constants import PROMPT_VERSION
+
+logger = logging.getLogger(__name__)
+
 
 class MainApplication:
     def __init__(self, legiscan_key):
         self.api_client = APIClient(legiscan_key)
-        self.chat_client = LLMClient()
-        # Initialize Airtable Table
+        self.llm_provider = get_llm_provider()
         self.airtable_client = AirtableClient()
-        self.document_processor = DocumentProcessor(self.chat_client)
+        self.document_processor = DocumentProcessor(self.llm_provider)
         self.report_generator = ReportGenerator()
-        self.wikipedia_client = WikipediaAPIClient()  # Initialize the WikipediaAPIClient
-        self.indigenous_db = IndigenousDatabase()  # Initialize IndigenousDatabase
+        self.wikipedia_client = WikipediaAPIClient()
+        self.indigenous_db = IndigenousDatabase()
         print("Building Indigenous database...")
         self.indigenous_db.build_database()
-        self.bill_processor = BillProcessor(self.api_client, self.chat_client, self.document_processor, self.indigenous_db)
-        self.progress = 0  # Add this line to initialize progress tracking
+
+        self._url_progress_base = 0.0
+        self._url_progress_span = 100.0
+        self.progress = 0
+        self.bill_processor = None
+        self._init_bill_processor()
 
         self.legiscan_processor = LegiScanProcessor(self.indigenous_db, self.api_client)
+        self._batch_analysis_cache = {}
 
+    def _init_bill_processor(self):
+        self.bill_processor = BillProcessor(
+            self.api_client,
+            self.llm_provider,
+            self.document_processor,
+            self.indigenous_db,
+            progress_callback=self._on_bill_phase_progress,
+        )
 
+    def _on_bill_phase_progress(self, phase, fraction):
+        phase_weights = {
+            "fetch": (0.0, 0.35),
+            "metadata": (0.35, 0.45),
+            "analysis": (0.45, 0.75),
+            "pros_cons": (0.75, 0.95),
+            "complete": (0.95, 1.0),
+        }
+        start, end = phase_weights.get(phase, (0.0, 1.0))
+        inner = start + (end - start) * min(max(fraction, 0.0), 1.0)
+        self.progress = self._url_progress_base + inner * self._url_progress_span
+        logger.info(
+            "progress phase=%s fraction=%.2f overall=%.1f",
+            phase,
+            fraction,
+            self.progress,
+        )
 
+    def resolve_canonical_url(self, url):
+        doc_id = self.legiscan_processor.extract_doc_id(url)
+        if doc_id:
+            bill_text_details = self.api_client.get_bill_text(doc_id)
+            extracted_bill_id = bill_text_details.get("bill_id")
+            if extracted_bill_id:
+                bill_details = self.api_client.get_bill_details(extracted_bill_id)
+                full_url = bill_details.get("bill", {}).get("url")
+                if full_url:
+                    return full_url, doc_id
+        return url, doc_id
 
-    def run(self):
-        print("Choose an option:")
-        print("1 - Process LegiScan URLs")
-        print("2 - Fetch data from List of Native American politicians")
-        print("3 - Fetch data from Native American state legislators category")
-        print("4 - Fetch data from Native Hawaiian politicians category")  # New option
-        print("5 - Build Indigenous Politician Database")  # New option
-        print("6 - Check if a list of politicians are Indigenous")  # New option
-
-
-        choice = input("Enter choice: ").strip()
-
-        if choice == "1":
-            self.indigenous_db.build_database()
-
-            urls = []
-            print("Enter LegiScan URLs (type 'exit' to finish):")
-            while True:
-                url = input("Enter URL: ")
-                if url.lower() == 'exit':
-                    break
-                urls.append(url)
-            self.process_legiscan_urls(urls)
-
-        elif choice == '2':
-            list_url = "https://en.wikipedia.org/wiki/List_of_Native_American_politicians"
-            politicians_list = WikipediaAPIClient().parse_list_page(list_url)
-            #for politician in politicians_list:
-            #    print(politician['name'])
-            print(type(politicians_list))
-            print(politicians_list)
-            #print("STATE LIST?")
-            #print(politicians_list)
-
-        elif choice == '3':
-            category_url = "Native_American_state_legislators"
-            politicians_category = self.wikipedia_client.parse_category_and_subcategories(category_url)
-            print(politicians_category)
-
-        elif choice == '4':
-            category_url = "Native_Hawaiian_politicians"
-            politicians_category = self.wikipedia_client.parse_category_and_subcategories(category_url)
-            print(politicians_category)
-            print(type(politicians_category))
-
-        elif choice == '5':
-            self.indigenous_db.build_database()
-
-        elif choice == '6':  # This is the option for checking Indigenous politicians
-            if not self.indigenous_db.database:  # Check if the database is built
-                print("Building database!")
-                self.indigenous_db.build_database()
-
-                print("calling new function")
-                self.indigenous_db.print_database()
-
-            while True:  # Start a loop to continuously ask for input
-                politicians_input = input("Enter a comma-separated list of politicians, or type 'exit' to finish: ")
-                if politicians_input.lower() == 'exit' or not politicians_input:
-                    break  # Break the loop if 'exit' is entered or if the input is empty
-
-                politicians_list = [name.strip() for name in politicians_input.split(',')]
-                indigenous_politicians = []
-                for politician in politicians_list:
-                    if self.indigenous_db.is_indigenous_sponsor(politician):
-                        indigenous_politicians.append(politician)
-                if indigenous_politicians:
-                    print("Indigenous Politicians: " + ', '.join(indigenous_politicians))
-                else:
-                    print("No Indigenous politicians found in the provided list.")
-
-
-
-
-
-        else:
-            print("Invalid choice")
-
-
-
-    def check_politician_indigenous_status(self, politicians_list):
-        """
-        Checks if the given politicians are Indigenous based on the indigenous_db.
-        :param politicians_list: List of politician names to check.
-        :return: Dictionary with politician names as keys and a boolean indicating if they are Indigenous as values.
-        """
-        # Ensure the Indigenous database is built
-        if not self.indigenous_db.database:
-            print("Building Indigenous database...")
-            self.indigenous_db.build_database()
-
-        results = {}
-        for politician in politicians_list:
-            # Check if each politician is Indigenous
-            is_indigenous = self.indigenous_db.is_indigenous_sponsor(politician)
-            results[politician] = is_indigenous
-
-        return results
-
-
-
-
-        
     def process_urls_for_web(self, urls_string):
-        # Step 1: Clean up the input string
-        urls_string = urls_string.strip()  # Remove leading/trailing whitespace
+        urls_string = urls_string.strip()
+        raw_urls = [u.strip() for u in re.split(r"[,\s]+", urls_string) if u.strip()]
 
-        # Split by both commas and whitespace using a regular expression
-        urls = [url.strip() for url in re.split(r'[,\s]+', urls_string) if url.strip()]  # Split and filter empty entries
-        total_urls = len(urls)
-
-        # Step 2: Validate URLs
-        def is_valid_url(url):
-            url_regex = re.compile(
-                r'^(http|https)://'  # Start with http or https
-                r'([A-Za-z0-9-]+\.)+[A-Za-z]{2,6}'  # Domain
-                r'(:[0-9]{1,5})?'  # Optional port
-                r'(/.*)?$'  # Optional path
-            )
-            return re.match(url_regex, url) is not None
-
-        valid_urls = [url for url in urls if is_valid_url(url)]
-        invalid_urls = [url for url in urls if url not in valid_urls]
-
-        # Log invalid URLs and proceed only with valid ones
+        url_regex = re.compile(
+            r"^(http|https)://"
+            r"([A-Za-z0-9-]+\.)+[A-Za-z]{2,6}"
+            r"(:[0-9]{1,5})?"
+            r"(/.*)?$"
+        )
+        valid_urls = [u for u in raw_urls if url_regex.match(u)]
+        invalid_urls = [u for u in raw_urls if u not in valid_urls]
         if invalid_urls:
             print(f"Invalid URLs skipped: {invalid_urls}")
-        print(f"Starting URL processing. Total valid URLs: {len(valid_urls)}")
 
-        # Reset progress at the start of processing
+        resolved = []
+        seen_canonical = set()
+        for url in valid_urls:
+            canonical, doc_id = self.resolve_canonical_url(url)
+            if canonical in seen_canonical:
+                print(f"Skipping duplicate URL in batch: {url} -> {canonical}")
+                continue
+            seen_canonical.add(canonical)
+            resolved.append((url, canonical, doc_id))
+
+        total_urls = len(resolved)
+        print(f"Starting URL processing. Total unique URLs: {total_urls}")
         self.progress = 0
-
-        # Initialize a list to store processed data for each URL
+        self._batch_analysis_cache = {}
         processed_data = []
 
-        for i, url in enumerate(urls):
-            # Log URL processing
-            print(f"Processing URL: {url}")
+        for i, (original_url, full_url, doc_id) in enumerate(resolved):
+            print(f"Processing URL: {original_url} (canonical: {full_url})")
+            span = 100.0 / total_urls if total_urls else 100.0
+            self._url_progress_base = i * span
+            self._url_progress_span = span
 
-            # Step 1: Check if the URL has a doc ID using LegiScan processing functions
-            doc_id = self.legiscan_processor.extract_doc_id(url)  # Assuming extract_doc_id method exists
-
-            # Step 2: If a doc ID is found, fetch the full bill URL
-            if doc_id:
-                # Get bill text details using the extracted doc ID
-                bill_text_details = self.api_client.get_bill_text(doc_id)
-                extracted_bill_id = bill_text_details.get('bill_id')
-
-                print(f"Extracted bill ID: {extracted_bill_id}")
-                print(f"Extracted text field: {bill_text_details.get('state_link')}")
-
-                if extracted_bill_id:
-                    # Fetch bill details using the extracted bill_id
-                    bill_details = self.api_client.get_bill_details(extracted_bill_id)
-                    full_url = bill_details.get('bill', {}).get('url')
-                    print(f"Bill ID found: {extracted_bill_id}. Full URL obtained: {full_url}")
-                else:
-                    # If no bill_id is found in the bill text details, fallback to the original URL
-                    print(f"No valid bill ID found in bill text details. Using original URL.")
-                    full_url = url
-            else:
-                # If no doc ID is found, use the original URL as the full URL
-                full_url = url
-                print(f"No doc ID found in URL. Using original URL: {full_url}")
-                doc_id = None  # Ensure doc_id is None when not found
-
-            # Step 3: Check if the full URL is already in Airtable in the Bill Overview (Link) category
-            is_duplicate, record_data = self.airtable_client.check_url_in_airtable(full_url, category="Bill Overview (Link)")
+            is_duplicate, record_data = self.airtable_client.check_url_in_airtable(
+                full_url, category="Bill Overview (Link)"
+            )
 
             if is_duplicate:
-                # Log the duplicate detection
-                print(f"Duplicate found for URL: {full_url}")
-
-                # Mark as duplicate and skip
-                state = record_data.get('State', 'Unknown')
-                title = record_data.get('Name', 'Unknown')
-                bill_number = record_data.get('Bill Number', 'Unknown')
-                bill_text_url = record_data.get('Bill Text', 'Unknown')
-
-                processed_data.append({
-                    'State': state,
-                    'Title': title,
-                    'Bill Number': bill_number,
-                    'Status': 'Duplicate -- Skipped',
-                    'Bill Text': bill_text_url,
-                })
+                processed_data.append(
+                    {
+                        "State": record_data.get("State", "Unknown"),
+                        "Title": record_data.get("Name", "Unknown"),
+                        "Bill Number": record_data.get("Bill Number", "Unknown"),
+                        "Status": "Duplicate -- Skipped",
+                        "Bill Text": record_data.get("Bill Text", "Unknown"),
+                    }
+                )
             else:
-                result = self.process_single_url(full_url, doc_id=doc_id)
-                # Whether it's successful data or an error message, append it to processed_data
+                cache_key = (full_url, PROMPT_VERSION)
+                cached_analysis = self._batch_analysis_cache.get(cache_key)
+
+                result = self.process_single_url(
+                    full_url, doc_id=doc_id, cached_analysis=cached_analysis
+                )
+
+                if not cached_analysis and cache_key not in self._batch_analysis_cache:
+                    payload = self.bill_processor.get_analysis_cache_payload()
+                    if payload.get("chat_summary"):
+                        self._batch_analysis_cache[cache_key] = payload
+
                 processed_data.append(result)
 
-            # Update and print progress
             self.progress = (i + 1) / total_urls * 100
             print(f"Processed URL {i + 1}/{total_urls}. Current progress: {self.progress}%")
-            time.sleep(1)
+            time.sleep(0.5)
 
-        # After processing all URLs, generate an Excel report
         if processed_data:
             excel_file_path = self.report_generator.export_to_excel(processed_data)
             print(excel_file_path)
             return excel_file_path
-        else:
-            return None  # Handle the case where no data was processed
-
+        return None
 
     def get_progress(self):
         return self.progress
 
-    def process_single_url(self, url, doc_id=None):
+    def process_single_url(self, url, doc_id=None, cached_analysis=None):
         try:
-            print("Processing single URL!")
-            # Call process_bill, which runs through all steps
-            success, message = self.bill_processor.process_bill(url, doc_id=doc_id)
+            self.bill_processor.compiled_bill = {}
+            success, message = self.bill_processor.process_bill(
+                url, doc_id=doc_id, cached_analysis=cached_analysis
+            )
             if success:
-                bill_data = self.bill_processor.compiled_bill.get('bill_data')
-                print("Bill processing completed successfully.")
-                return bill_data
-            else:
-                error_msg = self.bill_processor.compiled_bill.get('error', 'Unknown error')
-                print(f"Error: {error_msg}")
-                return {'url': url, 'error': error_msg}
+                return self.bill_processor.compiled_bill.get("bill_data")
+            error_msg = self.bill_processor.compiled_bill.get("error", "Unknown error")
+            return {"url": url, "error": error_msg}
         except Exception as e:
-            # Handle any exception
-            print(f"Error processing URL {url}: {e}")
-            return {'url': url, 'error': f"Error processing URL: {str(e)}"}
+            return {"url": url, "error": f"Error processing URL: {str(e)}"}
 
-# Main execution
+    def check_politician_indigenous_status(self, politicians_list):
+        if not self.indigenous_db.database:
+            self.indigenous_db.build_database()
+        return {
+            politician: self.indigenous_db.is_indigenous_sponsor(politician)
+            for politician in politicians_list
+        }
+
+    def run(self):
+        print("Choose an option:")
+        print("1 - Process LegiScan URLs")
+        choice = input("Enter choice: ").strip()
+        if choice == "1":
+            urls = []
+            print("Enter LegiScan URLs (type 'exit' to finish):")
+            while True:
+                url = input("Enter URL: ")
+                if url.lower() == "exit":
+                    break
+                urls.append(url)
+            self.process_urls_for_web(",".join(urls))
+
+
 if __name__ == "__main__":
     import os
     from dotenv import load_dotenv
 
+    logging.basicConfig(level=logging.INFO)
     load_dotenv()
     app = MainApplication(os.getenv("LEGISCAN_KEY"))
     app.run()

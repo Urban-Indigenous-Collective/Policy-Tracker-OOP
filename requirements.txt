@@ -57,6 +57,7 @@ python-dotenv==1.2.2
 python-Levenshtein==0.27.3
 pytz==2026.3.post1
 RapidFuzz==3.14.5
+redis==8.1.0
 requests==2.34.2
 rich==15.0.0
 setuptools==83.0.0
