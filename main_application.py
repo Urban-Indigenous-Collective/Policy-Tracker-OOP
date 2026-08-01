@@ -103,12 +103,17 @@ class MainApplication:
         for url in valid_urls:
             canonical, doc_id = self.resolve_canonical_url(url)
             if canonical in seen_canonical:
-                print(f"Skipping duplicate URL in batch: {url} -> {canonical}")
+                msg = f"Skipped duplicate link (same bill): {url}"
+                print(msg)
+                plog(msg)
                 continue
             seen_canonical.add(canonical)
             resolved.append((url, canonical, doc_id))
 
         total_urls = len(resolved)
+        skipped_dupes = len(valid_urls) - len(resolved)
+        if skipped_dupes:
+            plog(f"{skipped_dupes} duplicate link(s) skipped — processing {total_urls} unique bill(s)")
         print(f"Starting URL processing. Total unique URLs: {total_urls}")
         self.progress = 0
         self._batch_analysis_cache = {}
