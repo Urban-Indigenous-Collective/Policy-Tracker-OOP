@@ -2,7 +2,7 @@ import io
 from io import BytesIO
 import os
 import base64
-import PyPDF2
+import pypdf
 from bs4 import BeautifulSoup
 from pdf2image import convert_from_bytes
 from chatgpt_client import ChatGPTClient
@@ -38,7 +38,7 @@ class DocumentProcessor:
         try:
             # Attempt to extract text using PyPDF2
             pdf_stream = io.BytesIO(pdf_data)
-            pdf_reader = PyPDF2.PdfReader(pdf_stream)
+            pdf_reader = pypdf.PdfReader(pdf_stream)
             decoded_text = ""
 
             for page in pdf_reader.pages:
