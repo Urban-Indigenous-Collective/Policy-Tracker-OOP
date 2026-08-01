@@ -1,5 +1,6 @@
 from flask import Flask, request, send_from_directory, jsonify, render_template, redirect
 import os
+import threading
 from main_application import MainApplication
 from dotenv import load_dotenv
 from flask_cors import CORS
@@ -9,6 +10,8 @@ app = Flask(__name__)
 CORS(app)
 
 process_status = "Idle"
+process_result = {"file_url": None, "message": None}
+process_lock = threading.Lock()
 
 # Initialize MainApplication
 # Assuming MainApplication initializes API clients with hardcoded keys
@@ -31,24 +34,43 @@ def health_check():
     # Optionally, perform additional readiness checks here.
     return jsonify({"status": "ok"}), 200
 
+def _run_processing(urls_string):
+    global process_status, process_result
+    try:
+        main_app.progress = 0
+        excel_file_path = main_app.process_urls_for_web(urls_string)
+        if excel_file_path:
+            process_result = {
+                "file_url": "/download?path=" + excel_file_path,
+                "message": None,
+            }
+            process_status = "Complete"
+        else:
+            process_result = {
+                "file_url": None,
+                "message": "No valid data to generate report.",
+            }
+            process_status = "Failed"
+    except Exception as e:
+        process_result = {"file_url": None, "message": str(e)}
+        process_status = "Failed"
+
+
 @app.route('/process', methods=['POST'])
 def process():
-    global process_status
-    process_status = "Processing..."
-    main_app.progress = 0
-    
-    urls_string = request.form['links']
-    
-    excel_file_path = main_app.process_urls_for_web(urls_string)
+    global process_status, process_result
 
-    process_status = "Complete"
-    if excel_file_path:
-        # Construct a URL for the file
-        file_url = '/download?path=' + excel_file_path
-        return jsonify({'status': 'Complete', 'file_url': file_url})
-    else:
-        process_status = "Failed"
-        return jsonify({'status': 'Failed', 'message': 'No valid data to generate report.'})
+    with process_lock:
+        if process_status == "Processing...":
+            return jsonify({"status": "Processing...", "message": "Already processing."}), 409
+
+        urls_string = request.form["links"]
+        process_status = "Processing..."
+        process_result = {"file_url": None, "message": None}
+        thread = threading.Thread(target=_run_processing, args=(urls_string,), daemon=True)
+        thread.start()
+
+    return jsonify({"status": "Processing...", "message": "Processing started."}), 202
 
 @app.route('/download')
 def download_file():
@@ -63,8 +85,12 @@ def download_file():
 @app.route('/status')
 def status():
     progress = main_app.get_progress()
-    return jsonify({"status": process_status,
-                    "progress": progress})
+    response = {"status": process_status, "progress": progress}
+    if process_status == "Complete" and process_result.get("file_url"):
+        response["file_url"] = process_result["file_url"]
+    if process_status == "Failed" and process_result.get("message"):
+        response["message"] = process_result["message"]
+    return jsonify(response)
 
 @app.route('/progress')
 def get_progress():
