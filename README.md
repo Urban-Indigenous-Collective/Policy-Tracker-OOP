@@ -57,6 +57,52 @@ LLM_GATEWAY_URL=http://inference-gateway:8090
 
 Run tests: `pytest tests/`
 
+## Nightly MMIP discovery
+
+Automated pipeline searches LegiScan and configured state websites for new MMIP policy, runs the UIC analysis, writes to Airtable **Pending**, and alerts Slack.
+
+### Setup
+
+1. Create the **Pending** table and add `Review Status` to **Main v3** — see [docs/AIRTABLE_PENDING_SCHEMA.md](docs/AIRTABLE_PENDING_SCHEMA.md).
+2. Add to `.env`:
+   - `SLACK_WEBHOOK_URL` — incoming webhook for the review channel
+   - `AIRTABLE_PENDING_TABLE=Pending`
+3. Bootstrap state website links from existing Airtable entries:
+   ```bash
+   python scripts/bootstrap_state_sources.py
+   # Edit sources/state_sources.json — point URLs at index pages, set review_needed=false
+   ```
+4. Tune the relevance gate with a dry run:
+   ```bash
+   python scripts/run_discovery.py --dry-run --legiscan-only
+   ```
+
+### Manual run
+
+```bash
+python scripts/run_discovery.py              # full discovery
+python scripts/run_discovery.py --legiscan-only
+python scripts/run_discovery.py --dry-run
+python approval_sync.py                      # sync approved/send-back records
+```
+
+### Scheduler (production)
+
+The `scheduler` Docker service runs discovery nightly (default 2 AM ET) and approval sync every 10 minutes:
+
+```bash
+docker compose --profile tunnel up -d   # includes web + tunnel + scheduler
+```
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `DISCOVERY_CRON` | `0 2 * * *` | Nightly discovery schedule |
+| `DISCOVERY_TZ` | `America/New_York` | Timezone for cron |
+| `APPROVAL_SYNC_INTERVAL_MIN` | `10` | How often to sync Airtable status changes |
+| `DISCOVERY_MAX_ANALYSES_PER_RUN` | `25` | Cap LLM analyses per run (safety valve) |
+| `DISCOVERY_RELEVANCE_MIN_CONFIDENCE` | `0.6` | MMIP relevance gate threshold |
+| `SLACK_QUIET_RUNS` | `true` | Suppress Slack when no new policies found |
+
 ## Deploy manually
 
 ```bash

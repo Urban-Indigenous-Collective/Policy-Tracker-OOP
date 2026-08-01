@@ -88,6 +88,29 @@ class ProsConsResult(BaseModel):
         return items if len(items) > 1 else ([text] if text else [])
 
 
+class MMIPRelevanceResult(BaseModel):
+    is_mmip: bool
+    confidence: float = Field(..., ge=0.0, le=1.0)
+    rationale: str = ""
+    primary_subject: str = ""
+
+    @field_validator("confidence", mode="before")
+    @classmethod
+    def normalize_confidence(cls, value):
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.0
+
+    @field_validator("is_mmip", mode="before")
+    @classmethod
+    def normalize_is_mmip(cls, value):
+        if isinstance(value, bool):
+            return value
+        text = str(value).strip().lower()
+        return text in ("true", "yes", "1")
+
+
 class GovMetadata(BaseModel):
     state: str
     title: str

@@ -1,0 +1,5 @@
+{
+  "generated_from": "placeholder — run scripts/bootstrap_state_sources.py to populate from Airtable",
+  "note": "Edit urls to point at index/listing pages before setting review_needed=false",
+  "sources": []
+}

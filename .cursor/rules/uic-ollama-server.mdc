@@ -1,0 +1,34 @@
+---
+description: Use UIC production Ollama for LLM — not local Mac Ollama
+alwaysApply: true
+---
+
+# UIC Ollama Server (LLM)
+
+This project's analysis and discovery pipelines use **Qwen on the UIC production Ollama server**, not the developer's local Mac Ollama.
+
+## Correct LLM endpoint
+
+| Setting | Value |
+|---------|-------|
+| `LLM_BASE_URL` | `http://100.71.124.8:11434/v1` |
+| `LLM_MODEL` | `qwen2.5vl:32b` |
+| `LLM_API_KEY` | `ollama` |
+
+When running scripts locally (`scripts/run_discovery.py`, `scheduler.py`, `python app.py`, tests that call the LLM):
+
+```bash
+LLM_BASE_URL=http://100.71.124.8:11434/v1 LLM_MODEL=qwen2.5vl:32b python scripts/run_discovery.py
+```
+
+On the production WSL host, Docker services use `host.docker.internal:11434/v1` (same Ollama instance).
+
+## Do NOT use
+
+- **`localhost:11434`** on a Mac dev machine — local Ollama only has `llama3` models, not Qwen. Requests fail with `model 'qwen2.5vl:32b' not found`.
+- **OpenAI or other cloud API keys** for discovery/analysis unless the user explicitly requests it.
+
+## Production host
+
+- Deploy host: `100.71.124.8` (WSL, Tailscale-accessible)
+- Public app: https://policy.urbanindigenouscollective.org

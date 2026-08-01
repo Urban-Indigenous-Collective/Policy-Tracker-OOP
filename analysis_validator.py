@@ -1,7 +1,13 @@
 import re
 from typing import List, Tuple
 
-from analysis_schema import BillAnalysis, EvalAnswer, GovMetadata, ProsConsResult
+from analysis_schema import (
+    BillAnalysis,
+    EvalAnswer,
+    GovMetadata,
+    MMIPRelevanceResult,
+    ProsConsResult,
+)
 from constants import ALLOWED_CATEGORIES
 
 
@@ -96,6 +102,16 @@ def validate_gov_metadata(data: dict) -> Tuple[GovMetadata, List[str]]:
         return GovMetadata.model_validate(data), []
     except Exception as exc:
         return None, [f"Metadata schema validation failed: {exc}"]
+
+
+def validate_mmip_relevance(data: dict) -> Tuple[MMIPRelevanceResult, List[str]]:
+    try:
+        result = MMIPRelevanceResult.model_validate(data)
+        result.rationale = strip_preamble(result.rationale)
+        result.primary_subject = strip_preamble(result.primary_subject)
+        return result, []
+    except Exception as exc:
+        return None, [f"MMIP relevance schema validation failed: {exc}"]
 
 
 def validate_pros_cons(data: dict) -> Tuple[ProsConsResult, List[str]]:

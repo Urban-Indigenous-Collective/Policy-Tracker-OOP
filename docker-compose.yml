@@ -52,5 +52,21 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
+  scheduler:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    command: python scheduler.py
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - llm_cache:/app/cache
+      - discovery_data:/app/data
+    depends_on:
+      web:
+        condition: service_healthy
+
 volumes:
   llm_cache:
+  discovery_data:
