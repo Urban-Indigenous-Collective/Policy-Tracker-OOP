@@ -2,7 +2,6 @@
 <html>
 <head>
     <title>Process LegiScan URLs</title>
-    <!-- Link to your CSS file -->
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,9 +10,37 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script>
         $(document).ready(function(){
+            var lastLogCount = 0;
+
+            function renderLog(lines) {
+                if (!lines || !lines.length) {
+                    return;
+                }
+                var logEl = $("#activityLog");
+                var shouldStick = logEl[0].scrollHeight - logEl.scrollTop() <= logEl.outerHeight() + 40;
+                logEl.text(lines.join("\n"));
+                if (shouldStick) {
+                    logEl.scrollTop(logEl[0].scrollHeight);
+                }
+                lastLogCount = lines.length;
+            }
+
+            function formatStatus(response) {
+                var parts = [response.status || "Processing..."];
+                if (response.phase_label) {
+                    parts.push(response.phase_label);
+                }
+                if (response.detail) {
+                    parts.push("(" + response.detail + ")");
+                }
+                if (typeof response.progress === "number") {
+                    parts.push(Math.round(response.progress) + "%");
+                }
+                return parts.join(" — ");
+            }
+
             function handleComplete(response) {
                 if (response.file_url) {
-                    console.log(response.file_url);
                     window.parent.postMessage({ downloadUrl: response.file_url}, '*');
                     window.location.href = response.file_url;
                 }
@@ -24,8 +51,11 @@
                     url: "/status",
                     type: "GET",
                     success: function(response) {
-                        $("#status").text(response.message || response.status);
-                        $("#progressBar").prop('value', response.progress);
+                        $("#status").text(formatStatus(response));
+                        $("#progressBar").prop('value', response.progress || 0);
+                        if (response.log && response.log.length !== lastLogCount) {
+                            renderLog(response.log);
+                        }
 
                         if (response.status === "Complete") {
                             handleComplete(response);
@@ -39,12 +69,13 @@
             }
 
             $("#submit").click(function(e) {
-                console.log("initiated!")
                 e.preventDefault();
                 var links = $("#links").val();
 
+                lastLogCount = 0;
                 $("#status").text("Starting...");
                 $("#progressBar").prop('value', 0);
+                $("#activityLog").text("");
 
                 $.ajax({
                     url: "/process",
@@ -54,12 +85,10 @@
                         if (response.status === "Complete" && response.file_url) {
                             handleComplete(response);
                         } else {
-                            $("#status").text(response.message || response.status || "Processing...");
                             fetchUpdate();
                         }
                     },
                     error: function(xhr) {
-                        // POST can time out at Cloudflare while the job keeps running server-side.
                         if (xhr.status === 409) {
                             $("#status").text("Already processing...");
                         } else {
@@ -70,8 +99,7 @@
                 });
             });
         });
-        </script>
-        
+    </script>
 </head>
 <body style="background-color: #000; color: #fff">
     <div>
@@ -85,8 +113,8 @@
         <div class="progress-container">
             <div id="status">Idle</div>
             <progress id="progressBar" value="0" max="100"></progress>
+            <pre id="activityLog" aria-live="polite"></pre>
         </div>
-    </div>    
-        
+    </div>
 </body>
 </html>

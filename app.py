@@ -2,9 +2,10 @@ from flask import Flask, request, send_from_directory, jsonify, render_template,
 import logging
 import os
 import threading
-from main_application import MainApplication
 from dotenv import load_dotenv
 from flask_cors import CORS
+from main_application import MainApplication
+from processing_log import reset as plog_reset, snapshot as plog_snapshot
 
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
 
@@ -40,6 +41,7 @@ def health_check():
 def _run_processing(urls_string):
     global process_status, process_result
     try:
+        plog_reset()
         main_app.progress = 0
         excel_file_path = main_app.process_urls_for_web(urls_string)
         if excel_file_path:
@@ -88,7 +90,16 @@ def download_file():
 @app.route('/status')
 def status():
     progress = main_app.get_progress()
-    response = {"status": process_status, "progress": progress}
+    detail = main_app.get_status_detail()
+    log_snapshot = plog_snapshot()
+    response = {
+        "status": process_status,
+        "progress": progress,
+        "phase": detail.get("phase", log_snapshot.get("phase")),
+        "phase_label": log_snapshot.get("phase_label", ""),
+        "detail": detail.get("detail", log_snapshot.get("detail", "")),
+        "log": log_snapshot.get("lines", []),
+    }
     if process_status == "Complete" and process_result.get("file_url"):
         response["file_url"] = process_result["file_url"]
     if process_status == "Failed" and process_result.get("message"):

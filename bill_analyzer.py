@@ -13,6 +13,7 @@ from analysis_validator import (
     validate_pros_cons,
 )
 from constants import ALLOWED_CATEGORIES, PROMPT_VERSION
+from processing_log import log as plog
 from titlecase import titlecase
 
 logger = logging.getLogger(__name__)
@@ -67,8 +68,14 @@ class BillAnalyzer:
         if self.cache_enabled:
             self.cache_dir.mkdir(parents=True, exist_ok=True)
 
-    def _cache_key(self, kind: str, *parts: str) -> str:
-        raw = "|".join([PROMPT_VERSION, self.llm.model, kind, *parts])
+    def _cache_key(self, kind: str, *parts) -> str:
+        str_parts = []
+        for part in parts:
+            if isinstance(part, (list, dict)):
+                str_parts.append(json.dumps(part, sort_keys=True))
+            else:
+                str_parts.append(str(part))
+        raw = "|".join([PROMPT_VERSION, self.llm.model, kind, *str_parts])
         return hashlib.sha256(raw.encode()).hexdigest()
 
     def _read_cache(self, key: str) -> Optional[dict]:
@@ -99,11 +106,14 @@ class BillAnalyzer:
         cache_key = self._cache_key(kind, *cache_parts)
         cached = self._read_cache(cache_key)
         if cached is not None:
+            plog("Using cached LLM result")
             validated, warnings = validator(cached, source_text) if source_text else validator(cached)
             if validated is not None:
                 return validated, warnings, True
 
+        plog(f"LLM request: {kind}")
         raw = self.llm.complete_json(system, user, schema=schema)
+        plog(f"LLM response received: {kind}")
         validated, warnings = validator(raw, source_text) if source_text else validator(raw)
 
         if validated is None and warnings:
@@ -136,9 +146,12 @@ class BillAnalyzer:
         metadata.title = titlecase(metadata.title)
         return metadata, warnings
 
-    def analyze_bill(self, bill_text: str, indigenous_sponsors: str, progress_callback: Optional[Callable] = None):
+    def analyze_bill(self, bill_text: str, indigenous_sponsors, progress_callback: Optional[Callable] = None):
+        if isinstance(indigenous_sponsors, list):
+            indigenous_sponsors = ", ".join(indigenous_sponsors)
         if progress_callback:
-            progress_callback("analysis", 0.5)
+            progress_callback("analysis", 0.1)
+        plog("Starting structured bill analysis")
 
         user = (
             f"Indigenous sponsors (if any): {indigenous_sponsors or 'None identified'}\n\n"
@@ -165,16 +178,22 @@ class BillAnalyzer:
         )
         if analysis is None:
             raise ValueError(f"Failed to analyze bill: {'; '.join(warnings)}")
+        if progress_callback:
+            progress_callback("analysis", 1.0)
+        plog("Bill analysis validated")
         return analysis, warnings
 
     def pros_and_cons(
         self,
         analysis: BillAnalysis,
-        indigenous_sponsors: str,
+        indigenous_sponsors,
         progress_callback: Optional[Callable] = None,
     ):
+        if isinstance(indigenous_sponsors, list):
+            indigenous_sponsors = ", ".join(indigenous_sponsors)
         if progress_callback:
-            progress_callback("pros_cons", 0.85)
+            progress_callback("pros_cons", 0.1)
+        plog("Generating UIC pros and cons")
 
         data_points = {
             "summary": analysis.summary,
@@ -207,6 +226,9 @@ class BillAnalyzer:
         )
         if pros_cons is None:
             raise ValueError(f"Failed to generate pros/cons: {'; '.join(warnings)}")
+        if progress_callback:
+            progress_callback("pros_cons", 1.0)
+        plog("Pros and cons complete")
         return pros_cons, warnings
 
     def run_full_analysis(
