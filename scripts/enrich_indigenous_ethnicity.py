@@ -26,6 +26,7 @@ from typing import Any
 
 import requests
 from dotenv import load_dotenv
+from pydantic import BaseModel, Field
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -118,6 +119,41 @@ DISAMBIG_HINTS = re.compile(
     r"Washington|South Dakota|North Dakota|Arizona|Hawaii|Wisconsin)\b",
     re.I,
 )
+
+LLM_CONFIDENCE_THRESHOLD = 0.85
+LLM_SOURCE_TEXT_CHARS = 2000
+
+LLM_ETHNICITY_SYSTEM = (
+    "You extract indigenous tribal or nation affiliation from Wikipedia biographical text. "
+    "Return only specific nation or tribe names (e.g. Ho-Chunk, Cherokee Nation, Oglala Lakota). "
+    "Do NOT return generic labels like Native American, Indigenous, Alaska Native, or First Nations alone. "
+    "If no specific nation is stated in the text, return ethnicity null. "
+    "The evidence_quote MUST be an exact substring copied verbatim from the source text. "
+    "Return only valid JSON."
+)
+
+LLM_ETHNICITY_SCHEMA = {
+    "ethnicity": "string or null — specific tribal/nation affiliation",
+    "confidence": "float 0.0-1.0 — confidence in the extraction",
+    "evidence_quote": "string or null — exact quote from source supporting ethnicity",
+}
+
+LLM_ETHNICITY_USER_TEMPLATE = """Politician: {name}
+Wikipedia title: {title}
+State: {state}
+Party: {party}
+
+Source text (Wikipedia intro and infobox fields):
+{source_text}
+
+Extract the politician's specific indigenous tribal or nation affiliation if explicitly stated.
+Return JSON with ethnicity, confidence, and evidence_quote."""
+
+
+class LlmEthnicityResult(BaseModel):
+    ethnicity: str | None = None
+    confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    evidence_quote: str | None = None
 
 
 def _utc_now_iso() -> str:
@@ -500,6 +536,172 @@ def _validate_proposed(ethnicity: str, intro: str) -> str | None:
     return None
 
 
+def _is_generic_only_ethnicity(ethnicity: str) -> bool:
+    segments = [s.strip() for s in ethnicity.split(" / ") if s.strip()]
+    if not segments:
+        return True
+    return all(s.lower() in GENERIC_STANDALONE for s in segments)
+
+
+def build_llm_source_text(intro: str, infobox: dict[str, str], max_chars: int = LLM_SOURCE_TEXT_CHARS) -> str:
+    parts: list[str] = []
+    if intro.strip():
+        parts.append(intro.strip())
+    for key, val in sorted(infobox.items()):
+        val = val.strip()
+        if val:
+            parts.append(f"{key}: {val}")
+    text = "\n\n".join(parts)
+    return text[:max_chars]
+
+
+def build_llm_ethnicity_prompt(
+    name: str,
+    title: str,
+    source_text: str,
+    state: str | None = None,
+    party: str | None = None,
+) -> str:
+    return LLM_ETHNICITY_USER_TEMPLATE.format(
+        name=name,
+        title=title,
+        state=state or "N/A",
+        party=party or "N/A",
+        source_text=source_text,
+    )
+
+
+def _evidence_in_source(evidence_quote: str, source_text: str) -> bool:
+    if evidence_quote in source_text:
+        return True
+    norm_quote = re.sub(r"\s+", " ", evidence_quote.strip())
+    norm_source = re.sub(r"\s+", " ", source_text)
+    return norm_quote in norm_source
+
+
+def validate_llm_ethnicity_result(
+    raw: dict,
+    source_text: str,
+) -> tuple[LlmEthnicityResult | None, str | None]:
+    try:
+        result = LlmEthnicityResult.model_validate(raw)
+    except Exception as exc:
+        return None, f"schema_error: {exc}"
+
+    if not result.ethnicity:
+        return None, "no_ethnicity"
+    if result.confidence < LLM_CONFIDENCE_THRESHOLD:
+        return None, "low_confidence"
+    if not result.evidence_quote:
+        return None, "missing_evidence"
+    if not _evidence_in_source(result.evidence_quote, source_text):
+        return None, "evidence_not_in_source"
+
+    cleaned = _clean_ethnicity_segments(result.ethnicity)
+    reject = _validate_proposed(cleaned, source_text)
+    if reject or not cleaned:
+        return None, reject or "generic_only"
+    return LlmEthnicityResult(
+        ethnicity=cleaned,
+        confidence=result.confidence,
+        evidence_quote=result.evidence_quote,
+    ), None
+
+
+def run_llm_ethnicity_fallback(
+    llm: Any,
+    roster_name: str,
+    wikipedia_title: str,
+    source_text: str,
+    state: str | None = None,
+    party: str | None = None,
+) -> dict[str, Any]:
+    base: dict[str, Any] = {
+        "roster_name": roster_name,
+        "wikipedia_title": wikipedia_title,
+        "ethnicity": None,
+        "status": "rejected",
+        "method": "llm_wikipedia",
+        "source": "llm_wikipedia",
+        "confidence": None,
+        "evidence": None,
+        "fetched_at": _utc_now_iso(),
+        "reject_reason": None,
+    }
+
+    if len(source_text.strip()) < 80:
+        base["reject_reason"] = "source_too_short"
+        return base
+
+    user = build_llm_ethnicity_prompt(roster_name, wikipedia_title, source_text, state, party)
+    try:
+        raw = llm.complete_json(LLM_ETHNICITY_SYSTEM, user, schema=LLM_ETHNICITY_SCHEMA)
+    except Exception as exc:
+        logger.exception("LLM ethnicity fallback error for %s: %s", roster_name, exc)
+        base["reject_reason"] = f"llm_error: {exc}"
+        return base
+
+    result, reject = validate_llm_ethnicity_result(raw, source_text)
+    base["confidence"] = raw.get("confidence")
+    base["evidence"] = (result.evidence_quote if result else raw.get("evidence_quote")) or None
+
+    if result is None:
+        base["reject_reason"] = reject
+        return base
+
+    base["status"] = "accepted"
+    base["ethnicity"] = result.ethnicity
+    base["confidence"] = result.confidence
+    base["evidence"] = result.evidence_quote
+    base["reject_reason"] = None
+    return base
+
+
+def needs_llm_fallback(
+    wiki_entry: dict[str, Any] | None,
+    merged_ethnicity: str,
+    key: str,
+    override_keys: set[str],
+    cache_entry: dict | None,
+    refresh: bool,
+) -> bool:
+    if not _is_na(merged_ethnicity):
+        return False
+    if key in override_keys:
+        return False
+
+    if cache_entry and cache_entry.get("status") == "accepted" and not refresh:
+        cached_eth = cache_entry.get("ethnicity") or ""
+        if cached_eth and not _is_generic_only_ethnicity(cached_eth):
+            return False
+        if cache_entry.get("method") == "llm_wikipedia":
+            return False
+
+    entry = wiki_entry or cache_entry or {}
+    if not entry.get("wikipedia_title"):
+        return False
+
+    if wiki_entry and wiki_entry.get("status") == "accepted":
+        eth = wiki_entry.get("ethnicity") or ""
+        if eth and not _is_generic_only_ethnicity(eth):
+            return False
+
+    return True
+
+
+def should_skip_enrichment_write(
+    key: str,
+    existing_entry: dict | None,
+    override_keys: set[str],
+) -> bool:
+    if key in override_keys:
+        return True
+    if not existing_entry or existing_entry.get("status") != "accepted":
+        return False
+    eth = existing_entry.get("ethnicity") or ""
+    return bool(eth) and not _is_generic_only_ethnicity(eth)
+
+
 def extract_ethnicity(
     intro: str,
     infobox: dict[str, str],
@@ -779,9 +981,16 @@ def apply_enrichment(
     results: dict[str, dict],
     enrichment_path: Path,
     existing: dict[str, dict],
-) -> None:
+    override_keys: set[str] | None = None,
+) -> int:
+    override_keys = override_keys or set()
     merged = dict(existing)
-    merged.update(results)
+    written = 0
+    for key, entry in results.items():
+        if should_skip_enrichment_write(key, merged.get(key), override_keys):
+            continue
+        merged[key] = entry
+        written += 1
     payload = {
         "generated_at": _utc_now_iso(),
         "source": "wikipedia",
@@ -790,6 +999,7 @@ def apply_enrichment(
     }
     enrichment_path.parent.mkdir(parents=True, exist_ok=True)
     enrichment_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    return written
 
 
 def main() -> int:
@@ -801,6 +1011,11 @@ def main() -> int:
     parser.add_argument("--apply-report", type=Path, help="Apply accepted entries from an existing dry-run report JSON")
     parser.add_argument("--apply", action="store_true", help="Write accepted results to enrichment sidecar")
     parser.add_argument("--refresh", action="store_true", help="Re-fetch even if cached accepted entry exists")
+    parser.add_argument(
+        "--llm-fallback",
+        action="store_true",
+        help="After Wikipedia pass, run LLM extraction on remaining N/A or generic-only stubs",
+    )
     parser.add_argument("--delay", type=float, default=1.0, help="Seconds between Wikipedia requests")
     parser.add_argument("--report", type=Path, help="Report JSON output path")
     parser.add_argument("--db-path", default=str(DEFAULT_DB_PATH))
@@ -823,7 +1038,12 @@ def main() -> int:
                 continue
             key = IndigenousDatabase._normalize_roster_name(entry.get("roster_name") or "")
             accepted[key] = {**entry, "ethnicity": ethnicity, "status": "accepted"}
-        apply_enrichment(accepted, enrichment_path, cache)
+        apply_enrichment(
+            accepted,
+            enrichment_path,
+            cache,
+            override_keys=load_override_keys(Path(args.overrides_path)),
+        )
         print(f"Applied {len(accepted)} filtered entries from {args.apply_report}")
         return 0
 
@@ -837,6 +1057,9 @@ def main() -> int:
     tribes = build_tribe_dictionary(roster)
     override_keys = load_override_keys(overrides_path)
     cache = load_enrichment_cache(enrichment_path)
+    roster_by_key = {
+        IndigenousDatabase._normalize_roster_name(r.get("name") or ""): r for r in roster
+    }
 
     db = IndigenousDatabase(db_path=db_path, overrides_path=overrides_path, enrichment_path=enrichment_path)
     db.database = db._apply_ethnicity_sidecars(db._dedupe_roster(list(roster)))
@@ -887,7 +1110,70 @@ def main() -> int:
         results[key] = entry
         entries_report.append(entry)
 
+    llm_results: dict[str, dict] = {}
+    if args.llm_fallback:
+        from llm.factory import get_llm_provider
+
+        llm = get_llm_provider()
+        llm_targets = [
+            name
+            for name in targets
+            if needs_llm_fallback(
+                results.get(IndigenousDatabase._normalize_roster_name(name)),
+                merged_by_key.get(IndigenousDatabase._normalize_roster_name(name), "N/A"),
+                IndigenousDatabase._normalize_roster_name(name),
+                override_keys,
+                cache.get(IndigenousDatabase._normalize_roster_name(name)),
+                args.refresh,
+            )
+        ]
+        logger.info("LLM fallback for %d targets after Wikipedia pass", len(llm_targets))
+        for i, name in enumerate(llm_targets, 1):
+            key = IndigenousDatabase._normalize_roster_name(name)
+            wiki_entry = results.get(key) or cache.get(key) or {}
+            title = wiki_entry.get("wikipedia_title")
+            if not title:
+                continue
+            roster_rec = roster_by_key.get(key, {})
+            logger.info("[LLM %d/%d] %s", i, len(llm_targets), name)
+            try:
+                intro = client.fetch_intro(title)
+                infobox = client.fetch_infobox_fields(title) if intro else {}
+            except requests.RequestException as exc:
+                llm_entry = {
+                    "roster_name": name,
+                    "wikipedia_title": title,
+                    "ethnicity": None,
+                    "status": "rejected",
+                    "method": "llm_wikipedia",
+                    "source": "llm_wikipedia",
+                    "confidence": None,
+                    "evidence": None,
+                    "fetched_at": _utc_now_iso(),
+                    "reject_reason": f"api_error: {exc}",
+                }
+                llm_results[key] = llm_entry
+                entries_report.append(llm_entry)
+                continue
+
+            source_text = build_llm_source_text(intro, infobox)
+            llm_entry = run_llm_ethnicity_fallback(
+                llm,
+                name,
+                title,
+                source_text,
+                roster_rec.get("state"),
+                roster_rec.get("party"),
+            )
+            llm_results[key] = llm_entry
+            entries_report.append(llm_entry)
+            if llm_entry.get("status") == "accepted":
+                results[key] = llm_entry
+
     counts = Counter(e.get("status") for e in entries_report)
+    llm_counts = Counter(
+        e.get("status") for e in llm_results.values()
+    ) if llm_results else Counter()
     report = {
         "generated_at": _utc_now_iso(),
         "mode": mode,
@@ -900,6 +1186,9 @@ def main() -> int:
             "page_missing": counts.get("page_missing", 0),
             "skipped_override": counts.get("skipped_override", 0),
             "skipped_known": counts.get("skipped_known", 0),
+            "llm_targets": len(llm_results),
+            "llm_accepted": llm_counts.get("accepted", 0),
+            "llm_rejected": llm_counts.get("rejected", 0),
         },
         "entries": entries_report,
     }
@@ -916,8 +1205,8 @@ def main() -> int:
 
     if args.apply:
         accepted = {k: v for k, v in results.items() if v.get("status") == "accepted"}
-        apply_enrichment(accepted, enrichment_path, cache)
-        logger.info("Applied %d accepted entries to %s", len(accepted), enrichment_path)
+        written = apply_enrichment(accepted, enrichment_path, cache, override_keys=override_keys)
+        logger.info("Applied %d accepted entries to %s", written, enrichment_path)
     else:
         logger.info("Dry-run only; pass --apply to write sidecar")
 
