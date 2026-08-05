@@ -22,6 +22,10 @@ logger = logging.getLogger(__name__)
 _main_app: MainApplication | None = None
 
 
+def _env_flag(name: str, default: str = "false") -> bool:
+    return os.getenv(name, default).lower() in ("1", "true", "yes")
+
+
 def get_main_app() -> MainApplication:
     global _main_app
     if _main_app is None:
@@ -63,6 +67,56 @@ def run_approval_sync_job():
         SlackNotifier().notify_error(f"Approval sync failed: {exc}")
 
 
+def run_validation_refresh_job():
+    from scripts.refresh_pending_validation_warnings import run_validation_refresh
+
+    apply_eval_expl_fixes = _env_flag("VALIDATION_REFRESH_APPLY_EVAL_EXPL_FIXES", "false")
+    logger.info(
+        "Starting scheduled validation refresh (apply_eval_expl_fixes=%s)",
+        apply_eval_expl_fixes,
+    )
+    slack = SlackNotifier()
+    try:
+        stats = run_validation_refresh(
+            apply=True,
+            apply_eval_expl_fixes=apply_eval_expl_fixes,
+        )
+        logger.info(
+            "Validation refresh finished: processed=%d cleared=%d reduced=%d "
+            "unchanged=%d failed=%d",
+            stats.processed,
+            stats.cleared,
+            stats.reduced,
+            stats.unchanged,
+            stats.failed,
+        )
+    except Exception as exc:
+        logger.exception("Validation refresh job failed: %s", exc)
+        slack.notify_error(f"Validation refresh failed: {exc}")
+
+
+def _add_cron_job(scheduler, job_id, func, cron_expr, tz):
+    parts = cron_expr.split()
+    if len(parts) != 5:
+        raise ValueError(f"Invalid cron (expected 5 fields): {cron_expr}")
+    minute, hour, day, month, day_of_week = parts
+    scheduler.add_job(
+        func,
+        CronTrigger(
+            minute=minute,
+            hour=hour,
+            day=day,
+            month=month,
+            day_of_week=day_of_week,
+            timezone=tz,
+        ),
+        id=job_id,
+        max_instances=1,
+        coalesce=True,
+        replace_existing=True,
+    )
+
+
 def main():
     load_dotenv()
 
@@ -72,29 +126,12 @@ def main():
     cron_expr = os.getenv("DISCOVERY_CRON", "0 2 * * *")
     tz = os.getenv("DISCOVERY_TZ", "America/New_York")
     sync_interval = int(os.getenv("APPROVAL_SYNC_INTERVAL_MIN", "10"))
+    validation_refresh_enabled = _env_flag("VALIDATION_REFRESH_ENABLED", "false")
+    validation_refresh_cron = os.getenv("VALIDATION_REFRESH_CRON", "0 4 * * *")
 
-    cron_parts = cron_expr.split()
-    if len(cron_parts) != 5:
-        raise ValueError(f"Invalid DISCOVERY_CRON (expected 5 fields): {cron_expr}")
-
-    minute, hour, day, month, day_of_week = cron_parts
     scheduler = BlockingScheduler(timezone=tz)
 
-    scheduler.add_job(
-        run_discovery_job,
-        CronTrigger(
-            minute=minute,
-            hour=hour,
-            day=day,
-            month=month,
-            day_of_week=day_of_week,
-            timezone=tz,
-        ),
-        id="discovery",
-        max_instances=1,
-        coalesce=True,
-        replace_existing=True,
-    )
+    _add_cron_job(scheduler, "discovery", run_discovery_job, cron_expr, tz)
 
     scheduler.add_job(
         run_approval_sync_job,
@@ -105,6 +142,19 @@ def main():
         replace_existing=True,
     )
 
+    if validation_refresh_enabled:
+        _add_cron_job(
+            scheduler,
+            "validation_refresh",
+            run_validation_refresh_job,
+            validation_refresh_cron,
+            tz,
+        )
+    else:
+        logger.info(
+            "Validation refresh disabled (set VALIDATION_REFRESH_ENABLED=true to enable)"
+        )
+
     def shutdown(signum, frame):
         logger.info("Shutdown signal received, stopping scheduler")
         scheduler.shutdown(wait=False)
@@ -114,10 +164,12 @@ def main():
     signal.signal(signal.SIGINT, shutdown)
 
     logger.info(
-        "Scheduler started: discovery cron=%s tz=%s approval_sync=%dm",
+        "Scheduler started: discovery cron=%s tz=%s approval_sync=%dm validation_refresh=%s%s",
         cron_expr,
         tz,
         sync_interval,
+        "enabled" if validation_refresh_enabled else "disabled",
+        f" cron={validation_refresh_cron}" if validation_refresh_enabled else "",
     )
     scheduler.start()
 
