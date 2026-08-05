@@ -11,6 +11,7 @@ import pytest
 from indigenous_database import IndigenousDatabase
 from scripts.enrich_indigenous_ethnicity import (
     WikipediaEnrichClient,
+    _validate_proposed,
     build_tribe_dictionary,
     discover_mvp_targets,
     enrich_name,
@@ -53,6 +54,42 @@ def test_rejects_generic_native_american_only(tribes):
     ethnicity, method, confidence = extract_ethnicity(GENERIC_INTRO, {}, None, tribes)
     assert ethnicity == ""
     assert confidence == "rejected"
+
+
+def test_accepts_specific_nation_names(tribes):
+    intro = "x" * 80
+    for nation in ("Lakota", "Cherokee", "Ojibwe", "Navajo", "Crow", "Apache", "Pueblo"):
+        assert _validate_proposed(nation, intro) is None
+
+
+def test_extracts_lakota_from_intro(tribes):
+    intro = (
+        "Kevin Killer (born 1969) is an American politician and member of the Oglala Lakota "
+        "tribe. He has served in the South Dakota House of Representatives since 2009."
+    )
+    ethnicity, method, confidence = extract_ethnicity(intro, {}, None, tribes)
+    assert "Lakota" in ethnicity or "Oglala" in ethnicity
+    assert confidence == "high"
+
+
+def test_extracts_cherokee_from_intro(tribes):
+    intro = (
+        "Tom Cole (born April 28, 1949) is an American politician and member of the "
+        "Cherokee Nation. He has served in the U.S. House since 2003."
+    )
+    ethnicity, method, confidence = extract_ethnicity(intro, {}, None, tribes)
+    assert "Cherokee" in ethnicity
+    assert confidence == "high"
+
+
+def test_extracts_ojibwe_from_intro(tribes):
+    intro = (
+        "Mary Kunesh (born 1960) is an American politician and member of the Standing Rock "
+        "Dakota and Ojibwe tribes. She has served in the Minnesota Senate since 2021."
+    )
+    ethnicity, method, confidence = extract_ethnicity(intro, {}, None, tribes)
+    assert "Ojibwe" in ethnicity
+    assert confidence == "high"
 
 
 def test_disambiguation_picks_politician_page():
