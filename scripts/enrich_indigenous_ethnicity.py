@@ -71,21 +71,6 @@ GENERIC_ETHNICITY = frozenset(
         "american indian",
         "indigenous american",
         "native",
-        "pueblo",
-        "sioux",
-        "sac",
-        "ute",
-        "apache",
-        "crow",
-        "choctaw",
-        "cherokee",
-        "navajo",
-        "ojibwe",
-        "lakota",
-        "ottawa",
-        "quapaw",
-        "maliseet",
-        "oglala",
     }
 )
 
