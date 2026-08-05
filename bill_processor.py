@@ -1,3 +1,4 @@
+import os
 import re
 import datetime
 import traceback
@@ -5,6 +6,7 @@ import time
 from typing import Callable, Optional
 
 from bill_analyzer import BillAnalyzer
+from document_text_store import get_document_text_store, infer_source_type
 from legiscan_processor import LegiScanProcessor
 from gov_processor import GovProcessor
 from sponsor_utils import process_sponsors
@@ -47,16 +49,81 @@ class BillProcessor:
                     raise e
         raise Exception(f"Max retries exceeded for {func.__name__}")
 
-    def get_doc_text(self, url, doc_id=None):
+    def _seen_content_hash(self, url: str) -> str | None:
+        db_path = os.getenv("DISCOVERY_DB_PATH", "data/discovery.db")
+        try:
+            from discovery.seen_store import SeenStore
+
+            row = SeenStore(db_path).get(url)
+            if row and row.get("content_hash"):
+                return str(row["content_hash"])
+        except Exception:
+            pass
+        return None
+
+    def _apply_cached_doc_text(self, url: str, cached: dict) -> tuple[bool, str]:
+        bill_id = cached.get("bill_id")
+        doc_id = cached.get("doc_id")
+        self.compiled_bill.update(
+            {
+                "decoded_text": cached["decoded_text"],
+                "bill_id": bill_id,
+                "doc_id": doc_id,
+                "bill_text_url": url,
+            }
+        )
+        self._set_phase_progress("fetch", 0.35)
+        plog("Document text retrieved from cache")
+        return True, "Document text retrieved from cache"
+
+    def _write_doc_text_cache(
+        self,
+        url: str,
+        decoded_text: str,
+        *,
+        bill_id=None,
+        doc_id=None,
+    ) -> None:
+        store = get_document_text_store()
+        if not store:
+            return
+        try:
+            store.put(
+                url,
+                decoded_text,
+                source_type=infer_source_type(url),
+                bill_id=bill_id,
+                doc_id=doc_id,
+            )
+        except Exception as exc:
+            print(f"Warning: failed to write document text cache: {exc}")
+
+    def get_doc_text(self, url, doc_id=None, bill_id=None, refresh=False):
         try:
             print(f"Getting document text from URL: {url}")
+            store = get_document_text_store()
+            if store and not refresh:
+                cached = store.get(url)
+                if cached and cached.get("decoded_text"):
+                    seen_hash = self._seen_content_hash(url)
+                    if seen_hash and seen_hash != cached.get("content_hash"):
+                        print(
+                            "Document text cache stale (SeenStore content_hash mismatch); re-fetching"
+                        )
+                    else:
+                        print("Document text loaded from cache")
+                        return self._apply_cached_doc_text(url, cached)
+
             plog(f"Fetching document text...")
             self._set_phase_progress("fetch", 0.1)
             set_phase("fetch", url[:80])
             if "legiscan.com" in url:
                 print("URL identified as LegiScan URL.")
                 decoded_text, bill_id, doc_id = self.legiscan_processor.get_legiscan_text(
-                    url, doc_id=doc_id, document_processor=self.document_processor
+                    url,
+                    doc_id=doc_id,
+                    bill_id=bill_id,
+                    document_processor=self.document_processor,
                 )
                 if not bill_id:
                     error_msg = "Invalid or Unavailable LegiScan URL"
@@ -73,6 +140,9 @@ class BillProcessor:
                 )
                 self._set_phase_progress("fetch", 0.35)
                 plog("Document text retrieved")
+                self._write_doc_text_cache(
+                    url, decoded_text, bill_id=bill_id, doc_id=doc_id
+                )
                 return True, "LegiScan text retrieved successfully"
 
             if self.gov_processor.is_gov_url(url):
@@ -91,6 +161,7 @@ class BillProcessor:
                     }
                 )
                 self._set_phase_progress("fetch", 0.35)
+                self._write_doc_text_cache(url, decoded_text)
                 return True, ".gov document text retrieved successfully"
 
             error_msg = "Unsupported URL format"
@@ -237,13 +308,17 @@ class BillProcessor:
 
             bill_data = {
                 "State": bill.get("state", "") or "Unknown",
-                "Title": bill.get("title", "") or "Executive Order",
+                "Name": bill.get("title", "") or "Executive Order",
                 "Bill Number": bill.get("bill_number", "") or "",
-                "Status": bill_info.get("bill_passed_status", "Active"),
+                "Status": bill_info.get("bill_passed_status", "Pending"),
                 "Progression": bill_info.get("progression_status", "N/A"),
                 "Chamber": bill_info.get("chamber", "Executive"),
                 "Chamber Details": bill_info.get("chamber_details", ""),
-                "Bill Overview": bill_info.get("link", ""),
+                "Bill Overview (Link)": (
+                    bill_info.get("link")
+                    or bill_info.get("bill_text_url")
+                    or ""
+                ),
                 "Bill Text": bill_info.get("bill_text_url", ""),
                 "Optional Link": "",
                 "Summary": bill_info.get("chat_summary", ""),
@@ -252,7 +327,7 @@ class BillProcessor:
                 "Mechanisms for Evaluation?": bill_info.get("mechanisms_eval", ""),
                 "Mechanisms for Evaluation": bill_info.get("mechanisms_expl", ""),
                 "Gender Inclusive Language?": bill_info.get("gender_inclusive_eval", ""),
-                "Gender Inclusive Explanation": bill_info.get("gender_inclusive_expl", ""),
+                "Gender Inclusive Language": bill_info.get("gender_inclusive_expl", ""),
                 "Prevention Efforts?": bill_info.get("prevention_efforts_eval", ""),
                 "Prevention Efforts": bill_info.get("prevention_efforts_expl", ""),
                 "Level of Survivor / Relative Input?": bill_info.get(
@@ -267,13 +342,18 @@ class BillProcessor:
                 "Centering of Indigenous Voices": bill_info.get(
                     "centering_indigenous_voices_expl", ""
                 ),
-                "Sponsors": self.compiled_bill.get("bill_sponsors", "Executive Order"),
+                "Sponsors of the Legislation": self.compiled_bill.get(
+                    "bill_sponsors", "Executive Order"
+                ),
                 "Indigenous Sponsorship": self.compiled_bill.get("indigenous_sponsors", ""),
                 "Session": bill.get("session", {}).get("session_title", "N/A")
                 if isinstance(bill.get("session"), dict)
                 else bill.get("session", "N/A"),
                 "Categories": bill_info.get("categories_eval", ""),
-                "Last Update": bill.get("status_date", datetime.datetime.now().strftime("%Y-%m-%d")),
+                "Last Update": (
+                    bill.get("status_date")
+                    or datetime.datetime.now().strftime("%Y-%m-%d")
+                ),
                 "Validation Warnings": bill_info.get("validation_warnings", ""),
             }
 
@@ -284,8 +364,14 @@ class BillProcessor:
             self.compiled_bill["error"] = error_msg
             return False, error_msg
 
-    def process_bill(self, url, doc_id=None, cached_analysis: Optional[dict] = None):
-        success, message = self.get_doc_text(url, doc_id=doc_id)
+    def process_bill(
+        self,
+        url,
+        doc_id=None,
+        cached_analysis: Optional[dict] = None,
+        refresh: bool = False,
+    ):
+        success, message = self.get_doc_text(url, doc_id=doc_id, refresh=refresh)
         if not success:
             return False, message
 
