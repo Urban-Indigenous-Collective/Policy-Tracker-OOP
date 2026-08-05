@@ -17,6 +17,32 @@ def split_sponsors(sponsors_string: str) -> list[str]:
     return sponsors_list
 
 
+def _use_offices_held_as_role(offices_held: str, role: str) -> bool:
+    """Use roster offices_held only when LegiScan gave no role, and it is a title not career history."""
+    if not offices_held or offices_held == "N/A":
+        return False
+    if role:
+        return False
+    # Manual MMIP coordinator roster lines — the title is the whole point.
+    if "MMIP Coordinator" in offices_held:
+        return True
+    # Wikipedia list pages store full career timelines; skip those for sponsor display.
+    lowered = offices_held.lower()
+    career_markers = (
+        "present",
+        "–",
+        "-",
+        "19",
+        "20",
+        "speaker of",
+        "state representative",
+        "state senator",
+    )
+    if any(marker in lowered for marker in career_markers):
+        return False
+    return True
+
+
 def process_sponsors(sponsors_string: str, indigenous_db) -> tuple[str, str]:
     sponsors_list = split_sponsors(sponsors_string)
     processed_sponsors = []
@@ -43,7 +69,7 @@ def process_sponsors(sponsors_string: str, indigenous_db) -> tuple[str, str]:
         offices_held = indigenous_data.get("offices_held") if indigenous_data else None
 
         if ethnicity and ethnicity != "N/A":
-            if offices_held:
+            if _use_offices_held_as_role(offices_held or "", role):
                 role = offices_held
             name_with_ethnicity = f"{name} ({ethnicity})"
             processed_indigenous_sponsors.append(
