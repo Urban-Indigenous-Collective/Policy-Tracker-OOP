@@ -114,7 +114,8 @@ def _parse_date(value: str) -> dt.date | None:
         return None
 
 
-def _presidential_administration(value: str) -> str:
+def administration_from_date(value: str) -> str:
+    """Map an ISO date string to the presidential administration in office."""
     day = _parse_date(value)
     if not day:
         return ""
@@ -122,6 +123,9 @@ def _presidential_administration(value: str) -> str:
         if start <= day < end:
             return name
     return ""
+
+
+_presidential_administration = administration_from_date
 
 
 def _needs_backfill(fields: dict) -> bool:
@@ -169,14 +173,13 @@ def _backup_updates(fields: dict, backup_fields: dict) -> dict:
     return updates
 
 
-def _federal_session_update(fields: dict, updates: dict) -> dict:
+def _federal_session_update(fields: dict, updates: dict, url: str = "") -> dict:
     if str(fields.get("Session") or "").strip() or updates.get("Session"):
         return updates
-    source = str(fields.get("Source") or "").strip()
-    if source != "Federal Site":
+    if _infer_source(fields, url or _record_url(fields)) != "Federal Site":
         return updates
     date_val = updates.get("Last Update") or fields.get("Last Update") or ""
-    admin = _presidential_administration(str(date_val))
+    admin = administration_from_date(str(date_val))
     if admin:
         updates = dict(updates)
         updates["Session"] = admin
@@ -216,7 +219,7 @@ def backfill_record(
 
     if allow_federal_admin and source == "Federal Site":
         before = updates.get("Session")
-        updates = _federal_session_update(fields, updates)
+        updates = _federal_session_update(fields, updates, url)
         if not before and updates.get("Session"):
             reason = "federal_admin" if reason == "skipped" else reason
 
