@@ -1,7 +1,36 @@
 import datetime
 import re
 import requests
-from bs4 import BeautifulSoup
+
+TRACKED_STATUS_FIELD_NAMES = (
+    "Status",
+    "Progression",
+    "Chamber",
+    "Chamber Details",
+    "Last Update",
+)
+
+_BILL_URL_RE = re.compile(
+    r"legiscan\.com/([A-Z]{2})/(?:bill|text)/([A-Z]+[0-9]+)/([0-9]{4})",
+    re.IGNORECASE,
+)
+_FAILED_ACTION_RE = re.compile(r"failed to adopt|failed passage|died in|withdrawn", re.I)
+
+
+def normalize_bill_number(bill_number: str) -> str:
+    """Normalize bill numbers for identity comparison (HB0015 -> HB15)."""
+    compact = re.sub(r"[^A-Z0-9]", "", str(bill_number or "").upper())
+    match = re.match(r"^([A-Z]+)0*(\d+)$", compact)
+    if match:
+        return f"{match.group(1)}{match.group(2)}"
+    return compact
+
+
+def parse_legiscan_bill_url(url: str) -> tuple[str, str, int] | None:
+    match = _BILL_URL_RE.search(url or "")
+    if not match:
+        return None
+    return match.group(1).upper(), match.group(2).upper(), int(match.group(3))
 
 
 class LegiScanProcessor:
@@ -52,89 +81,139 @@ class LegiScanProcessor:
         """
         return "legiscan.com" in url
 
-    def get_latest_bill_id(self, state_code, session_year, bill_number):
-        """
-        Fetches the bill ID for a given state, session year, and bill number using the LegiScan API.
-        """
+    def _get_session_list(self, state_code: str) -> list[dict]:
+        getter = getattr(self.api_client, "get_session_list", None)
+        if callable(getter):
+            payload = getter(state_code) or {}
+            return payload.get("sessions") or []
         api_key = self.api_client.get_api_key()
+        response = requests.get(
+            f"https://api.legiscan.com/?key={api_key}&op=getSessionList&state={state_code}",
+            timeout=60,
+        )
+        if response.status_code != 200:
+            return []
+        return response.json().get("sessions") or []
 
-        # Step 1: Get the session list for the state
-        session_list_url = f"https://api.legiscan.com/?key={api_key}&op=getSessionList&state={state_code}"
-        print("Session URL requested " + session_list_url)
-        response = requests.get(session_list_url)
-        
-        if response.status_code == 200:
-            sessions = response.json().get('sessions', [])
-            if sessions:
-                # Find the session that matches the provided year
-                matching_session = None
-                for session in sessions:
-                    if session['year_start'] <= session_year <= session['year_end']:
-                        matching_session = session
-                        break
+    def _get_master_list(self, session_id: int | str) -> dict:
+        getter = getattr(self.api_client, "get_master_list", None)
+        if callable(getter):
+            payload = getter(session_id) or {}
+            return payload.get("masterlist") or {}
+        api_key = self.api_client.get_api_key()
+        response = requests.get(
+            f"https://api.legiscan.com/?key={api_key}&op=getMasterList&id={session_id}",
+            timeout=60,
+        )
+        if response.status_code != 200:
+            return {}
+        return response.json().get("masterlist") or {}
 
-                if matching_session:
-                    latest_session_id = matching_session['session_id']
-                    print(f"Found session ID: {latest_session_id} for {state_code} in year {session_year}")
+    def get_latest_bill_id(self, state_code, session_year, bill_number):
+        """Fetch bill_id for state/year/bill_number, trying all matching sessions."""
+        target = normalize_bill_number(bill_number)
+        sessions = self._get_session_list(state_code)
+        matching_sessions = [
+            session
+            for session in sessions
+            if session.get("year_start", 0) <= session_year <= session.get("year_end", 0)
+        ]
+        for session in matching_sessions:
+            master_list = self._get_master_list(session["session_id"])
+            for bill_data in master_list.values():
+                if not isinstance(bill_data, dict):
+                    continue
+                if normalize_bill_number(bill_data.get("number", "")) == target:
+                    bill_id = bill_data["bill_id"]
+                    return int(bill_id) if str(bill_id).isdigit() else bill_id
+        return None
 
-                    # Step 2: Get the master list for the selected session
-                    master_list_url = f"https://api.legiscan.com/?key={api_key}&op=getMasterList&id={latest_session_id}"
-                    print("MasterList URL requested " + master_list_url)
-                    response = requests.get(master_list_url)
-
-                    if response.status_code == 200:
-                        master_list = response.json().get('masterlist', {})
-
-                        # Step 3: Search for the bill number in the master list
-                        for key, bill_data in master_list.items():
-                            if isinstance(bill_data, dict) and bill_data.get('number') == bill_number:
-                                print(f"Found bill {bill_number} with bill_id: {bill_data['bill_id']}")
-                                return bill_data['bill_id']  # Return the matching bill ID and doc ID
-                        
-                        print(f"No matching bill found for {bill_number} in session {session_year}")
-                        return None
-                    else:
-                        print(f"Error fetching master list: {response.status_code}")
-                        return None
-                else:
-                    print(f"No matching session found for year {session_year} in state {state_code}.")
-                    return None
-            else:
-                print(f"No sessions found for the state: {state_code}")
-                return None
-        else:
-            print(f"Error fetching session list: {response.status_code}")
+    def search_bill_id(self, state: str, bill_number: str, year: int) -> str | None:
+        target = normalize_bill_number(bill_number)
+        data = self.api_client.get_search_raw(bill_number, state=state, year=year)
+        if not data or data.get("status") != "OK":
             return None
+        results = data.get("searchresult") or {}
+        for key, item in results.items():
+            if key == "summary" or not isinstance(item, dict):
+                continue
+            if normalize_bill_number(item.get("bill_number", "")) == target:
+                bill_id = item.get("bill_id")
+                return str(bill_id) if bill_id is not None else None
+        return None
+
+    def resolve_bill_id(
+        self,
+        url: str,
+        *,
+        state: str = "",
+        bill_number: str = "",
+        year: int | None = None,
+    ) -> str | None:
+        """Resolve a LegiScan bill_id from overview/text URLs and optional hints."""
+        if not url or not self.is_legiscan_url(url):
+            if state and bill_number and year:
+                return self.search_bill_id(state, bill_number, year) or self.get_latest_bill_id(
+                    state, year, bill_number
+                )
+            return None
+
+        doc_id = self.extract_doc_id(url)
+        if doc_id and "/text/" in url:
+            text_getter = getattr(self.api_client, "get_bill_text_doc", None)
+            if callable(text_getter):
+                text_doc = text_getter(doc_id) or {}
+            else:
+                text_doc = self.api_client.get_bill_text(doc_id) or {}
+            bill_id = text_doc.get("bill_id")
+            if bill_id:
+                return str(bill_id)
+
+        parsed = parse_legiscan_bill_url(url)
+        if parsed:
+            state_code, parsed_bill, session_year = parsed
+            found = self.get_latest_bill_id(state_code, session_year, parsed_bill)
+            if found:
+                return str(found)
+            found = self.search_bill_id(state_code, parsed_bill, session_year)
+            if found:
+                return found
+
+        if state and bill_number and year:
+            found = self.search_bill_id(state, bill_number, year)
+            if found:
+                return found
+            found = self.get_latest_bill_id(state, year, bill_number)
+            return str(found) if found else None
+        return None
+
+    def extract_status_fields(self, bill_details: dict) -> dict[str, str]:
+        bill = bill_details.get("bill") or {}
+        return {
+            "Status": self.check_bill_status(bill_details),
+            "Progression": self.status_codes.get(bill.get("status"), "Unknown Status"),
+            "Chamber": self.get_chamber_details(bill),
+            "Chamber Details": self.get_latest_action(bill),
+            "Last Update": str(bill.get("status_date") or ""),
+        }
+
+    def extract_metadata_fields(self, bill_details: dict) -> dict[str, str]:
+        """Authoritative LegiScan session/date metadata for backfill."""
+        bill = bill_details.get("bill") or {}
+        session = bill.get("session") or {}
+        session_title = ""
+        if isinstance(session, dict):
+            session_title = str(session.get("session_title") or "").strip()
+        elif session:
+            session_title = str(session).strip()
+        fields = self.extract_status_fields(bill_details)
+        if session_title:
+            fields["Session"] = session_title
+        return fields
 
     def process_legiscan_url(self, url):
-        """
-        Processes the LegiScan URL to extract the bill ID if present.
-        If no bill ID is found, attempts to extract state, session year, and bill number.
-        """
-        # Attempt to extract bill ID directly
-        bill_id = self.extract_doc_id(url)
-        if bill_id:
-            return bill_id
-
-        # Attempt to extract state, bill number, and session year if bill ID is not found
-        match = re.search(r'legiscan\.com/([A-Z]{2})/bill/([A-Z]+[0-9]+)/([0-9]{4})', url)
-        if match:
-            state_code = match.group(1)  # e.g., 'AK'
-            bill_number = match.group(2)  # e.g., 'SB211'
-            session_year = int(match.group(3))  # e.g., 2022
-            
-            # Get the bill ID by passing the state, session year, and bill number
-            latest_bill_id = self.get_latest_bill_id(state_code, session_year, bill_number)
-            
-            if latest_bill_id:
-                print(f"Found bill ID: {latest_bill_id}")
-                return latest_bill_id
-            else:
-                print(f"No bill found for {bill_number} in {state_code} for year {session_year}")
-                return None
-        else:
-            print("Invalid LegiScan URL format.")
-            return None
+        """Legacy helper; prefer resolve_bill_id."""
+        return self.resolve_bill_id(url)
 
 
     def identify_indigenous_sponsors(self, sponsors):
@@ -151,20 +230,29 @@ class LegiScanProcessor:
         return ", ".join(indigenous_sponsors)
 
     def check_bill_status(self, bill_details):
-        """
-        Checks the status of a bill.
-        """
-        if bill_details['bill']['completed'] == 1:
-            return "Passed"
-        else:
-            today = datetime.date.today()
-            session_end_year = bill_details['bill']['session']['year_end']
-            session_end_date = datetime.date(session_end_year, 12, 31)
-
-            if today > session_end_date:
+        """Checks the status of a bill."""
+        bill = bill_details.get("bill") or {}
+        history = bill.get("history") or []
+        if history:
+            last_action = str(history[-1].get("action") or "")
+            if _FAILED_ACTION_RE.search(last_action):
                 return "Failed"
-            else:
-                return "Pending"
+
+        status_code = bill.get("status")
+        if bill.get("completed") == 1:
+            if status_code == 6:
+                return "Failed"
+            if history and _FAILED_ACTION_RE.search(str(history[-1].get("action") or "")):
+                return "Failed"
+            return "Passed"
+
+        session = bill.get("session") or {}
+        session_end_year = session.get("year_end") if isinstance(session, dict) else None
+        if session_end_year:
+            session_end_date = datetime.date(int(session_end_year), 12, 31)
+            if datetime.date.today() > session_end_date:
+                return "Failed"
+        return "Pending"
 
     def get_chamber_details(self, bill):
         """
@@ -254,13 +342,13 @@ class LegiScanProcessor:
             bill_id = bill_text_details.get('bill_id')
             print(f"Bill ID retrieved from bill text details: {bill_id}")
             if not bill_id:
-                return "Invalid or Unavailable LegiScan URL", None
+                return "Invalid or Unavailable LegiScan URL", None, None
         else:
             # Retrieve bill_id from the URL
             bill_id = self.process_legiscan_url(legiscan_url)
             print(f"Bill ID returned from initial fetch: {bill_id}")
             if not bill_id:
-                return "Invalid or Unavailable LegiScan URL", None
+                return "Invalid or Unavailable LegiScan URL", None, None
 
         # Retrieve the bill text using the provided doc_id or fetch the doc_id and get the text
         decoded_text, doc_id = self.get_bill_id_and_text(
