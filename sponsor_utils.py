@@ -68,12 +68,16 @@ def process_sponsors(sponsors_string: str, indigenous_db) -> tuple[str, str]:
         ethnicity = indigenous_data.get("ethnicity") if indigenous_data else None
         offices_held = indigenous_data.get("offices_held") if indigenous_data else None
 
-        if ethnicity and ethnicity != "N/A":
-            if _use_offices_held_as_role(offices_held or "", role):
-                role = offices_held
-            name_with_ethnicity = f"{name} ({ethnicity})"
+        if indigenous_data:
+            display_role = role
+            if ethnicity and ethnicity != "N/A":
+                if _use_offices_held_as_role(offices_held or "", role):
+                    display_role = offices_held
+                name_with_ethnicity = f"{name} ({ethnicity})"
+            else:
+                name_with_ethnicity = name
             processed_indigenous_sponsors.append(
-                _format_sponsor_line(name_with_ethnicity, role, additional_details)
+                _format_sponsor_line(name_with_ethnicity, display_role, additional_details)
             )
         else:
             name_with_ethnicity = name

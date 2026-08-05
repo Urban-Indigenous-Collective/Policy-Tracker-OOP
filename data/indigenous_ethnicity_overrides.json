@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "description": "Verified tribal affiliations and name aliases merged after roster dedupe; survives Wikipedia refresh.",
+  "ethnicity": {
+    "James Ramos": "Serrano/Cahuilla",
+    "Sharice Davids": "Ho-Chunk",
+    "Mary Kunesh": "Standing Rock Dakota / Native Hawaiian",
+    "Stacelynn Eli": "Native Hawaiian",
+    "Aaron Dana": "Passamaquoddy",
+    "Derrick Lente": "Sandia & Isleta Pueblo",
+    "Doreen Wonda Johnson": "Navajo"
+  },
+  "aliases": {
+    "Derrick J. Lente": "Derrick Lente",
+    "Wonda Johnson": "Doreen Wonda Johnson",
+    "Stacelynn Eli": "Stacelynn Kehaulani Eli",
+    "Aaron Dana": "Aaron M. Dana"
+  }
+}

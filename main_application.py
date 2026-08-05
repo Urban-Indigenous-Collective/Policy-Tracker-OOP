@@ -25,8 +25,8 @@ class MainApplication:
         self.report_generator = ReportGenerator()
         self.wikipedia_client = WikipediaAPIClient()
         self.indigenous_db = IndigenousDatabase()
-        print("Building Indigenous database...")
-        self.indigenous_db.build_database()
+        source = self.indigenous_db.ensure_loaded()
+        logger.info("Indigenous database loaded via %s (%d entries)", source, len(self.indigenous_db.database))
 
         self._url_progress_base = 0.0
         self._url_progress_span = 100.0
@@ -173,7 +173,7 @@ class MainApplication:
 
     def check_politician_indigenous_status(self, politicians_list):
         if not self.indigenous_db.database:
-            self.indigenous_db.build_database()
+            self.indigenous_db.ensure_loaded()
         return {
             politician: self.indigenous_db.is_indigenous_sponsor(politician)
             for politician in politicians_list
