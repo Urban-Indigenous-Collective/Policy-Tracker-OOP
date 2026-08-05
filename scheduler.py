@@ -132,6 +132,21 @@ def run_indigenous_roster_refresh_job():
         db = IndigenousDatabase()
         db.ensure_loaded()
         stats = db.refresh()
+        from scripts.enrich_indigenous_ethnicity import run_post_refresh_enrichment
+
+        enrich_stats = run_post_refresh_enrichment(db_path=db.db_path)
+        if enrich_stats.get("skipped"):
+            logger.info(
+                "Post-refresh ethnicity enrichment skipped (%s)",
+                enrich_stats.get("reason"),
+            )
+        else:
+            logger.info(
+                "Post-refresh ethnicity enrichment: targets=%s accepted=%s applied=%s",
+                enrich_stats.get("targets"),
+                enrich_stats.get("accepted"),
+                enrich_stats.get("applied"),
+            )
         app = get_main_app()
         if app.indigenous_db.reload_if_stale():
             logger.info("Reloaded in-memory indigenous roster after refresh")

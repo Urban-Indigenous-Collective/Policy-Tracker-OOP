@@ -977,6 +977,226 @@ def write_report(report: dict, report_path: Path | None) -> tuple[Path, Path]:
     return json_path, md_path
 
 
+def _env_flag(name: str, default: str = "false") -> bool:
+    return os.getenv(name, default).lower() in ("1", "true", "yes")
+
+
+def run_enrichment_for_targets(
+    targets: list[str],
+    *,
+    mode: str,
+    db_path: Path,
+    overrides_path: Path,
+    enrichment_path: Path,
+    aliases_path: Path,
+    apply: bool = False,
+    llm_fallback: bool = False,
+    delay: float = 1.0,
+    refresh: bool = False,
+    report_path: Path | None = None,
+) -> dict[str, Any]:
+    """Run Wikipedia (+ optional LLM) enrichment for explicit targets."""
+    aliases = load_title_aliases(aliases_path)
+    roster = load_roster(db_path)
+    tribes = build_tribe_dictionary(roster)
+    override_keys = load_override_keys(overrides_path)
+    cache = load_enrichment_cache(enrichment_path)
+    roster_by_key = {
+        IndigenousDatabase._normalize_roster_name(r.get("name") or ""): r for r in roster
+    }
+
+    db = IndigenousDatabase(db_path=db_path, overrides_path=overrides_path, enrichment_path=enrichment_path)
+    db.database = db._apply_ethnicity_sidecars(db._dedupe_roster(list(roster)))
+    merged_by_key = {
+        IndigenousDatabase._normalize_roster_name(r["name"]): r.get("ethnicity", "N/A")
+        for r in db.database
+    }
+
+    client = WikipediaEnrichClient(delay=delay)
+    results: dict[str, dict] = {}
+    entries_report: list[dict] = []
+
+    logger.info("Enriching %d targets (mode=%s, apply=%s)", len(targets), mode, apply)
+
+    for i, name in enumerate(targets, 1):
+        key = IndigenousDatabase._normalize_roster_name(name)
+        merged_eth = merged_by_key.get(key, "N/A")
+        cache_entry = cache.get(key)
+        logger.info("[%d/%d] %s", i, len(targets), name)
+        entry = enrich_name(
+            name,
+            client,
+            tribes,
+            aliases,
+            merged_eth,
+            override_keys,
+            cache_entry,
+            refresh,
+        )
+        results[key] = entry
+        entries_report.append(entry)
+
+    llm_results: dict[str, dict] = {}
+    if llm_fallback:
+        from llm.factory import get_llm_provider
+
+        llm = get_llm_provider()
+        llm_targets = [
+            name
+            for name in targets
+            if needs_llm_fallback(
+                results.get(IndigenousDatabase._normalize_roster_name(name)),
+                merged_by_key.get(IndigenousDatabase._normalize_roster_name(name), "N/A"),
+                IndigenousDatabase._normalize_roster_name(name),
+                override_keys,
+                cache.get(IndigenousDatabase._normalize_roster_name(name)),
+                refresh,
+            )
+        ]
+        logger.info("LLM fallback for %d targets after Wikipedia pass", len(llm_targets))
+        for i, name in enumerate(llm_targets, 1):
+            key = IndigenousDatabase._normalize_roster_name(name)
+            wiki_entry = results.get(key) or cache.get(key) or {}
+            title = wiki_entry.get("wikipedia_title")
+            if not title:
+                continue
+            roster_rec = roster_by_key.get(key, {})
+            logger.info("[LLM %d/%d] %s", i, len(llm_targets), name)
+            try:
+                intro = client.fetch_intro(title)
+                infobox = client.fetch_infobox_fields(title) if intro else {}
+            except requests.RequestException as exc:
+                llm_entry = {
+                    "roster_name": name,
+                    "wikipedia_title": title,
+                    "ethnicity": None,
+                    "status": "rejected",
+                    "method": "llm_wikipedia",
+                    "source": "llm_wikipedia",
+                    "confidence": None,
+                    "evidence": None,
+                    "fetched_at": _utc_now_iso(),
+                    "reject_reason": f"api_error: {exc}",
+                }
+                llm_results[key] = llm_entry
+                entries_report.append(llm_entry)
+                continue
+
+            source_text = build_llm_source_text(intro, infobox)
+            llm_entry = run_llm_ethnicity_fallback(
+                llm,
+                name,
+                title,
+                source_text,
+                roster_rec.get("state"),
+                roster_rec.get("party"),
+            )
+            llm_results[key] = llm_entry
+            entries_report.append(llm_entry)
+            if llm_entry.get("status") == "accepted":
+                results[key] = llm_entry
+
+    counts = Counter(e.get("status") for e in entries_report)
+    llm_counts = Counter(e.get("status") for e in llm_results.values()) if llm_results else Counter()
+    report = {
+        "generated_at": _utc_now_iso(),
+        "mode": mode,
+        "targets": targets,
+        "counts": {
+            "targets": len(targets),
+            "accepted": counts.get("accepted", 0),
+            "rejected": counts.get("rejected", 0),
+            "disambiguation_unresolved": counts.get("disambiguation_unresolved", 0),
+            "page_missing": counts.get("page_missing", 0),
+            "skipped_override": counts.get("skipped_override", 0),
+            "skipped_known": counts.get("skipped_known", 0),
+            "llm_targets": len(llm_results),
+            "llm_accepted": llm_counts.get("accepted", 0),
+            "llm_rejected": llm_counts.get("rejected", 0),
+        },
+        "entries": entries_report,
+    }
+
+    json_path, md_path = write_report(report, report_path)
+    logger.info("Report: %s", json_path)
+    logger.info("Summary: %s", md_path)
+
+    written = 0
+    if apply:
+        accepted = {k: v for k, v in results.items() if v.get("status") == "accepted"}
+        written = apply_enrichment(accepted, enrichment_path, cache, override_keys=override_keys)
+        logger.info("Applied %d accepted entries to %s", written, enrichment_path)
+
+    return {
+        "mode": mode,
+        "targets": len(targets),
+        "accepted": counts.get("accepted", 0),
+        "rejected": counts.get("rejected", 0),
+        "disambiguation_unresolved": counts.get("disambiguation_unresolved", 0),
+        "page_missing": counts.get("page_missing", 0),
+        "llm_targets": len(llm_results),
+        "llm_accepted": llm_counts.get("accepted", 0),
+        "applied": written,
+        "report_json": str(json_path),
+        "report_md": str(md_path),
+    }
+
+
+def run_post_refresh_enrichment(
+    *,
+    db_path: Path | str | None = None,
+    overrides_path: Path | str | None = None,
+    enrichment_path: Path | str | None = None,
+    aliases_path: Path | str | None = None,
+    enrich_enabled: bool | None = None,
+    llm_fallback: bool | None = None,
+    delay: float = 1.0,
+    refresh: bool = False,
+    report_path: Path | None = None,
+) -> dict[str, Any]:
+    """Wikipedia ethnicity enrichment hook for roster refresh (all N/A targets)."""
+    if enrich_enabled is None:
+        enrich_enabled = _env_flag("INDIGENOUS_ETHNICITY_ENRICH_ON_REFRESH", "true")
+    if not enrich_enabled:
+        logger.info(
+            "Post-refresh ethnicity enrichment skipped "
+            "(INDIGENOUS_ETHNICITY_ENRICH_ON_REFRESH=false)"
+        )
+        return {"skipped": True, "reason": "disabled"}
+
+    if llm_fallback is None:
+        llm_fallback = _env_flag("INDIGENOUS_ETHNICITY_LLM_FALLBACK_ON_REFRESH", "false")
+
+    db_path = Path(db_path or DEFAULT_DB_PATH)
+    overrides_path = Path(overrides_path or DEFAULT_OVERRIDES_PATH)
+    enrichment_path = Path(enrichment_path or DEFAULT_ENRICHMENT_PATH)
+    aliases_path = Path(aliases_path or DEFAULT_ALIASES_PATH)
+
+    roster = load_roster(db_path)
+    targets = select_all_na_targets(roster, overrides_path)
+    logger.info(
+        "Post-refresh ethnicity enrichment: %d N/A targets (llm_fallback=%s)",
+        len(targets),
+        llm_fallback,
+    )
+
+    stats = run_enrichment_for_targets(
+        targets,
+        mode="post-refresh",
+        db_path=db_path,
+        overrides_path=overrides_path,
+        enrichment_path=enrichment_path,
+        aliases_path=aliases_path,
+        apply=True,
+        llm_fallback=llm_fallback,
+        delay=delay,
+        refresh=refresh,
+        report_path=report_path,
+    )
+    stats["skipped"] = False
+    return stats
+
+
 def apply_enrichment(
     results: dict[str, dict],
     enrichment_path: Path,
@@ -1052,21 +1272,7 @@ def main() -> int:
 
     db_path = Path(args.db_path)
     overrides_path = Path(args.overrides_path)
-    aliases = load_title_aliases(Path(args.aliases_path))
     roster = load_roster(db_path)
-    tribes = build_tribe_dictionary(roster)
-    override_keys = load_override_keys(overrides_path)
-    cache = load_enrichment_cache(enrichment_path)
-    roster_by_key = {
-        IndigenousDatabase._normalize_roster_name(r.get("name") or ""): r for r in roster
-    }
-
-    db = IndigenousDatabase(db_path=db_path, overrides_path=overrides_path, enrichment_path=enrichment_path)
-    db.database = db._apply_ethnicity_sidecars(db._dedupe_roster(list(roster)))
-    merged_by_key = {
-        IndigenousDatabase._normalize_roster_name(r["name"]): r.get("ethnicity", "N/A")
-        for r in db.database
-    }
 
     if args.names:
         targets = args.names
@@ -1086,128 +1292,26 @@ def main() -> int:
         targets = discover_mvp_targets(roster, overrides_path, airtable_client)
         mode = "mvp"
 
-    client = WikipediaEnrichClient(delay=args.delay)
-    results: dict[str, dict] = {}
-    entries_report: list[dict] = []
-
-    logger.info("Enriching %d targets (mode=%s, apply=%s)", len(targets), mode, args.apply)
-
-    for i, name in enumerate(targets, 1):
-        key = IndigenousDatabase._normalize_roster_name(name)
-        merged_eth = merged_by_key.get(key, "N/A")
-        cache_entry = cache.get(key)
-        logger.info("[%d/%d] %s", i, len(targets), name)
-        entry = enrich_name(
-            name,
-            client,
-            tribes,
-            aliases,
-            merged_eth,
-            override_keys,
-            cache_entry,
-            args.refresh,
-        )
-        results[key] = entry
-        entries_report.append(entry)
-
-    llm_results: dict[str, dict] = {}
-    if args.llm_fallback:
-        from llm.factory import get_llm_provider
-
-        llm = get_llm_provider()
-        llm_targets = [
-            name
-            for name in targets
-            if needs_llm_fallback(
-                results.get(IndigenousDatabase._normalize_roster_name(name)),
-                merged_by_key.get(IndigenousDatabase._normalize_roster_name(name), "N/A"),
-                IndigenousDatabase._normalize_roster_name(name),
-                override_keys,
-                cache.get(IndigenousDatabase._normalize_roster_name(name)),
-                args.refresh,
-            )
-        ]
-        logger.info("LLM fallback for %d targets after Wikipedia pass", len(llm_targets))
-        for i, name in enumerate(llm_targets, 1):
-            key = IndigenousDatabase._normalize_roster_name(name)
-            wiki_entry = results.get(key) or cache.get(key) or {}
-            title = wiki_entry.get("wikipedia_title")
-            if not title:
-                continue
-            roster_rec = roster_by_key.get(key, {})
-            logger.info("[LLM %d/%d] %s", i, len(llm_targets), name)
-            try:
-                intro = client.fetch_intro(title)
-                infobox = client.fetch_infobox_fields(title) if intro else {}
-            except requests.RequestException as exc:
-                llm_entry = {
-                    "roster_name": name,
-                    "wikipedia_title": title,
-                    "ethnicity": None,
-                    "status": "rejected",
-                    "method": "llm_wikipedia",
-                    "source": "llm_wikipedia",
-                    "confidence": None,
-                    "evidence": None,
-                    "fetched_at": _utc_now_iso(),
-                    "reject_reason": f"api_error: {exc}",
-                }
-                llm_results[key] = llm_entry
-                entries_report.append(llm_entry)
-                continue
-
-            source_text = build_llm_source_text(intro, infobox)
-            llm_entry = run_llm_ethnicity_fallback(
-                llm,
-                name,
-                title,
-                source_text,
-                roster_rec.get("state"),
-                roster_rec.get("party"),
-            )
-            llm_results[key] = llm_entry
-            entries_report.append(llm_entry)
-            if llm_entry.get("status") == "accepted":
-                results[key] = llm_entry
-
-    counts = Counter(e.get("status") for e in entries_report)
-    llm_counts = Counter(
-        e.get("status") for e in llm_results.values()
-    ) if llm_results else Counter()
-    report = {
-        "generated_at": _utc_now_iso(),
-        "mode": mode,
-        "targets": targets,
-        "counts": {
-            "targets": len(targets),
-            "accepted": counts.get("accepted", 0),
-            "rejected": counts.get("rejected", 0),
-            "disambiguation_unresolved": counts.get("disambiguation_unresolved", 0),
-            "page_missing": counts.get("page_missing", 0),
-            "skipped_override": counts.get("skipped_override", 0),
-            "skipped_known": counts.get("skipped_known", 0),
-            "llm_targets": len(llm_results),
-            "llm_accepted": llm_counts.get("accepted", 0),
-            "llm_rejected": llm_counts.get("rejected", 0),
-        },
-        "entries": entries_report,
-    }
-
-    json_path, md_path = write_report(report, args.report)
-    logger.info("Report: %s", json_path)
-    logger.info("Summary: %s", md_path)
-    print(
-        f"Targets={len(targets)} accepted={counts.get('accepted', 0)} "
-        f"rejected={counts.get('rejected', 0)} "
-        f"unresolved={counts.get('disambiguation_unresolved', 0)} "
-        f"missing={counts.get('page_missing', 0)}"
+    stats = run_enrichment_for_targets(
+        targets,
+        mode=mode,
+        db_path=db_path,
+        overrides_path=overrides_path,
+        enrichment_path=enrichment_path,
+        aliases_path=Path(args.aliases_path),
+        apply=args.apply,
+        llm_fallback=args.llm_fallback,
+        delay=args.delay,
+        refresh=args.refresh,
+        report_path=args.report,
     )
-
-    if args.apply:
-        accepted = {k: v for k, v in results.items() if v.get("status") == "accepted"}
-        written = apply_enrichment(accepted, enrichment_path, cache, override_keys=override_keys)
-        logger.info("Applied %d accepted entries to %s", written, enrichment_path)
-    else:
+    print(
+        f"Targets={stats['targets']} accepted={stats['accepted']} "
+        f"rejected={stats['rejected']} "
+        f"unresolved={stats['disambiguation_unresolved']} "
+        f"missing={stats['page_missing']}"
+    )
+    if not args.apply:
         logger.info("Dry-run only; pass --apply to write sidecar")
 
     return 0

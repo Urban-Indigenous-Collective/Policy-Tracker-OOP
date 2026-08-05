@@ -20,9 +20,27 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from indigenous_database import DEFAULT_BACKUP_DIR, DEFAULT_DB_PATH, IndigenousDatabase
+from scripts.enrich_indigenous_ethnicity import run_post_refresh_enrichment
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
+
+
+def _run_post_refresh_enrichment(db_path: str) -> None:
+    try:
+        stats = run_post_refresh_enrichment(db_path=db_path)
+    except Exception:
+        logger.exception("Post-refresh ethnicity enrichment failed")
+        return
+    if stats.get("skipped"):
+        logger.info("Post-refresh ethnicity enrichment skipped (%s)", stats.get("reason"))
+        return
+    logger.info(
+        "Post-refresh ethnicity enrichment: targets=%s accepted=%s applied=%s",
+        stats.get("targets"),
+        stats.get("accepted"),
+        stats.get("applied"),
+    )
 
 
 def cmd_status(args: argparse.Namespace) -> int:
@@ -52,6 +70,7 @@ def cmd_refresh(args: argparse.Namespace) -> int:
         f"Refreshed: count={stats['count']} built_at={stats['built_at']} "
         f"backup={stats['backup_path'] or '(none)'} path={stats['path']}"
     )
+    _run_post_refresh_enrichment(args.path)
     return 0
 
 
@@ -97,6 +116,7 @@ def cmd_dedupe_only(args: argparse.Namespace) -> int:
         f"Deduped: before={stats['before']} after={stats['after']} "
         f"backup={stats['backup_path']} path={stats['path']}"
     )
+    _run_post_refresh_enrichment(args.path)
     return 0
 
 
