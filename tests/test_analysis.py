@@ -1,6 +1,7 @@
 import pytest
 
 from analysis_schema import BillAnalysis, EvalAnswer
+from airtable_coercion import coerce_categories
 from analysis_validator import (
     quote_in_source,
     strip_preamble,
@@ -44,6 +45,53 @@ def test_validate_categories_valid():
 def test_validate_categories_invalid():
     errors = validate_categories(["Not A Real Category"])
     assert len(errors) == 1
+
+
+def test_normalize_categories_python_list_repr():
+    data = {
+        "summary": "Short summary.",
+        "gender_inclusive_eval": "No",
+        "gender_inclusive_expl": "No",
+        "mechanisms_eval": "No",
+        "mechanisms_expl": [],
+        "prevention_efforts_eval": "No",
+        "prevention_efforts_expl": [],
+        "centering_indigenous_voices_eval": "No",
+        "centering_indigenous_voices_expl": "No",
+        "survivor_relative_input_eval": "No",
+        "survivor_relative_input_expl": "No",
+        "categories": "['Day of Recognition', 'US Law Enforcement']",
+    }
+    analysis = BillAnalysis.model_validate(data)
+    assert analysis.categories == ["Day of Recognition", "US Law Enforcement"]
+    assert validate_categories(analysis.categories) == []
+
+
+def test_normalize_categories_json_array_unchanged():
+    cats = ["US Law Enforcement", "Data Collection"]
+    data = {
+        "summary": "Short summary.",
+        "gender_inclusive_eval": "No",
+        "gender_inclusive_expl": "No",
+        "mechanisms_eval": "No",
+        "mechanisms_expl": [],
+        "prevention_efforts_eval": "No",
+        "prevention_efforts_expl": [],
+        "centering_indigenous_voices_eval": "No",
+        "centering_indigenous_voices_expl": "No",
+        "survivor_relative_input_eval": "No",
+        "survivor_relative_input_expl": "No",
+        "categories": cats,
+    }
+    analysis = BillAnalysis.model_validate(data)
+    assert analysis.categories == cats
+
+
+def test_validate_categories_passes_after_coerce_from_mangled_string():
+    raw = "['Day of Recognition', 'US Law Enforcement']"
+    fixed = coerce_categories(raw)
+    assert fixed == ["Day of Recognition", "US Law Enforcement"]
+    assert validate_categories(fixed) == []
 
 
 def test_bill_analysis_schema_enums():
@@ -107,6 +155,16 @@ class MockLLMProvider:
 
     def complete_vision(self, prompt, image_b64):
         return "ocr text"
+
+
+def test_gov_metadata_cache_key_includes_text_hash():
+    from bill_analyzer import BillAnalyzer
+
+    analyzer = BillAnalyzer(MockLLMProvider([]), cache_dir="/tmp/policy-tracker-test-cache")
+    url = "https://example.gov/test"
+    key_a = analyzer._cache_key("gov_metadata", url, "hash_a")
+    key_b = analyzer._cache_key("gov_metadata", url, "hash_b")
+    assert key_a != key_b
 
 
 def test_bill_analyzer_integration_smoke():

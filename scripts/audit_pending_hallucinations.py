@@ -116,12 +116,13 @@ def audit_record(
     llm,
     *,
     excerpt_chars: int,
+    refresh: bool = False,
 ) -> dict:
     rid = record["id"]
     fields = record.get("fields") or {}
     url = _record_url(fields)
 
-    ok, msg = processor.get_doc_text(url)
+    ok, msg = processor.get_doc_text(url, refresh=refresh)
     if not ok:
         return {
             "record_id": rid,
@@ -299,7 +300,12 @@ def main() -> int:
         "--excerpt-chars",
         type=int,
         default=DEFAULT_EXCERPT_CHARS,
-        help="Source text chars sent to critic",
+        help="Source text chars sent to critic (0 = full text, no truncation)",
+    )
+    parser.add_argument(
+        "--refresh",
+        action="store_true",
+        help="Bypass document text cache and re-fetch source URLs",
     )
     parser.add_argument("--sleep", type=float, default=0.5, help="Pause between LLM calls")
     args = parser.parse_args()
@@ -348,6 +354,7 @@ def main() -> int:
             processor,
             llm,
             excerpt_chars=args.excerpt_chars,
+            refresh=args.refresh,
         )
         rows.append(row)
         if args.sleep and idx < len(selected):

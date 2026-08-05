@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from pending_hallucination_critic import (
+    DEFAULT_EXCERPT_CHARS,
     CriticSeverity,
     FieldVerdict,
     HallucinationCriticResult,
@@ -67,6 +68,13 @@ def test_build_analysis_block_includes_summary_and_excerpt():
     assert "MMIP Task Force Bill" in prompt
     assert "SECTION 1. Task force established." in prompt
     assert "Establishes a task force on MMIP." in prompt
+
+
+def test_default_excerpt_chars_is_full_text():
+    assert DEFAULT_EXCERPT_CHARS == 0
+    long_text = "A" * 20000
+    prompt = build_critic_user_prompt({"Name": "Test"}, long_text)
+    assert long_text in prompt
 
 
 def test_run_critic_uses_llm_complete_json():

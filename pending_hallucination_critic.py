@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field, field_validator
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_EXCERPT_CHARS = 12000
+DEFAULT_EXCERPT_CHARS = 0
 
 CRITIC_SYSTEM = (
     "You are a skeptical auditor for Urban Indigenous Collective's policy tracker. "
@@ -180,13 +180,20 @@ def build_analysis_block(fields: dict) -> str:
     return "\n".join(lines) if lines else "(no analysis fields present)"
 
 
+def _source_excerpt(source_text: str, excerpt_chars: int) -> str:
+    text = source_text or ""
+    if excerpt_chars <= 0:
+        return text
+    return text[:excerpt_chars]
+
+
 def build_critic_user_prompt(
     fields: dict,
     source_text: str,
     *,
     excerpt_chars: int = DEFAULT_EXCERPT_CHARS,
 ) -> str:
-    excerpt = (source_text or "")[:excerpt_chars]
+    excerpt = _source_excerpt(source_text, excerpt_chars)
     return CRITIC_USER_TEMPLATE.format(
         name=str(fields.get("Name") or ""),
         state=str(fields.get("State") or ""),
