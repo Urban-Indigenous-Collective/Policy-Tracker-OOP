@@ -1,4 +1,4 @@
-"""Scheduler wiring for nightly validation refresh."""
+"""Scheduler wiring for nightly validation refresh (pipeline step)."""
 
 from __future__ import annotations
 
@@ -31,13 +31,13 @@ def test_add_cron_job_registers_job(cron_expr):
     mock_scheduler = MagicMock()
     scheduler._add_cron_job(
         mock_scheduler,
-        "validation_refresh",
-        scheduler.run_validation_refresh_job,
+        "nightly_pipeline",
+        scheduler.run_nightly_pipeline,
         cron_expr,
         "America/New_York",
     )
     mock_scheduler.add_job.assert_called_once()
-    assert mock_scheduler.add_job.call_args.kwargs["id"] == "validation_refresh"
+    assert mock_scheduler.add_job.call_args.kwargs["id"] == "nightly_pipeline"
 
 
 def test_run_validation_refresh_job_delegates_to_script():
@@ -57,7 +57,7 @@ def test_run_validation_refresh_job_delegates_to_script():
     mock_run.assert_called_once_with(apply=True, apply_eval_expl_fixes=False)
 
 
-def test_main_skips_validation_refresh_when_disabled():
+def test_main_registers_only_nightly_pipeline_cron_when_validation_disabled():
     with patch.dict(
         "os.environ",
         {
@@ -71,23 +71,4 @@ def test_main_skips_validation_refresh_when_disabled():
                 with patch.object(scheduler.BlockingScheduler, "add_job"):
                     scheduler.main()
     job_ids = [call.args[1] for call in mock_add_cron.call_args_list]
-    assert job_ids == ["discovery"]
-    assert "validation_refresh" not in job_ids
-
-
-def test_main_registers_validation_refresh_when_enabled():
-    with patch.dict(
-        "os.environ",
-        {
-            "LEGISCAN_KEY": "test-key",
-            "VALIDATION_REFRESH_ENABLED": "true",
-            "VALIDATION_REFRESH_CRON": "0 4 * * *",
-        },
-        clear=False,
-    ):
-        with patch.object(scheduler.BlockingScheduler, "start"):
-            with patch.object(scheduler, "_add_cron_job") as mock_add_cron:
-                with patch.object(scheduler.BlockingScheduler, "add_job"):
-                    scheduler.main()
-    job_ids = [call.args[1] for call in mock_add_cron.call_args_list]
-    assert job_ids == ["discovery", "validation_refresh"]
+    assert job_ids == ["nightly_pipeline"]
