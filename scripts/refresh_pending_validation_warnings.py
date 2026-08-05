@@ -182,12 +182,13 @@ def refresh_record(
     *,
     apply_eval_expl_fixes: bool = False,
     record_id: str = "",
+    refresh: bool = False,
 ) -> tuple[dict | None, str]:
     url = _record_url(fields)
     if not url:
         return None, "no_url"
 
-    ok, msg = processor.get_doc_text(url)
+    ok, msg = processor.get_doc_text(url, refresh=refresh)
     if not ok:
         return None, f"fetch_failed:{msg}"
 
@@ -253,6 +254,11 @@ def main() -> int:
     )
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--record-id", action="append", default=[])
+    parser.add_argument(
+        "--refresh",
+        action="store_true",
+        help="Bypass document text cache and re-fetch source URLs",
+    )
     args = parser.parse_args()
 
     api = APIClient(os.environ["LEGISCAN_KEY"])
@@ -302,6 +308,7 @@ def main() -> int:
                 fields,
                 apply_eval_expl_fixes=args.apply_eval_expl_fixes,
                 record_id=rid,
+                refresh=args.refresh,
             )
         except Exception as exc:
             logger.exception("Refresh failed for %s: %s", rid, exc)

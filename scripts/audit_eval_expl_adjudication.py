@@ -56,7 +56,7 @@ def _field_action_label(adj) -> str:
     return adj.action.value
 
 
-def audit_record(processor: BillProcessor, record: dict) -> dict | None:
+def audit_record(processor: BillProcessor, record: dict, *, refresh: bool = False) -> dict | None:
     fields = record.get("fields") or {}
     if not _has_eval_expl_mismatch(fields):
         return None
@@ -70,7 +70,7 @@ def audit_record(processor: BillProcessor, record: dict) -> dict | None:
             "status": "no_url",
         }
 
-    ok, msg = processor.get_doc_text(url)
+    ok, msg = processor.get_doc_text(url, refresh=refresh)
     if not ok:
         return {
             "record_id": rid,
@@ -132,6 +132,11 @@ def main() -> int:
         default="",
         help="Write JSON audit report here (default: data/backups/eval_expl_audit-<stamp>.json)",
     )
+    parser.add_argument(
+        "--refresh",
+        action="store_true",
+        help="Bypass document text cache and re-fetch source URLs",
+    )
     args = parser.parse_args()
 
     api = APIClient(os.environ["LEGISCAN_KEY"])
@@ -163,7 +168,7 @@ def main() -> int:
         rid = record["id"]
         logger.info("[%d/%d] Auditing %s", i, len(targets), rid)
         try:
-            entry = audit_record(processor, record)
+            entry = audit_record(processor, record, refresh=args.refresh)
         except Exception as exc:
             logger.exception("Audit failed for %s: %s", rid, exc)
             failed += 1
