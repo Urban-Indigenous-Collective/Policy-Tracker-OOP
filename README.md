@@ -88,7 +88,7 @@ python approval_sync.py                      # sync approved/send-back records
 
 ### Scheduler (production)
 
-The `scheduler` Docker service runs discovery nightly (default 2 AM ET) and approval sync every 10 minutes:
+The `scheduler` Docker service runs a nightly pipeline (default 2 AM ET) and approval sync every 10 minutes. The pipeline runs enabled steps sequentially: discovery → status refresh → validation refresh.
 
 ```bash
 docker compose --profile tunnel up -d   # includes web + tunnel + scheduler
@@ -96,7 +96,10 @@ docker compose --profile tunnel up -d   # includes web + tunnel + scheduler
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `DISCOVERY_CRON` | `0 2 * * *` | Nightly discovery schedule |
+| `NIGHTLY_PIPELINE_CRON` | `0 2 * * *` | Nightly pipeline schedule (`DISCOVERY_CRON` is a deprecated alias) |
+| `DISCOVERY_ENABLED` | `true` | Run discovery as pipeline step 1 |
+| `STATUS_REFRESH_ENABLED` | `true` | Run LegiScan status refresh as pipeline step 2 |
+| `VALIDATION_REFRESH_ENABLED` | `false` | Run pending validation refresh as pipeline step 3 |
 | `DISCOVERY_TZ` | `America/New_York` | Timezone for cron |
 | `APPROVAL_SYNC_INTERVAL_MIN` | `10` | How often to sync Airtable status changes |
 | `DISCOVERY_MAX_ANALYSES_PER_RUN` | `25` | Cap LLM analyses per run (safety valve) |
