@@ -73,22 +73,6 @@ def _iter_tables(client: AirtableClient, tables: list[str]):
         yield key, mapping[key][0], mapping[key][1]
 
 
-def _load_indigenous_roster(indigenous_db: IndigenousDatabase) -> tuple[str, str]:
-    json_path = ROOT / "data" / "indigenous_politicians.json"
-    if json_path.is_file():
-        import json
-
-        payload = json.loads(json_path.read_text(encoding="utf-8"))
-        indigenous_db.database = payload.get("politicians") or payload.get("records") or []
-        built_at = str(payload.get("built_at") or "unknown")
-        return "disk", built_at
-    if hasattr(indigenous_db, "ensure_loaded"):
-        source = indigenous_db.ensure_loaded()
-        return source, str(getattr(indigenous_db, "built_at", "unknown"))
-    indigenous_db.build_database()
-    return "wikipedia_scrape", "n/a"
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -127,7 +111,8 @@ def main() -> int:
         return 1
 
     indigenous_db = IndigenousDatabase()
-    source, built_at = _load_indigenous_roster(indigenous_db)
+    source = indigenous_db.ensure_loaded()
+    built_at = str(indigenous_db.built_at or "unknown")
     logger.info(
         "Indigenous roster loaded via %s (count=%d built_at=%s)",
         source,

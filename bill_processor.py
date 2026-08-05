@@ -235,9 +235,7 @@ class BillProcessor:
                     for s in bill.get("sponsors", [])
                 ]
             )
-            indigenous_sponsors = self.legiscan_processor.identify_indigenous_sponsors(bill_sponsors)
-            if isinstance(indigenous_sponsors, list):
-                indigenous_sponsors = ", ".join(indigenous_sponsors)
+            _, indigenous_sponsors = process_sponsors(bill_sponsors, self.indigenous_db)
             plog(f"Metadata loaded: {bill.get('bill_number', 'unknown')}")
 
             self.compiled_bill.update(

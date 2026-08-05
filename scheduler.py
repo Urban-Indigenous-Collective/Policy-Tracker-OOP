@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 
 from approval_sync import ApprovalSync
 from discovery.pipeline import DiscoveryPipeline
+from indigenous_database import IndigenousDatabase
 from main_application import MainApplication
 from slack_client import SlackNotifier
 
@@ -32,7 +33,7 @@ def get_main_app() -> MainApplication:
         legiscan_key = os.getenv("LEGISCAN_KEY")
         if not legiscan_key:
             raise ValueError("LEGISCAN_KEY must be set for scheduler")
-        logger.info("Initializing MainApplication (Indigenous DB build may take 30-60s)...")
+        logger.info("Initializing MainApplication...")
         _main_app = MainApplication(legiscan_key)
     return _main_app
 
@@ -122,6 +123,27 @@ def run_approval_sync_job():
     except Exception as exc:
         logger.exception("Approval sync job failed: %s", exc)
         SlackNotifier().notify_error(f"Approval sync failed: {exc}")
+
+
+def run_indigenous_roster_refresh_job():
+    logger.info("Starting scheduled indigenous roster refresh")
+    slack = SlackNotifier()
+    try:
+        db = IndigenousDatabase()
+        db.ensure_loaded()
+        stats = db.refresh()
+        app = get_main_app()
+        if app.indigenous_db.reload_if_stale():
+            logger.info("Reloaded in-memory indigenous roster after refresh")
+        logger.info(
+            "Indigenous roster refresh finished: count=%d built_at=%s backup=%s",
+            stats["count"],
+            stats["built_at"],
+            stats.get("backup_path"),
+        )
+    except Exception as exc:
+        logger.exception("Indigenous roster refresh failed: %s", exc)
+        slack.notify_error(f"Indigenous roster refresh failed: {exc}")
 
 
 def run_nightly_pipeline():
@@ -242,6 +264,16 @@ def main():
         replace_existing=True,
     )
 
+    if _env_flag("INDIGENOUS_DB_REFRESH_ENABLED", "false"):
+        indigenous_cron = os.getenv("INDIGENOUS_DB_REFRESH_CRON", "0 1 * * 0")
+        _add_cron_job(
+            scheduler,
+            "indigenous_roster_refresh",
+            run_indigenous_roster_refresh_job,
+            indigenous_cron,
+            tz,
+        )
+
     def shutdown(signum, frame):
         logger.info("Shutdown signal received, stopping scheduler")
         scheduler.shutdown(wait=False)
@@ -252,13 +284,15 @@ def main():
 
     logger.info(
         "Scheduler started: nightly_pipeline cron=%s tz=%s approval_sync=%dm "
-        "steps: discovery=%s status_refresh=%s validation_refresh=%s",
+        "steps: discovery=%s status_refresh=%s validation_refresh=%s "
+        "indigenous_roster_refresh=%s",
         pipeline_cron,
         tz,
         sync_interval,
         "enabled" if discovery_enabled else "disabled",
         "enabled" if status_refresh_enabled else "disabled",
         "enabled" if validation_refresh_enabled else "disabled",
+        "enabled" if _env_flag("INDIGENOUS_DB_REFRESH_ENABLED", "false") else "disabled",
     )
     scheduler.start()
 
