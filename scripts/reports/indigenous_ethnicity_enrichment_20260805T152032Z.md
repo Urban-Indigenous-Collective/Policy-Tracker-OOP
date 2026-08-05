@@ -1,0 +1,236 @@
+# Indigenous Ethnicity Enrichment Report
+
+Generated: 2026-08-05T15:20:32Z
+Mode: all-na
+
+## Summary
+
+- Targets: 217
+- Accepted: 157
+- Rejected: 59
+- Unresolved: 0
+- Page missing: 0
+- Skipped (override): 0
+- Skipped (known): 1
+
+## Accepted entries
+
+- **Ada Brown (judge)** → Native (intro_regex, Ada Brown (judge))
+- **Alicia Mousseau** → Alicia Mousseau is the Vice President of the Oglala Sioux / Oglala / Oglala Sioux (intro_regex, Alicia Mousseau)
+- **Amber Kanazbah Crotty** → Navajo / Navajo Nation (intro_regex, Amber Kanazbah Crotty)
+- **Amy Bowers Cordalis** → Amy Bowers Cordalis is a Native American attorney and citizen of the Yurok / Native (intro_regex, Amy Bowers Cordalis)
+- **Anne McKeig** → Native (intro_regex, Anne McKeig)
+- **Ashley Grant** → Cherokee / Cherokee Nation / Tribal Councilor for District 5. A former employee of Cherokee (intro_regex, Ashley Grant)
+- **Audra Smoke-Conner** → Cherokee / Cherokee Nation (intro_regex, Audra Smoke-Conner)
+- **Barbara May** → Apache (intro_regex, Barbara May)
+- **Barbara McIlvaine Smith** → Fox Nation / Sac (intro_regex, Barbara McIlvaine Smith)
+- **Beasley Denson** → Choctaw / Mississippi Choctaw / Mississippi Choctaw, who served as Miko or Tribal Chief of the Mississippi (intro_regex, Beasley Denson)
+- **Bill Anoatubby** → Chickasaw / Chickasaw Nation / Ute (intro_regex, Bill Anoatubby)
+- **Bill John Baker** → Baker unsuccessfully ran for Deputy Chief of the Cherokee / Cherokee / Cherokee Nation (intro_regex, Bill John Baker)
+- **Birdie Wilcox-Cano** → Native / Navajo / Pueblo (intro_regex, Birdie Wilcox-Cano)
+- **Brenda Jesus** → Navajo / Navajo Nation (intro_regex, Brenda Jesus)
+- **Brian Reynolds (politician)** → Maliseet (intro_regex, Brian Reynolds (politician))
+- **Bryan Warner** → Bryan Warner is a Cherokee / Cherokee / Cherokee Nation (intro_regex, Bryan Warner)
+- **Buu Nygren** → Navajo / Navajo Nation (intro_regex, Buu Nygren)
+- **Candessa Tehee** → Candessa Tehee is a Cherokee / Cherokee / Cherokee Nation (intro_regex, Candessa Tehee)
+- **Cara Cowan Watts** → Cherokee / Cherokee Nation / in the 2023 Cherokee (intro_regex, Cara Cowan Watts)
+- **Carl Venne** → Crow / the chairman of the executive branch of the Crow (intro_regex, Carl Venne)
+- **Carol Jean Vigil** → and the first female Native American to be elected a state court judge in New Mexico. She was a member of the / Native / Pueblo (intro_regex, Carol Jean Vigil)
+- **Chad Smith (politician)** → Cherokee / Cherokee Nation / is a Cherokee (intro_regex, Chad Smith (politician))
+- **Charlotte Little** → Pueblo (intro_regex, Charlotte Little)
+- **Chase Iron Eyes** → and a member of the Oglala Sioux / He is a member of the Lakota / Lakota (intro_regex, Chase Iron Eyes)
+- **Cherilyn Yazzie** → an off-grid farm established to address food insecurity on the Navajo / and entrepreneur. She serves as a delegate on the 25th Navajo / Navajo (intro_regex, Cherilyn Yazzie)
+- **Chuck Hoskin Jr.** → between 2007 and 2013 and as the Secretary of State for the Cherokee / Cherokee / Cherokee Nation (intro_regex, Chuck Hoskin Jr.)
+- **Claire Valdez** → Pueblo (infobox, Claire Valdez)
+- **Clara Nomee** → -terms from 1990 to 2000. Nomee was the first woman to hold the chairmanship of the Crow / Crow (intro_regex, Clara Nomee)
+- **Clifford Birdinground** → Birdinground served as the Chairman of the Crow / Crow (intro_regex, Clifford Birdinground)
+- **Cory T. Williams** → Cherokee / Cherokee Nation (infobox, Cory T. Williams)
+- **Crystalyne Curley** → Navajo / Navajo Nation (intro_regex, Crystalyne Curley)
+- **Daryl Legg** → Cherokee / Cherokee Nation / Daryl Legg is a Cherokee (intro_regex, Daryl Legg)
+- **David Slagger** → Maine House of Representatives, representing the newly recognized Maliseet / Maliseet / representing the newly recognized Maliseet (intro_regex, David Slagger)
+- **David Walkingstick** → Cherokee / Cherokee Nation / David Walkingstick is a Cherokee (intro_regex, David Walkingstick)
+- **Davis Filfred** → districts along with Kenneth Maryboy for his Navajo / election process. Davis Filfred serves the same Navajo / Mark Maryboy on the Navajo (intro_regex, Davis Filfred)
+- **Debora Juarez** → Blackfeet / Blackfeet Nation / Native (intro_regex, Debora Juarez)
+- **Deborah Parker** → is an activist and Indigenous leader in the United States. A member of the Tulalip / Native / Tulalip (intro_regex, Deborah Parker)
+- **Diane E. Benson** → Ute (intro_regex, Diane E. Benson)
+- **Dora Patzkowski** → Cherokee / Cherokee Nation / Dora Patzkowski is a Cherokee (intro_regex, Dora Patzkowski)
+- **Edward T. Begay** → Native / Navajo / Navajo Nation (intro_regex, Edward T. Begay)
+- **Edwin DeVries Vanderhoop** → Native / Native American and Dutch Surinamese / Sac (intro_regex, Edwin DeVries Vanderhoop)
+- **Eldena Bear Don't Walk** → Confederated Salish / Crow / Kootenai (intro_regex, Eldena Bear Don't Walk)
+- **Eleanor Shirley** → Crow / Eleanor Shirley is an American and Navajo jurist serving as the interim chief justice of the Navajo / Navajo (intro_regex, Eleanor Shirley)
+- **Erma Vizenor** → Ojibwe (intro_regex, Erma Vizenor)
+- **Ernest House Sr.** → Ute / was an American tribal leader who served as the chairman of the Ute Mountain Ute (intro_regex, Ernest House Sr.)
+- **Ethel Branch** → Branch was the 11th and 13th Attorney General of the Navajo / Navajo / Navajo Nation (intro_regex, Ethel Branch)
+- **Ethel Cook** → Ottawa (intro_regex, Ethel Cook)
+- **Eugenia Charles-Newton** → Navajo / Navajo Nation (intro_regex, Eugenia Charles-Newton)
+- **Faith Spotted Eagle** → Native / Sioux / Yankton Sioux (intro_regex, Faith Spotted Eagle)
+- **Fawn Sharp** → Native (intro_regex, Fawn Sharp)
+- **Frank Dayish** → Navajo / Navajo Nation / who was the 6th Vice President of the Navajo (intro_regex, Frank Dayish)
+- **Frank White Clay** → Crow (intro_regex, Frank White Clay)
+- **Frankie Hargis** → Cherokee / Cherokee Nation (intro_regex, Frankie Hargis)
+- **Gabriella Cázares-Kelly** → Native / Tohono Oʼodham (intro_regex, Gabriella Cázares-Kelly)
+- **Gary Batton** → Choctaw / Choctaw Nation / the current and 47th Chief of the Choctaw (intro_regex, Gary Batton)
+- **Germaine Simonson** → Navajo / Navajo Nation (intro_regex, Germaine Simonson)
+- **Gertrude Lee** → Navajo / Navajo Nation (intro_regex, Gertrude Lee)
+- **Gilbert Blue** → Native / was a Native American chief of the Catawba (intro_regex, Gilbert Blue)
+- **Gregory E. Pyle** → Choctaw / Choctaw Nation / he had served as Assistant Chief for 13 years. He began to work for the Choctaw (intro_regex, Gregory E. Pyle)
+- **Guy Barker (politician)** → Quapaw (intro_regex, Guy Barker (politician))
+- **Harold Frazier** → Cheyenne River Sioux / Sioux (intro_regex, Harold Frazier)
+- **Harry J. W. Belvin** → and the longest serving principal chief of the Choctaw / Choctaw / Choctaw Nation (intro_regex, Harry J. W. Belvin)
+- **Heather Clah** → for less than a month in 2025. A longtime legal counsel within the Navajo / Heather L. Clah is an American and Navajo lawyer who served as the attorney general of the Navajo / Navajo (intro_regex, Heather Clah)
+- **Heather Keeler** → including the city of Moorhead and parts of Clay County. Keeler is an enrolled member of the Yankton Sioux / Sioux (intro_regex, Heather Keeler)
+- **Helena Nez Begay** → Navajo / Navajo Nation (intro_regex, Helena Nez Begay)
+- **Horace Nelson** → Penobscot (intro_regex, Horace Nelson)
+- **Ina Salter** → Apache (intro_regex, Ina Salter)
+- **Jack Jackson Jr.** → Navajo (intro_regex, Jack Jackson Jr.)
+- **James Trosper** → Eastern Shoshone / He is Director of the High Plains American Indian Research Institute. HPAIRI facilitates a wide variety of partnerships / Shoshone (intro_regex, James Trosper)
+- **Janees Taylor** → Cherokee / Cherokee Nation / since 2021. She was a member of the Cherokee (intro_regex, Janees Taylor)
+- **Janelle Fullbright** → Cherokee / Cherokee Nation (intro_regex, Janelle Fullbright)
+- **Jenelle Roybal** → Pueblo (intro_regex, Jenelle Roybal)
+- **Jennifer Porter** → Jennifer Porter is the current tribal chair of the Kootenai / Kootenai / Navajo (intro_regex, Jennifer Porter)
+- **Jimmy Goins** → Goins led efforts to gain federal recognition for the Lumbee / Lumbee / the (intro_regex, Jimmy Goins)
+- **Jimmy Newton** → Ute (intro_regex, Jimmy Newton)
+- **JoAnn Jayne** → Native / Navajo / Navajo Nation (intro_regex, JoAnn Jayne)
+- **Joe Byrd (Cherokee Nation Principal Chief)** → Cherokee / Cherokee Nation / was the Principal Chief of the Cherokee (intro_regex, Joe Byrd (Cherokee Nation Principal Chief))
+- **Joe Crittenden** → and Principal Chief of the Cherokee / Cherokee / Cherokee Nation (intro_regex, Joe Crittenden)
+- **Joe Deere** → Cherokee / Cherokee Nation / Joe Deere is a Cherokee (intro_regex, Joe Deere)
+- **Joe Shirley Jr.** → Navajo / Navajo Nation (intro_regex, Joe Shirley Jr.)
+- **John Red Eagle** → Osage / Osage Nation (intro_regex, John Red Eagle)
+- **Joseph Tali Byrd** → and Osage / and Quapaw / Cherokee (intro_regex, Joseph Tali Byrd)
+- **Joyce Dugan** → Cherokee (intro_regex, Joyce Dugan)
+- **Julia Coates** → Cherokee / Cherokee Nation / Julia Coates is a Cherokee (intro_regex, Julia Coates)
+- **Katie Fire Thunder** → Lakota / Oglala / Oglala Lakota (intro_regex, Katie Fire Thunder)
+- **Keith Austin** → Cherokee / Cherokee Nation / Keith Austin is a Cherokee (intro_regex, Keith Austin)
+- **Kelsey Begaye** → Navajo / Navajo Nation / was elected the fifth president of the Navajo (intro_regex, Kelsey Begaye)
+- **Kendra McGeady** → Cherokee / Cherokee Nation (intro_regex, Kendra McGeady)
+- **Kenneth Maryboy** → and was Navajo / Navajo / Navajo Nation (intro_regex, Kenneth Maryboy)
+- **Kristina Gabriel** → Cherokee / Cherokee Nation (infobox, Kristina Gabriel)
+- **Laura Spurr** → a federally recognized Potawatomi / Ottawa / Potawatomi (intro_regex, Laura Spurr)
+- **Lawrence T. Morgan** → Arizona. In January 2009 he was once again re-elected to lead the Navajo / Lawrence T. Morgan is the former Speaker of the Navajo / Navajo (intro_regex, Lawrence T. Morgan)
+- **Lewis Mitchell** → is known for his advocacy of the Passamaquoddy / Maine State Legislature in the late 1800s into the early 1900s, is known for his advocacy of the Passamaquoddy / Native (intro_regex, Lewis Mitchell)
+- **Liish Kozlowski** → Ojibwe (intro_regex, Liish Kozlowski)
+- **Linda Hughes O'Leary** → Cherokee / Cherokee Nation (intro_regex, Linda Hughes O'Leary)
+- **Lisa Goree** → Native (intro_regex, Lisa Goree)
+- **Lisa Hall (politician)** → Cherokee / Cherokee Nation / Lisa Robison Hall is a Cherokee (intro_regex, Lisa Hall (politician))
+- **List of first Native American U.S. state legislators** → Native / Native Hawaiian (intro_regex, List of first Native American U.S. state legislators)
+- **Liz Marty May** → Oglala (intro_regex, Liz Marty May)
+- **Lynn Trujillo** → Native (intro_regex, Lynn Trujillo)
+- **Marcella LeBeau** → Lakota (intro_regex, Marcella LeBeau)
+- **Marcellus Osceola Jr.** → the (intro_regex, Marcellus Osceola Jr.)
+- **Marge Anderson** → Ojibwe (intro_regex, Marge Anderson)
+- **Mark Quiet Hawk Gould** → Native (intro_regex, Mark Quiet Hawk Gould)
+- **Martha Garcia (New Mexico politician)** → Navajo / Navajo Nation (intro_regex, Martha Garcia (New Mexico politician))
+- **Mary Ann Green** → a federally recognized Cahuilla / Cahuilla / Native (intro_regex, Mary Ann Green)
+- **Mary Baker Shaw** → Cherokee / Cherokee Nation (intro_regex, Mary Baker Shaw)
+- **Mary Peltola** → Native (intro_regex, Mary Peltola)
+- **Mary Thomas (politician)** → Ute (intro_regex, Mary Thomas (politician))
+- **Matthew Box** → is the former chairman of the Southern Ute Indian / so the recall failed. Box resigned from his post as Chairman of the Southern Ute Indian / Ute (intro_regex, Matthew Box)
+- **Melanie Benjamin (Ojibwe leader)** → Ojibwe (intro_regex, Melanie Benjamin (Ojibwe leader))
+- **Melvina Shotpouch** → Cherokee / Cherokee Nation / Melvina Shotpouch is a Cherokee (intro_regex, Melvina Shotpouch)
+- **Meredith Frailey** → Cherokee / Cherokee Nation / Meredith Frailey is a Cherokee (intro_regex, Meredith Frailey)
+- **Mike Shambaugh** → and police officer who has served on the Cherokee / Cherokee / Cherokee Nation (intro_regex, Mike Shambaugh)
+- **Milton Bluehouse Sr.** → Navajo / Navajo Nation / was the fourth president of the Navajo (intro_regex, Milton Bluehouse Sr.)
+- **Mitch O'Farrell** → Native (intro_regex, Mitch O'Farrell)
+- **Nellie Jimmie** → Yup'ik (intro_regex, Nellie Jimmie)
+- **Patrick Lambert** → Cherokee (intro_regex, Patrick Lambert)
+- **Pearl Casias** → Ute (intro_regex, Pearl Casias)
+- **Peter Roy** → Ojibwe / Territory and was of French and Ojibwe (intro_regex, Peter Roy)
+- **Phyliss J. Anderson** → Choctaw (intro_regex, Phyliss J. Anderson)
+- **Phyllis Yargee** → Cherokee / Cherokee Nation (intro_regex, Phyllis Yargee)
+- **Priscilla Freeman Jacobs** → Native / Priscilla Freeman Jacobs is a former Native American chief of the Waccamaw-Siouan (intro_regex, Priscilla Freeman Jacobs)
+- **Ray McCarter** → Chickasaw (intro_regex, Ray McCarter)
+- **Reid D. Milanovich** → Cahuilla (intro_regex, Reid D. Milanovich)
+- **Rex Jordan** → Cherokee / Cherokee Nation / Rex Jordan is a Cherokee (intro_regex, Rex Jordan)
+- **Rex Lee Jim** → Navajo / Navajo Nation (intro_regex, Rex Lee Jim)
+- **Richard Sneed** → Cherokee (intro_regex, Richard Sneed)
+- **Richelle Montoya** → Navajo / Navajo Nation / She is the first woman elected to the executive office of Navajo (intro_regex, Richelle Montoya)
+- **Rick Purcell** → Sac (intro_regex, Rick Purcell)
+- **RJ Walker** → Osage / Osage Nation (intro_regex, RJ Walker)
+- **Robert Miguel** → Native (intro_regex, Robert Miguel)
+- **Ronnie Lupe** → Apache (intro_regex, Ronnie Lupe)
+- **Rudy Reyes (activist)** → Ute (intro_regex, Rudy Reyes (activist))
+- **Russell Begaye** → Navajo / Navajo Nation (intro_regex, Russell Begaye)
+- **Sarah Harris (politician)** → Mohegan (intro_regex, Sarah Harris (politician))
+- **Sasha Blackfox-Qualls** → Cherokee / Cherokee Nation / Sasha Blackfox-Qualls is a Cherokee (intro_regex, Sasha Blackfox-Qualls)
+- **Shaandiin Parrish** → Navajo / Navajo Nation / serving as a member of the Navajo (intro_regex, Shaandiin Parrish)
+- **Shawn Bordeaux** → Lakota (intro_regex, Shawn Bordeaux)
+- **Shawn Crittenden** → Cherokee / Cherokee Nation / Shawn Crittenden is a Cherokee (intro_regex, Shawn Crittenden)
+- **Shawna Ann Claw** → Navajo / Navajo Nation (intro_regex, Shawna Ann Claw)
+- **Shella Bowlin** → Cherokee / Cherokee Nation / Shella Bowlin is a Cherokee government official and business executive serving as the secretary of state of the Cherokee (intro_regex, Shella Bowlin)
+- **Tamra Borchardt-Slayton** → Ute (intro_regex, Tamra Borchardt-Slayton)
+- **Taylor McKenzie** → and the first Navajo / Navajo / Navajo Nation (intro_regex, Taylor McKenzie)
+- **Thedis Crowe** → Blackfeet / Crow (intro_regex, Thedis Crowe)
+- **Tina Glory-Jordan** → Cherokee / Cherokee Nation (intro_regex, Tina Glory-Jordan)
+- **Tom Maulson** → Chippewa (intro_regex, Tom Maulson)
+- **Valerie Davidson** → Ute (intro_regex, Valerie Davidson)
+- **Valerie Key-Cheney** → Apache (intro_regex, Valerie Key-Cheney)
+- **Victoria Holland** → Cherokee / Comanche / including the Comanche (intro_regex, Victoria Holland)
+- **Victoria Vazquez** → Cherokee / Cherokee Nation / Tribal Council from 2013 to 2024. She was named a Cherokee (intro_regex, Victoria Vazquez)
+- **Vincent Goes Ahead** → Crow / due to a bribery indictment. Goes Ahead was elected Vice Chairman of the Crow / in May 2000. He became acting Chairman of the Crow (intro_regex, Vincent Goes Ahead)
+- **Wahsayah Whitebird** → Chippewa (intro_regex, Wahsayah Whitebird)
+- **Wanda Hatfield** → Cherokee / Cherokee Nation (intro_regex, Wanda Hatfield)
+- **William Fowler (Brothertown Indian)** → Native (intro_regex, William Fowler (Brothertown Indian))
+- **William Whipple Warren** → he was of Ojibwe and French / Ojibwe (intro_regex, William Whipple Warren)
+- **Wizipan Little Elk** → Native / Sioux / Wizipan Little Elk is a community leader of the Rosebud Sioux (intro_regex, Wizipan Little Elk)
+
+## Rejected / unresolved
+
+- Alexander Faribault: rejected — no_tribe_match
+- Alexis Bailly: rejected — no_tribe_match
+- Alonzo D. Dick: rejected — no_tribe_match
+- Annessa Hartman: rejected — no_tribe_match
+- Barbara Bessette: rejected — no_tribe_match
+- Ben Johnson (Makah politician): rejected — no_tribe_match
+- Brian Garcia (politician): rejected — no_tribe_match
+- Buzzy Peltola: rejected — no_tribe_match
+- Cheryll Toney Holley: rejected — no_tribe_match
+- Clarena Brockie: rejected — no_tribe_match
+- Claudette White: rejected — no_tribe_match
+- Don Wright (politician): rejected — no_tribe_match
+- Donavon Hawk: rejected — no_tribe_match
+- Donne Trotter: rejected — no_tribe_match
+- Donny Olson: rejected — no_tribe_match
+- Doug Combs: rejected — no_tribe_match
+- Edwina Butler-Wolfe: rejected — no_tribe_match
+- Eldon Nygaard: rejected — no_tribe_match
+- F. Kay Wallis: rejected — no_tribe_match
+- Frank DeGroat: rejected — no_tribe_match
+- Frank Warnke: rejected — no_tribe_match
+- Hal Stratton: rejected — no_tribe_match
+- Henry G. Bailly: rejected — no_tribe_match
+- Ivan Ivan (politician): rejected — no_tribe_match
+- Jackie Fielder: rejected — no_tribe_match
+- Jade Sooktis: rejected — no_tribe_match
+- James E. Billie: rejected — no_tribe_match
+- James R. Floyd: rejected — no_tribe_match
+- Joe Donnell: rejected — no_tribe_match
+- John Raymond Johnson: rejected — no_tribe_match
+- John Tyler Hammons: rejected — no_tribe_match
+- Jules Wright (politician): rejected — no_tribe_match
+- Larry Pemberton: rejected — no_tribe_match
+- LaRue Parker: rejected — no_tribe_match
+- Lorena Austin: rejected — no_tribe_match
+- Maxine Dibert: rejected — no_tribe_match
+- Mike Fox (politician): rejected — no_tribe_match
+- Nick Salazar: rejected — no_tribe_match
+- Patrick Goggles: rejected — no_tribe_match
+- R. Perry Beaver: rejected — no_tribe_match
+- Raquel Montoya-Lewis: rejected — no_tribe_match
+- Rebecca Cryer: rejected — no_tribe_match
+- Robbie Hedges: rejected — no_tribe_match
+- Robyn Frier: rejected — no_tribe_match
+- Rynalea Whiteman Pena: rejected — no_tribe_match
+- Shannon Augare: rejected — no_tribe_match
+- Sharon Bryant (politician): rejected — no_tribe_match
+- Shelley Buck: rejected — no_tribe_match
+- Shelly Fyant: rejected — no_tribe_match
+- Sidney Fitzpatrick: rejected — no_tribe_match
+- Skip Finn: rejected — no_tribe_match
+- Steve Holland (politician): rejected — no_tribe_match
+- Sunshine Sykes: rejected — no_tribe_match
+- Susan Masten: rejected — no_tribe_match
+- Theresa Becenti-Aguilar: rejected — no_tribe_match
+- Timothy Nuvangyaoma: rejected — no_tribe_match
+- Vivian Juan-Saunders: rejected — no_tribe_match
+- Willard F. Bennett: rejected — no_tribe_match
+- William H. Dick: rejected — no_tribe_match

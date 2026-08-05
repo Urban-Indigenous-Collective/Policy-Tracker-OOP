@@ -10,4 +10,6 @@ cloudflared/credentials.json
 data/*
 !data/indigenous_politicians.json
 !data/indigenous_ethnicity_overrides.json
+!data/indigenous_ethnicity_enrichment.json
+!data/indigenous_wikipedia_title_aliases.json
 cache/
