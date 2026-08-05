@@ -23,7 +23,10 @@ from airtable_fields import (
 )
 from api_client import APIClient
 from bill_processor import BillProcessor
+from document_processor import DocumentProcessor
 from document_text_store import get_document_text_store
+from indigenous_database import IndigenousDatabase
+from llm.factory import get_llm_provider
 
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
 logger = logging.getLogger(__name__)
@@ -72,7 +75,13 @@ def main() -> int:
         return 1
 
     api = APIClient(os.environ["LEGISCAN_KEY"])
-    processor = BillProcessor(api)
+    llm = get_llm_provider()
+    processor = BillProcessor(
+        api,
+        llm,
+        DocumentProcessor(llm),
+        IndigenousDatabase(),
+    )
     client = AirtableClient()
 
     if args.record_id:
