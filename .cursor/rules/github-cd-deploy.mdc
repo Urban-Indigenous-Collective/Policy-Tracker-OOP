@@ -1,0 +1,29 @@
+---
+description: Deploy only via GitHub CD pipeline unless user explicitly requests manual deploy
+alwaysApply: true
+---
+
+# Production deploys — GitHub CD only
+
+All production deploys to `100.71.124.8` (policy tracker) MUST go through the **GitHub Actions CD pipeline** (push to `main` → `.github/workflows/deploy.yml`).
+
+## Do
+
+- Commit and **push to `main`** when prod needs updated code
+- Verify the GitHub Actions deploy workflow succeeded
+- Use prod helper scripts that **only read logs or run one-off jobs inside the existing container** (e.g. `docker compose exec scheduler python scripts/...`) when the user asks for operational tasks — not as a substitute for shipping code
+
+## Do NOT (unless the operating user explicitly says otherwise)
+
+- Run `./deploy/deploy.sh` or manual rsync/SSH deploys
+- Run `scripts/wsl-deploy-remote.sh` directly from a dev machine to push code
+- `docker cp` hot-patched scripts onto prod as a deploy strategy
+- Tell the user "deploy is done" after a manual rsync while CI is the source of truth
+
+## When manual deploy is allowed
+
+Only when the user **explicitly** requests a manual deploy in the current conversation (e.g. "run deploy.sh", "manual deploy now", "rsync to prod").
+
+## Rationale
+
+Manual deploys can diverge from `main` (rsync full working tree, uncommitted files, missing excludes). GitHub CD is the canonical path to prod.
