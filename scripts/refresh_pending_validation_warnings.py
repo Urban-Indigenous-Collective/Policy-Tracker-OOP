@@ -11,6 +11,7 @@ import os
 import re
 import sys
 import time
+from dataclasses import dataclass
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from dotenv import load_dotenv
@@ -239,6 +240,115 @@ def refresh_record(
     return updates, "ok"
 
 
+@dataclass
+class ValidationRefreshStats:
+    processed: int = 0
+    cleared: int = 0
+    reduced: int = 0
+    unchanged: int = 0
+    failed: int = 0
+    apply: bool = False
+
+
+def run_validation_refresh(
+    *,
+    apply: bool = False,
+    apply_eval_expl_fixes: bool = False,
+    eval_expl_only: bool = False,
+    limit: int = 0,
+    record_ids: list[str] | None = None,
+    refresh: bool = False,
+    processor: BillProcessor | None = None,
+    client: AirtableClient | None = None,
+) -> ValidationRefreshStats:
+    """Re-validate Pending rows that carry Validation Warnings."""
+    record_ids = record_ids or []
+    if processor is None:
+        api = APIClient(os.environ["LEGISCAN_KEY"])
+        processor = BillProcessor(
+            api,
+            get_llm_provider(),
+            DocumentProcessor(get_llm_provider()),
+            IndigenousDatabase(),
+        )
+    if client is None:
+        client = AirtableClient()
+
+    targets: list[dict] = []
+    for record in client.pending_table.all():
+        fields = record.get("fields") or {}
+        if fields.get("Review Status") == REVIEW_STATUS_REJECTED:
+            continue
+        if record_ids and record["id"] not in record_ids:
+            continue
+        warnings = str(fields.get("Validation Warnings") or "").strip()
+        if not warnings and not record_ids:
+            continue
+        if eval_expl_only:
+            has_mismatch = (
+                "mechanisms_expl provided but mechanisms_eval is not Yes" in warnings
+                or "prevention_efforts_expl provided but prevention_efforts_eval is not Yes"
+                in warnings
+            )
+            if not has_mismatch:
+                continue
+        targets.append(record)
+
+    if limit:
+        targets = targets[:limit]
+
+    stats = ValidationRefreshStats(apply=apply)
+    stats.processed = len(targets)
+
+    for i, record in enumerate(targets, 1):
+        rid = record["id"]
+        fields = record.get("fields") or {}
+        old = str(fields.get("Validation Warnings") or "").strip()
+        try:
+            updates, status = refresh_record(
+                processor,
+                fields,
+                apply_eval_expl_fixes=apply_eval_expl_fixes,
+                record_id=rid,
+                refresh=refresh,
+            )
+        except Exception as exc:
+            logger.exception("Refresh failed for %s: %s", rid, exc)
+            stats.failed += 1
+            continue
+
+        if updates is None:
+            logger.warning("%s skipped: %s", rid, status)
+            stats.failed += 1
+            continue
+
+        new = str(updates.get("Validation Warnings") or "").strip()
+        if new == old:
+            stats.unchanged += 1
+        elif not new:
+            stats.cleared += 1
+        else:
+            stats.reduced += 1
+
+        logger.info(
+            "[%d/%d] %s warnings: %d -> %d chars",
+            i,
+            len(targets),
+            rid,
+            len(old),
+            len(new),
+        )
+
+        if apply:
+            prepared = _prepare_updates(updates, fields)
+            client.update_record(client.pending_table, rid, prepared)
+
+        processor.compiled_bill = {}
+        time.sleep(0.3)
+
+    return stats
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--apply", action="store_true")
@@ -261,92 +371,17 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    api = APIClient(os.environ["LEGISCAN_KEY"])
-    processor = BillProcessor(
-        api,
-        get_llm_provider(),
-        DocumentProcessor(get_llm_provider()),
-        IndigenousDatabase(),
+    stats = run_validation_refresh(
+        apply=args.apply,
+        apply_eval_expl_fixes=args.apply_eval_expl_fixes,
+        eval_expl_only=args.eval_expl_only,
+        limit=args.limit,
+        record_ids=args.record_id,
+        refresh=args.refresh,
     )
-    client = AirtableClient()
-
-    targets: list[dict] = []
-    for record in client.pending_table.all():
-        fields = record.get("fields") or {}
-        if fields.get("Review Status") == REVIEW_STATUS_REJECTED:
-            continue
-        if args.record_id and record["id"] not in args.record_id:
-            continue
-        warnings = str(fields.get("Validation Warnings") or "").strip()
-        if not warnings and not args.record_id:
-            continue
-        if args.eval_expl_only:
-            has_mismatch = (
-                "mechanisms_expl provided but mechanisms_eval is not Yes" in warnings
-                or "prevention_efforts_expl provided but prevention_efforts_eval is not Yes"
-                in warnings
-            )
-            if not has_mismatch:
-                continue
-        targets.append(record)
-
-    if args.limit:
-        targets = targets[: args.limit]
-
-    cleared = 0
-    reduced = 0
-    failed = 0
-    unchanged = 0
-
-    for i, record in enumerate(targets, 1):
-        rid = record["id"]
-        fields = record.get("fields") or {}
-        old = str(fields.get("Validation Warnings") or "").strip()
-        try:
-            updates, status = refresh_record(
-                processor,
-                fields,
-                apply_eval_expl_fixes=args.apply_eval_expl_fixes,
-                record_id=rid,
-                refresh=args.refresh,
-            )
-        except Exception as exc:
-            logger.exception("Refresh failed for %s: %s", rid, exc)
-            failed += 1
-            continue
-
-        if updates is None:
-            logger.warning("%s skipped: %s", rid, status)
-            failed += 1
-            continue
-
-        new = str(updates.get("Validation Warnings") or "").strip()
-        if new == old:
-            unchanged += 1
-        elif not new:
-            cleared += 1
-        else:
-            reduced += 1
-
-        logger.info(
-            "[%d/%d] %s warnings: %d -> %d chars",
-            i,
-            len(targets),
-            rid,
-            len(old),
-            len(new),
-        )
-
-        if args.apply:
-            prepared = _prepare_updates(updates, fields)
-            client.update_record(client.pending_table, rid, prepared)
-
-        processor.compiled_bill = {}
-        time.sleep(0.3)
-
     print(
-        f"processed={len(targets)} cleared={cleared} reduced={reduced} "
-        f"unchanged={unchanged} failed={failed} apply={args.apply}"
+        f"processed={stats.processed} cleared={stats.cleared} reduced={stats.reduced} "
+        f"unchanged={stats.unchanged} failed={stats.failed} apply={stats.apply}"
     )
     return 0
 
