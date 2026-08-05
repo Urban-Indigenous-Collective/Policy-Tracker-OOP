@@ -396,6 +396,98 @@ def test_ethnicity_overrides_merge_after_dedupe(tmp_path):
     assert "Ho-Chunk" in indigenous
 
 
+def test_load_from_disk_applies_enrichment_sidecar(tmp_path):
+    enrichment = tmp_path / "enrichment.json"
+    enrichment.write_text(
+        json.dumps(
+            {
+                "entries": {
+                    "janedoe": {
+                        "roster_name": "Jane Doe",
+                        "ethnicity": "Cherokee Nation",
+                        "status": "accepted",
+                    }
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    roster = tmp_path / "roster.json"
+    roster.write_text(
+        json.dumps(
+            {
+                "built_at": "2026-08-01T00:00:00Z",
+                "source": "wikipedia",
+                "count": 1,
+                "politicians": [
+                    {
+                        "name": "Jane Doe",
+                        "party": "N/A",
+                        "state": "N/A",
+                        "ethnicity": "N/A",
+                        "offices_held": "N/A",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    db = IndigenousDatabase(
+        db_path=roster,
+        backup_dir=tmp_path / "backups",
+        enrichment_path=enrichment,
+        wikipedia_client=FakeWiki(),
+    )
+    assert db.load_from_disk()
+    assert db.database[0]["ethnicity"] == "Cherokee Nation"
+
+
+def test_known_ethnicity_not_overwritten_by_enrichment(tmp_path):
+    enrichment = tmp_path / "enrichment.json"
+    enrichment.write_text(
+        json.dumps(
+            {
+                "entries": {
+                    "debhaaland": {
+                        "roster_name": "Deb Haaland",
+                        "ethnicity": "Wrong Tribe",
+                        "status": "accepted",
+                    }
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    roster = tmp_path / "roster.json"
+    roster.write_text(
+        json.dumps(
+            {
+                "built_at": "2026-08-01T00:00:00Z",
+                "source": "wikipedia",
+                "count": 1,
+                "politicians": [
+                    {
+                        "name": "Deb Haaland",
+                        "party": "Democratic",
+                        "state": "New Mexico",
+                        "ethnicity": "Laguna Pueblo",
+                        "offices_held": "N/A",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    db = IndigenousDatabase(
+        db_path=roster,
+        backup_dir=tmp_path / "backups",
+        enrichment_path=enrichment,
+        wikipedia_client=FakeWiki(),
+    )
+    db.load_from_disk()
+    assert db.database[0]["ethnicity"] == "Laguna Pueblo"
+
+
 def test_wonda_johnson_alias(tmp_path):
     overrides = tmp_path / "overrides.json"
     overrides.write_text(

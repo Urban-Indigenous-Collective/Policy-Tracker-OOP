@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_DB_PATH = Path("data/indigenous_politicians.json")
 DEFAULT_BACKUP_DIR = Path("data/backups")
 DEFAULT_OVERRIDES_PATH = Path("data/indigenous_ethnicity_overrides.json")
+DEFAULT_ENRICHMENT_PATH = Path("data/indigenous_ethnicity_enrichment.json")
 DEFAULT_MIN_COUNT = 500
 
 
@@ -34,18 +35,21 @@ class IndigenousDatabase:
         db_path: Path | str | None = None,
         backup_dir: Path | str | None = None,
         overrides_path: Path | str | None = None,
+        enrichment_path: Path | str | None = None,
         wikipedia_client: WikipediaAPIClient | None = None,
     ):
         self.db_path = Path(db_path or DEFAULT_DB_PATH)
         self.backup_dir = Path(backup_dir or DEFAULT_BACKUP_DIR)
         self.overrides_path = Path(overrides_path or DEFAULT_OVERRIDES_PATH)
+        self.enrichment_path = Path(enrichment_path or DEFAULT_ENRICHMENT_PATH)
         self.wikipedia_client = wikipedia_client or WikipediaAPIClient()
         self.database: list[dict] = []
         self.built_at: str | None = None
         self._disk_mtime: float | None = None
         self._ethnicity_overrides: dict[str, str] = {}
         self._name_aliases: dict[str, str] = {}
-        self._load_ethnicity_overrides()
+        self._ethnicity_enrichment: dict[str, str] = {}
+        self._load_ethnicity_sidecars()
 
     def build_category_dict(self, database, url, ethnicity):
         politicians_category = self.wikipedia_client.parse_category_and_subcategories(url)
@@ -193,14 +197,24 @@ class IndigenousDatabase:
         deduped.sort(key=lambda r: (r.get("name") or "").lower())
         return deduped
 
-    def _load_ethnicity_overrides(self) -> None:
+    def _load_ethnicity_sidecars(self) -> None:
         self._ethnicity_overrides = {}
         self._name_aliases = {}
-        if not self.overrides_path.is_file():
-            return
-        payload = json.loads(self.overrides_path.read_text(encoding="utf-8"))
-        self._ethnicity_overrides = dict(payload.get("ethnicity") or {})
-        self._name_aliases = dict(payload.get("aliases") or {})
+        self._ethnicity_enrichment = {}
+        if self.overrides_path.is_file():
+            payload = json.loads(self.overrides_path.read_text(encoding="utf-8"))
+            self._ethnicity_overrides = dict(payload.get("ethnicity") or {})
+            self._name_aliases = dict(payload.get("aliases") or {})
+        if self.enrichment_path.is_file():
+            payload = json.loads(self.enrichment_path.read_text(encoding="utf-8"))
+            for key, entry in (payload.get("entries") or {}).items():
+                if not isinstance(entry, dict):
+                    continue
+                if entry.get("status") != "accepted":
+                    continue
+                ethnicity = (entry.get("ethnicity") or "").strip()
+                if ethnicity and not _is_na(ethnicity):
+                    self._ethnicity_enrichment[key] = ethnicity
 
     @staticmethod
     def _strip_middle_initial(name: str) -> str:
@@ -234,22 +248,27 @@ class IndigenousDatabase:
             cleaned = self._resolve_alias(stripped)
         return cleaned
 
-    def _apply_ethnicity_overrides(self, records: list[dict]) -> list[dict]:
-        if not self._ethnicity_overrides:
-            return records
+    def _apply_ethnicity_sidecars(self, records: list[dict]) -> list[dict]:
         override_keys = {
             self._compact_name_key(name): ethnicity
             for name, ethnicity in self._ethnicity_overrides.items()
         }
+        enrichment_keys = dict(self._ethnicity_enrichment)
+        if not override_keys and not enrichment_keys:
+            return records
         for record in records:
             key = self._compact_name_key(record.get("name") or "")
             if key in override_keys:
                 record["ethnicity"] = override_keys[key]
+            elif not _is_na(record.get("ethnicity")):
+                continue
+            elif key in enrichment_keys:
+                record["ethnicity"] = enrichment_keys[key]
         return records
 
     def _finalize_roster(self, records: list[dict]) -> list[dict]:
         records = self._dedupe_roster(records)
-        return self._apply_ethnicity_overrides(records)
+        return self._apply_ethnicity_sidecars(records)
 
     def save_to_disk(self) -> None:
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -394,12 +413,16 @@ class IndigenousDatabase:
         if self._compact_name_key(normalized_input) == self._compact_name_key(normalized_db_name):
             return True
 
-        token_score = fuzz.token_sort_ratio(normalized_input, normalized_db_name)
-        if token_score >= 88:
-            return True
-
         input_parts = normalized_input.split()
         db_parts = normalized_db_name.split()
+
+        token_score = fuzz.token_sort_ratio(normalized_input, normalized_db_name)
+        if token_score >= 88:
+            if len(input_parts) >= 1 and len(db_parts) >= 1:
+                if fuzz.ratio(input_parts[0], db_parts[0]) >= 80:
+                    return True
+            return False
+
         if len(input_parts) >= 2 and len(db_parts) >= 2:
             input_last = self._last_name(normalized_input)
             db_last = self._last_name(normalized_db_name)

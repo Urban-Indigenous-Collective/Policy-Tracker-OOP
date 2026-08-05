@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "description": "Manual Wikipedia title aliases for roster names that fail OpenSearch disambiguation.",
+  "aliases": {
+    "James Ramos": "James Ramos (politician)",
+    "Mary Kunesh": "Mary Kunesh-Podein",
+    "Tyson Running Wolf": "Tyson Runningwolf",
+    "Bryce Edgmon": "Bryce Edgmon",
+    "Donald Olson": "Donald Olson (politician)",
+    "Kevin Killer": "Kevin Killer",
+    "Peggy Flanagan": "Peggy Flanagan",
+    "Rena Newell": "Rena Newell",
+    "Shannon Pinto": "Shannon Pinto"
+  }
+}
