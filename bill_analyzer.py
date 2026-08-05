@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 from typing import Callable, Optional
 
-from analysis_schema import BillAnalysis, ProsConsResult
+from analysis_schema import BillAnalysis, EvalAnswer, ProsConsResult
 from analysis_validator import (
     analysis_to_compiled_fields,
     validate_bill_analysis,
@@ -20,12 +20,23 @@ logger = logging.getLogger(__name__)
 
 ANALYSIS_SYSTEM = (
     "You are a precise legislative analyst for Urban Indigenous Collective. "
-    "Return only valid JSON. Be accurate. Quote exact text from the legislation when asked."
+    "Return only valid JSON. Be accurate. "
+    "For mechanisms_expl and prevention_efforts_expl you MUST copy verbatim substrings "
+    "from the legislation — do not paraphrase, summarize, or normalize punctuation."
+)
+
+QUOTE_EXTRACT_SYSTEM = (
+    "You extract verbatim supporting quotes from legislation. "
+    "Return only valid JSON. Each quote must be copied character-for-character from the "
+    "provided legislation text — never paraphrase."
 )
 
 METADATA_SYSTEM = (
     "You extract structured metadata from government documents. "
-    "Return only valid JSON. Search the document text carefully."
+    "Return only valid JSON. Use ONLY facts explicitly stated in the document text. "
+    "If the date, sponsor, chamber action, or session/administration is not stated "
+    "in the text, return an empty string for that field. Do not infer governors, "
+    "proclamations, or annual observance dates from the title or URL alone."
 )
 
 PROS_CONS_SYSTEM = (
@@ -38,9 +49,9 @@ ANALYSIS_SCHEMA = {
     "gender_inclusive_eval": "Yes | No | Somewhat",
     "gender_inclusive_expl": "string",
     "mechanisms_eval": "Yes | No",
-    "mechanisms_expl": ["exact quotes from bill when Yes, else []"],
+    "mechanisms_expl": ["verbatim copy-paste substrings from legislation when Yes, else []"],
     "prevention_efforts_eval": "Yes | No",
-    "prevention_efforts_expl": ["exact quotes from bill when Yes, else []"],
+    "prevention_efforts_expl": ["verbatim copy-paste substrings from legislation when Yes, else []"],
     "centering_indigenous_voices_eval": "Yes | No | Somewhat",
     "centering_indigenous_voices_expl": "string",
     "survivor_relative_input_eval": "Yes | No | Somewhat",
@@ -93,6 +104,13 @@ class BillAnalyzer:
         path = self.cache_dir / f"{key}.json"
         path.write_text(json.dumps(data, indent=2))
 
+    def _quote_warning_items(self, warnings: list[str]) -> list[str]:
+        return [
+            w
+            for w in warnings
+            if "quote not found" in w or "could not be anchored" in w
+        ]
+
     def _complete_json_with_retry(
         self,
         kind: str,
@@ -112,6 +130,25 @@ class BillAnalyzer:
                 return validated, warnings, True
 
         plog(f"LLM request: {kind}")
+        raw = self._complete_json_with_retry_body(
+            kind, system, user, schema, validator, source_text
+        )
+        validated, warnings = validator(raw, source_text) if source_text else validator(raw)
+
+        if validated is not None:
+            self._write_cache(cache_key, raw if isinstance(raw, dict) else validated.model_dump())
+
+        return validated, warnings, False
+
+    def _complete_json_with_retry_body(
+        self,
+        kind: str,
+        system: str,
+        user: str,
+        schema: dict,
+        validator,
+        source_text: str = "",
+    ) -> dict:
         raw = self.llm.complete_json(system, user, schema=schema)
         plog(f"LLM response received: {kind}")
         validated, warnings = validator(raw, source_text) if source_text else validator(raw)
@@ -122,20 +159,62 @@ class BillAnalyzer:
             raw = self.llm.complete_json(system, retry_user, schema=schema)
             validated, warnings = validator(raw, source_text) if source_text else validator(raw)
 
-        if validated is not None:
-            self._write_cache(cache_key, raw if isinstance(raw, dict) else validated.model_dump())
+        quote_warnings = self._quote_warning_items(warnings)
+        if validated is not None and quote_warnings and source_text:
+            retry_user = (
+                user
+                + "\n\nYour supporting quotes were not verbatim copies from the legislation. "
+                "Re-read the legislation text and fix ONLY the quote list fields. "
+                "Each quote must appear exactly in the text (copy-paste, no paraphrase).\n"
+                "Issues:\n"
+                + "\n".join(quote_warnings)
+            )
+            logger.warning("quote_validation_retry kind=%s errors=%s", kind, quote_warnings)
+            raw = self.llm.complete_json(system, retry_user, schema=schema)
+            validated, warnings = validator(raw, source_text)
+            if validated is None:
+                return raw
 
-        return validated, warnings, False
+        return raw if isinstance(raw, dict) else (validated.model_dump() if validated else raw)
+
+    def _extract_verbatim_quotes(
+        self,
+        bill_text: str,
+        question: str,
+        cache_suffix: str,
+    ) -> list[str]:
+        user = (
+            f"Legislation text:\n{bill_text}\n\n"
+            f"Question: {question}\n"
+            "If Yes, return JSON {\"quotes\": [\"verbatim substring\", ...]} using only exact "
+            "copy-paste from the legislation above. If No supporting language exists, "
+            "return {\"quotes\": []}."
+        )
+        raw = self.llm.complete_json(
+            QUOTE_EXTRACT_SYSTEM,
+            user,
+            schema={"quotes": ["verbatim substring from legislation"]},
+        )
+        quotes = raw.get("quotes") if isinstance(raw, dict) else []
+        if not isinstance(quotes, list):
+            return []
+        from quote_repair import repair_quote_list
+
+        repaired, _ = repair_quote_list([str(q).strip() for q in quotes if str(q).strip()], bill_text)
+        logger.info("verbatim_quote_extract suffix=%s count=%d", cache_suffix, len(repaired))
+        return repaired
 
     def extract_gov_metadata(self, bill_text: str, bill_link: str):
+        text_hash = hashlib.sha256(bill_text.encode()).hexdigest()[:16]
         user = (
             f"Document URL: {bill_link}\n\n"
             f"Document text:\n{bill_text}\n\n"
-            "Extract metadata fields from this document."
+            "Extract metadata fields from this document. "
+            "Use only facts explicitly present in the document text above."
         )
         metadata, warnings, _ = self._complete_json_with_retry(
             "gov_metadata",
-            (bill_link,),
+            (bill_link, text_hash),
             METADATA_SYSTEM,
             user,
             METADATA_SCHEMA,
@@ -158,8 +237,12 @@ class BillAnalyzer:
             f"Legislation text:\n{bill_text}\n\n"
             "Analyze this legislation for UIC. "
             "For eval fields use exactly Yes, No, or Somewhat. "
-            "When eval is No, set expl to the literal string No. "
-            "For quote lists, include only exact substrings from the legislation."
+            "When eval is No or Somewhat, set gender_inclusive_expl, centering_indigenous_voices_expl, "
+            "and survivor_relative_input_expl to the literal string No or Somewhat respectively. "
+            "When mechanisms_eval or prevention_efforts_eval is No, set mechanisms_expl and "
+            "prevention_efforts_expl to empty arrays []. "
+            "When mechanisms_eval or prevention_efforts_eval is Yes, each expl entry must be a "
+            "verbatim copy-paste substring from the legislation above — not a summary."
         )
 
         analysis, warnings, cache_hit = self._complete_json_with_retry(
@@ -171,6 +254,27 @@ class BillAnalyzer:
             validate_bill_analysis,
             bill_text,
         )
+
+        if analysis and self._quote_warning_items(warnings):
+            if analysis.mechanisms_eval == EvalAnswer.YES and any(
+                w.startswith("mechanisms_expl") for w in warnings
+            ):
+                analysis.mechanisms_expl = self._extract_verbatim_quotes(
+                    bill_text,
+                    "Does this legislation include accountability mechanisms, reporting requirements, "
+                    "oversight, audits, or evaluation processes related to MMIP?",
+                    "mechanisms",
+                )
+            if analysis.prevention_efforts_eval == EvalAnswer.YES and any(
+                w.startswith("prevention_efforts_expl") for w in warnings
+            ):
+                analysis.prevention_efforts_expl = self._extract_verbatim_quotes(
+                    bill_text,
+                    "Does this legislation include prevention efforts related to MMIP "
+                    "(training, education, outreach, intervention programs)?",
+                    "prevention",
+                )
+            analysis, warnings = validate_bill_analysis(analysis.model_dump(), bill_text)
         logger.info(
             "analyze_bill cache_hit=%s warnings=%s",
             cache_hit,
