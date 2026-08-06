@@ -59,11 +59,11 @@ def run_discovery_job():
 
 
 def run_status_refresh_job():
-    from discovery.status_refresh import build_pipeline
-
     logger.info("Starting scheduled status refresh run")
     slack = SlackNotifier()
     try:
+        from discovery.status_refresh import build_pipeline
+
         pipeline = build_pipeline(dry_run=False)
         stats = pipeline.run()
         logger.info(
@@ -82,6 +82,23 @@ def run_status_refresh_job():
     except Exception as exc:
         logger.exception("Status refresh job failed: %s", exc)
         slack.notify_error(f"Status refresh failed: {exc}")
+        raise
+
+
+def run_slack_summary_job():
+    """Post the deferred overnight discovery/status digest to Slack."""
+    from discovery.slack_report import send_deferred_report
+
+    logger.info("Starting scheduled Slack summary")
+    try:
+        sent = send_deferred_report()
+        if sent:
+            logger.info("Deferred Slack summary sent")
+        else:
+            logger.info("No deferred Slack summary to send")
+    except Exception as exc:
+        logger.exception("Slack summary job failed: %s", exc)
+        SlackNotifier().notify_error(f"Slack summary failed: {exc}")
         raise
 
 
@@ -191,7 +208,7 @@ def run_nightly_pipeline():
         try:
             run_status_refresh_job()
         except Exception:
-            logger.warning(
+            logger.exception(
                 "Nightly pipeline: status refresh failed; continuing to next step"
             )
         else:
@@ -259,16 +276,27 @@ def main():
     pipeline_cron = os.getenv("NIGHTLY_PIPELINE_CRON") or os.getenv(
         "DISCOVERY_CRON", "0 2 * * *"
     )
+    slack_summary_cron = os.getenv("SLACK_SUMMARY_CRON", "30 7 * * *")
     tz = os.getenv("DISCOVERY_TZ", "America/New_York")
     sync_interval = int(os.getenv("APPROVAL_SYNC_INTERVAL_MIN", "10"))
 
     discovery_enabled = _env_flag("DISCOVERY_ENABLED", "true")
     status_refresh_enabled = _env_flag("STATUS_REFRESH_ENABLED", "true")
     validation_refresh_enabled = _env_flag("VALIDATION_REFRESH_ENABLED", "false")
+    slack_summary_enabled = _env_flag("SLACK_DEFER_DISCOVERY", "true")
 
     scheduler = BlockingScheduler(timezone=tz)
 
     _add_cron_job(scheduler, "nightly_pipeline", run_nightly_pipeline, pipeline_cron, tz)
+
+    if slack_summary_enabled:
+        _add_cron_job(
+            scheduler,
+            "slack_summary",
+            run_slack_summary_job,
+            slack_summary_cron,
+            tz,
+        )
 
     scheduler.add_job(
         run_approval_sync_job,
@@ -299,11 +327,12 @@ def main():
 
     logger.info(
         "Scheduler started: nightly_pipeline cron=%s tz=%s approval_sync=%dm "
-        "steps: discovery=%s status_refresh=%s validation_refresh=%s "
+        "slack_summary=%s steps: discovery=%s status_refresh=%s validation_refresh=%s "
         "indigenous_roster_refresh=%s",
         pipeline_cron,
         tz,
         sync_interval,
+        f"enabled cron={slack_summary_cron}" if slack_summary_enabled else "disabled",
         "enabled" if discovery_enabled else "disabled",
         "enabled" if status_refresh_enabled else "disabled",
         "enabled" if validation_refresh_enabled else "disabled",

@@ -9,6 +9,7 @@ from discovery.models import Candidate, utc_now_iso
 from discovery.relevance import MMIPRelevanceGate
 from discovery.seen_store import SeenStore
 from discovery.site_crawler import StateSiteSource
+from discovery.slack_report import discovery_slack_always, save_deferred_report, should_defer_slack
 from main_application import MainApplication
 from slack_client import SlackNotifier
 
@@ -23,6 +24,10 @@ class DiscoveryRunStats:
     analyzed: int = 0
     errors: int = 0
     slack_items: list[dict[str, Any]] = field(default_factory=list)
+    by_state: dict[str, Any] = field(default_factory=dict)
+    sources_attempted: dict[str, Any] = field(default_factory=dict)
+    run_started_at: str = ""
+    run_finished_at: str = ""
 
 
 class DiscoveryPipeline:
@@ -229,7 +234,7 @@ class DiscoveryPipeline:
             logger.info("Discovery disabled via DISCOVERY_ENABLED")
             return DiscoveryRunStats()
 
-        stats = DiscoveryRunStats()
+        stats = DiscoveryRunStats(run_started_at=utc_now_iso())
         candidates = self.collect_candidates()
         stats.discovered = len(candidates)
         logger.info("Collected %d discovery candidates", len(candidates))
@@ -237,9 +242,22 @@ class DiscoveryPipeline:
         for candidate in candidates:
             self._process_candidate(candidate, stats)
 
+        stats.run_finished_at = utc_now_iso()
         if not self.dry_run:
-            self.slack.notify_discovery_batch(stats.slack_items)
-            self.slack.notify_run_complete(
-                stats.analyzed, stats.rejected, stats.skipped, stats.errors
-            )
+            if should_defer_slack():
+                save_deferred_report(stats)
+            else:
+                self.slack.notify_discovery_batch(stats.slack_items)
+                self.slack.notify_run_complete(
+                    analyzed=stats.analyzed,
+                    rejected=stats.rejected,
+                    skipped=stats.skipped,
+                    errors=stats.errors,
+                    discovered=stats.discovered,
+                    by_state=stats.by_state,
+                    run_started_at=stats.run_started_at,
+                    run_finished_at=stats.run_finished_at,
+                    sources_attempted=stats.sources_attempted,
+                    always_notify=discovery_slack_always(),
+                )
         return stats

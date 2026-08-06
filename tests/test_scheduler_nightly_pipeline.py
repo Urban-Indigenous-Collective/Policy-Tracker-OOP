@@ -106,6 +106,8 @@ def test_main_registers_single_nightly_pipeline_cron():
         {
             "LEGISCAN_KEY": "test-key",
             "NIGHTLY_PIPELINE_CRON": "0 2 * * *",
+            "SLACK_DEFER_DISCOVERY": "true",
+            "SLACK_SUMMARY_CRON": "30 7 * * *",
             "VALIDATION_REFRESH_ENABLED": "true",
         },
         clear=False,
@@ -116,7 +118,7 @@ def test_main_registers_single_nightly_pipeline_cron():
                     scheduler.main()
 
     cron_job_ids = [call.args[1] for call in mock_add_cron.call_args_list]
-    assert cron_job_ids == ["nightly_pipeline"]
+    assert cron_job_ids == ["nightly_pipeline", "slack_summary"]
     assert "discovery" not in cron_job_ids
     assert "validation_refresh" not in cron_job_ids
     assert "status_refresh" not in cron_job_ids
@@ -128,7 +130,11 @@ def test_main_registers_single_nightly_pipeline_cron():
 def test_main_falls_back_to_discovery_cron():
     with patch.dict(
         "os.environ",
-        {"LEGISCAN_KEY": "test-key", "DISCOVERY_CRON": "15 1 * * *"},
+        {
+            "LEGISCAN_KEY": "test-key",
+            "DISCOVERY_CRON": "15 1 * * *",
+            "SLACK_DEFER_DISCOVERY": "false",
+        },
         clear=False,
     ):
         with patch.object(scheduler.BlockingScheduler, "start"):
@@ -136,7 +142,11 @@ def test_main_falls_back_to_discovery_cron():
                 with patch.object(scheduler.BlockingScheduler, "add_job"):
                     scheduler.main()
 
-    assert mock_add_cron.call_args.args[3] == "15 1 * * *"
+    pipeline_call = mock_add_cron.call_args_list[0]
+    assert pipeline_call.args[1] == "nightly_pipeline"
+    assert pipeline_call.args[3] == "15 1 * * *"
+    cron_job_ids = [call.args[1] for call in mock_add_cron.call_args_list]
+    assert "slack_summary" not in cron_job_ids
 
 
 def test_run_status_refresh_job_delegates_to_build_pipeline():
