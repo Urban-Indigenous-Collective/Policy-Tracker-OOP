@@ -94,6 +94,15 @@ class AirtableClient:
     def list_pending_rejected(self) -> list[dict]:
         return self.list_by_status(self.pending_table, "Review Status", REVIEW_STATUS_REJECTED)
 
+    def list_pending_for_refresh(self) -> list[dict]:
+        """Pending rows eligible for legislative status refresh (excludes Rejected)."""
+        records = self.pending_table.all()
+        return [
+            record
+            for record in records
+            if (record.get("fields") or {}).get("Review Status") != REVIEW_STATUS_REJECTED
+        ]
+
     def list_live_send_back(self) -> list[dict]:
         return self.list_by_status(self.live_table, LIVE_REVIEW_STATUS_FIELD, REVIEW_STATUS_SEND_BACK)
 
