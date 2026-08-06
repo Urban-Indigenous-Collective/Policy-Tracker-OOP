@@ -291,7 +291,14 @@ class StatusRefreshPipeline:
                     fields.get("Validation Warnings", ""),
                     [warning],
                 )
-                self.airtable.update_record(table, record["id"], updated_fields)
+                # Only write mutable fields — full field dumps include computed columns.
+                self.airtable.update_record(
+                    table,
+                    record["id"],
+                    {
+                        "Validation Warnings": updated_fields["Validation Warnings"],
+                    },
+                )
                 move_record = {**record, "fields": updated_fields}
                 self._silent_approval_sync()._move_to_pending(move_record)
             else:

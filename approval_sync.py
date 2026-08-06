@@ -44,9 +44,15 @@ class ApprovalSync:
 
     def _fields_for_pending(self, live_fields: dict[str, Any]) -> dict[str, Any]:
         pending_fields = {k: live_fields.get(k, "") for k in BILL_FIELD_NAMES}
-        overview = live_fields.get(BILL_OVERVIEW_FIELD) or live_fields.get(BILL_OVERVIEW_LINK_FIELD)
+        overview = live_fields.get(BILL_OVERVIEW_LINK_FIELD) or live_fields.get(BILL_OVERVIEW_FIELD)
         if overview:
-            pending_fields[BILL_OVERVIEW_FIELD] = overview
+            # Pending schema stores the URL on Bill Overview (Link), not Bill Overview.
+            pending_fields[BILL_OVERVIEW_LINK_FIELD] = overview
+            pending_fields.pop(BILL_OVERVIEW_FIELD, None)
+        # Live / Pending both use Name; BILL_FIELD_NAMES still lists legacy Title.
+        if live_fields.get("Name"):
+            pending_fields["Name"] = live_fields["Name"]
+        pending_fields.pop("Title", None)
         pending_fields["Review Status"] = REVIEW_STATUS_PENDING
         for extra in PENDING_EXTRA_FIELDS:
             if extra not in pending_fields:
@@ -102,7 +108,11 @@ class ApprovalSync:
         fields = self.airtable.record_to_fields(record)
         url = fields.get(BILL_OVERVIEW_LINK_FIELD) or fields.get(BILL_OVERVIEW_FIELD) or ""
 
-        existing = self.airtable.find_by_url(self.airtable.pending_table, url)
+        existing = self.airtable.find_by_url(
+            self.airtable.pending_table, url, field=BILL_OVERVIEW_LINK_FIELD
+        ) or self.airtable.find_by_url(
+            self.airtable.pending_table, url, field=BILL_OVERVIEW_FIELD
+        )
         if existing:
             logger.info("Record already in pending, deleting live: %s", url)
             self.airtable.delete_record(self.airtable.live_table, record_id)
@@ -115,7 +125,11 @@ class ApprovalSync:
         if not created_id:
             raise RuntimeError(f"Failed to create pending record for {url}")
 
-        verify = self.airtable.find_by_url(self.airtable.pending_table, url)
+        verify = self.airtable.find_by_url(
+            self.airtable.pending_table, url, field=BILL_OVERVIEW_LINK_FIELD
+        ) or self.airtable.find_by_url(
+            self.airtable.pending_table, url, field=BILL_OVERVIEW_FIELD
+        )
         if not verify:
             raise RuntimeError(f"Pending record verification failed for {url}")
 
@@ -124,7 +138,7 @@ class ApprovalSync:
         self.seen_store.update_status(url, "pending")
 
         self.slack.notify_approval(
-            fields.get("Title", "Untitled"),
+            fields.get("Name") or fields.get("Title", "Untitled"),
             fields.get("State", ""),
             "to_pending",
         )

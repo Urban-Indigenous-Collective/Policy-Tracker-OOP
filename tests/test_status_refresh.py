@@ -334,8 +334,9 @@ def test_status_refresh_sends_live_identity_mismatch_to_pending():
     airtable.pending_table = MagicMock()
     airtable.live_table = MagicMock()
     airtable.find_by_url.side_effect = [
-        None,
-        {"id": "recPendingNew", "fields": {"Review Status": "Pending Review"}},
+        None,  # existing check: Bill Overview (Link)
+        None,  # existing check fallback: Bill Overview
+        {"id": "recPendingNew", "fields": {"Review Status": "Pending Review"}},  # verify
     ]
     airtable.create_record.return_value = {"id": "recPendingNew"}
     airtable.record_to_fields.side_effect = lambda record: dict(record.get("fields") or {})
@@ -364,6 +365,8 @@ def test_status_refresh_sends_live_identity_mismatch_to_pending():
     airtable.create_record.assert_called_once()
     created_fields = airtable.create_record.call_args[0][1]
     assert created_fields["Review Status"] == "Pending Review"
+    assert created_fields["Bill Overview (Link)"] == "https://legiscan.com/MN/bill/SF3663/2023"
+    assert "Bill Overview" not in created_fields
     assert "identity mismatch" in created_fields["Validation Warnings"]
     airtable.delete_record.assert_called_once_with(airtable.live_table, "recLive1")
     seen.update_status.assert_called_with(

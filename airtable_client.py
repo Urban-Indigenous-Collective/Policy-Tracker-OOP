@@ -54,7 +54,8 @@ class AirtableClient:
         escaped = _escape_formula_value(url)
         checks = [
             (self.live_table, BILL_OVERVIEW_LINK_FIELD),
-            (self.pending_table, BILL_OVERVIEW_FIELD),
+            (self.pending_table, BILL_OVERVIEW_LINK_FIELD),
+            (self.live_table, BILL_OVERVIEW_FIELD),
         ]
         for table, field in checks:
             formula = f"{{{field}}} = '{escaped}'"
@@ -65,10 +66,14 @@ class AirtableClient:
                 logger.warning("Airtable lookup failed for field %s: %s", field, exc)
         return False
 
-    def find_by_url(self, table: Table, url: str, field: str = BILL_OVERVIEW_FIELD) -> Optional[dict]:
+    def find_by_url(self, table: Table, url: str, field: str = BILL_OVERVIEW_LINK_FIELD) -> Optional[dict]:
         escaped = _escape_formula_value(url)
         formula = f"{{{field}}} = '{escaped}'"
-        records = table.all(formula=formula)
+        try:
+            records = table.all(formula=formula)
+        except Exception as exc:
+            logger.warning("Airtable find_by_url failed for field %s: %s", field, exc)
+            return None
         return records[0] if records else None
 
     # --- CRUD ---
@@ -133,7 +138,7 @@ class AirtableClient:
 
     def pending_record_url(self, record: dict) -> str:
         fields = record.get("fields") or {}
-        return fields.get(BILL_OVERVIEW_FIELD) or fields.get("Bill Overview (Link)") or ""
+        return fields.get(BILL_OVERVIEW_LINK_FIELD) or fields.get(BILL_OVERVIEW_FIELD) or ""
 
     def record_to_fields(self, record: dict) -> dict[str, Any]:
         return dict(record.get("fields") or {})

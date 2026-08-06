@@ -128,3 +128,5 @@ def test_approval_sync_live_to_pending(sync):
     assert len(client.pending_table.records) == 1
     pending = list(client.pending_table.records.values())[0]
     assert pending["fields"]["Review Status"] == REVIEW_STATUS_PENDING
+    assert pending["fields"]["Bill Overview (Link)"] == "https://example.com/bill/2"
+    assert "Bill Overview" not in pending["fields"]
