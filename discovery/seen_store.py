@@ -59,6 +59,33 @@ class SeenStore:
             ).fetchone()
             return dict(row) if row else None
 
+    def get_by_state_bill(self, state: str, bill_number: str) -> Optional[dict[str, Any]]:
+        """Find a seen row with external_id matching state and normalized bill number."""
+        from legiscan_processor import normalize_bill_number, parse_legiscan_bill_url
+
+        state_key = (state or "").strip().upper()
+        target = normalize_bill_number(bill_number)
+        if not state_key or not target:
+            return None
+        with self._connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT * FROM seen_candidates
+                WHERE upper(state) = ? AND external_id IS NOT NULL AND external_id != ''
+                """,
+                (state_key,),
+            ).fetchall()
+        for row in rows:
+            record = dict(row)
+            parsed = parse_legiscan_bill_url(record.get("url") or "")
+            if parsed:
+                _, url_bill, _ = parsed
+                if normalize_bill_number(url_bill) == target:
+                    return record
+            if target in normalize_bill_number(record.get("url") or ""):
+                return record
+        return None
+
     def should_process(
         self,
         url: str,
@@ -146,6 +173,28 @@ class SeenStore:
                         status,
                     ),
                 )
+
+    def update_metadata(
+        self,
+        url: str,
+        external_id: str = "",
+        change_hash: str = "",
+    ) -> None:
+        """Update LegiScan identifiers without changing workflow status."""
+        from discovery.models import utc_now_iso
+
+        url_key = url.strip().lower()
+        with self._connect() as conn:
+            conn.execute(
+                """
+                UPDATE seen_candidates SET
+                    external_id = COALESCE(NULLIF(?, ''), external_id),
+                    change_hash = COALESCE(NULLIF(?, ''), change_hash),
+                    last_seen = ?
+                WHERE url = ?
+                """,
+                (external_id, change_hash, utc_now_iso(), url_key),
+            )
 
     def update_status(self, url: str, status: str, verdict: str = "") -> None:
         if status not in VALID_STATUSES:
