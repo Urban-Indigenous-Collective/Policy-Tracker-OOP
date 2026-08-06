@@ -335,7 +335,6 @@ def test_status_refresh_sends_live_identity_mismatch_to_pending():
     airtable.live_table = MagicMock()
     airtable.find_by_url.side_effect = [
         None,  # existing check: Bill Overview (Link)
-        None,  # existing check fallback: Bill Overview
         {"id": "recPendingNew", "fields": {"Review Status": "Pending Review"}},  # verify
     ]
     airtable.create_record.return_value = {"id": "recPendingNew"}
