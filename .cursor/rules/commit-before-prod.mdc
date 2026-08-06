@@ -1,0 +1,29 @@
+---
+description: Never leave scheduler/prod-critical code untracked — Aug 2026 status_refresh wipe
+alwaysApply: true
+---
+
+# Commit before prod — no ghost modules
+
+**Incident (2026-08-05/06):** `scheduler.py` was committed and deployed calling `discovery.status_refresh`, but `discovery/status_refresh.py` and `discovery/slack_report.py` were **never committed**. They only existed on the host via manual rsync. The next git-based deploy wiped `/opt/policy-tracker/discovery/` to the tracked tree → ImportError → status refresh silently dead → no Slack. That must never happen again.
+
+## Hard rules
+
+1. **If code is imported by `scheduler.py`, discovery pipeline, approval sync, or any path that runs in the prod Docker image, it MUST be `git add`ed and committed in the same change set** (or an earlier commit already on `main`) before anyone says it is “done,” “deployed,” or “wired.”
+2. **Before push/deploy claims:** run `git status` and `git ls-files -- <paths>`. Untracked/`??` files are **not** on prod after GitHub CD.
+3. **Never** rely on rsync / `docker cp` / hot-patch to place permanent product code on prod. CD deploys from git; untracked files get deleted or never appear.
+4. **Same PR/commit as the caller:** when adding `from discovery.foo import ...` in committed code, `discovery/foo.py` ships in that commit. No “wire the scheduler now, commit the module later.”
+5. **Verify after deploy:** prod container must import the module (`docker compose exec scheduler python -c "import discovery.status_refresh"`) or equivalent. Scheduler “started” logs alone are not proof.
+
+## Checklist (agent must complete before calling a nightly feature done)
+
+- [ ] New module paths appear in `git ls-files`
+- [ ] Tests that import the module are tracked and passing
+- [ ] Commit includes caller + callee together
+- [ ] User asked → push to `main` → GitHub CD — not manual rsync of a dirty tree
+
+## Do not
+
+- Tell the user a feature is in production while its implementing files are still `??` in `git status`
+- Patch only `scheduler.py` / env cron vars and leave implementation files local
+- Assume “it worked on the server last night” means it is in git
