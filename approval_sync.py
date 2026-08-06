@@ -13,10 +13,24 @@ from airtable_fields import (
     REVIEW_STATUS_PENDING,
     REVIEW_STATUS_REJECTED,
 )
+from airtable_schema import (
+    BILL_FIELD_NAMES as PENDING_BILL_FIELD_NAMES,
+    DISCOVERY_METADATA_FIELD_NAMES,
+    LEGACY_FIELD_RENAMES,
+    PENDING_ONLY_FIELD_NAMES,
+    SOURCE_CHOICES,
+)
 from discovery.seen_store import SeenStore
 from slack_client import SlackNotifier
 
 logger = logging.getLogger(__name__)
+
+_PENDING_WRITABLE_FIELDS = frozenset(
+    PENDING_BILL_FIELD_NAMES
+    + PENDING_ONLY_FIELD_NAMES
+    + DISCOVERY_METADATA_FIELD_NAMES
+)
+_SKIP_LIVE_FIELDS = frozenset({"Created By", LIVE_REVIEW_STATUS_FIELD})
 
 
 class ApprovalSync:
@@ -43,21 +57,45 @@ class ApprovalSync:
         return live_fields
 
     def _fields_for_pending(self, live_fields: dict[str, Any]) -> dict[str, Any]:
-        pending_fields = {k: live_fields.get(k, "") for k in BILL_FIELD_NAMES}
-        overview = live_fields.get(BILL_OVERVIEW_LINK_FIELD) or live_fields.get(BILL_OVERVIEW_FIELD)
+        """Map a Live row onto Pending-writable columns only."""
+        working = {
+            key: value
+            for key, value in live_fields.items()
+            if key not in _SKIP_LIVE_FIELDS
+        }
+        for legacy, canonical in LEGACY_FIELD_RENAMES.items():
+            if legacy in working and canonical not in working:
+                working[canonical] = working[legacy]
+            working.pop(legacy, None)
+
+        overview = working.get(BILL_OVERVIEW_LINK_FIELD) or working.get(BILL_OVERVIEW_FIELD)
         if overview:
-            # Pending schema stores the URL on Bill Overview (Link), not Bill Overview.
-            pending_fields[BILL_OVERVIEW_LINK_FIELD] = overview
-            pending_fields.pop(BILL_OVERVIEW_FIELD, None)
-        # Live / Pending both use Name; BILL_FIELD_NAMES still lists legacy Title.
-        if live_fields.get("Name"):
-            pending_fields["Name"] = live_fields["Name"]
-        pending_fields.pop("Title", None)
+            working[BILL_OVERVIEW_LINK_FIELD] = overview
+        working.pop(BILL_OVERVIEW_FIELD, None)
+
+        pending_fields = {
+            key: working[key]
+            for key in _PENDING_WRITABLE_FIELDS
+            if key in working and working[key] not in (None, "")
+        }
+        # Preserve empty-string Validation Warnings only if present on live.
+        if "Validation Warnings" in working:
+            pending_fields["Validation Warnings"] = working.get("Validation Warnings") or ""
+
         pending_fields["Review Status"] = REVIEW_STATUS_PENDING
-        for extra in PENDING_EXTRA_FIELDS:
-            if extra not in pending_fields:
-                pending_fields[extra] = live_fields.get(extra, "")
-        pending_fields["Source"] = live_fields.get("Source", "Manual")
+        source = working.get("Source") or ""
+        if source not in SOURCE_CHOICES:
+            overview_url = str(pending_fields.get(BILL_OVERVIEW_LINK_FIELD) or "")
+            if "legiscan.com" in overview_url.lower():
+                source = "LegiScan"
+            elif any(
+                token in overview_url.lower()
+                for token in ("justice.gov", "federalregister.gov", "whitehouse.gov")
+            ):
+                source = "Federal Site"
+            else:
+                source = "State Site"
+        pending_fields["Source"] = source
         return pending_fields
 
     def _move_to_live(self, record: dict) -> bool:
@@ -110,8 +148,6 @@ class ApprovalSync:
 
         existing = self.airtable.find_by_url(
             self.airtable.pending_table, url, field=BILL_OVERVIEW_LINK_FIELD
-        ) or self.airtable.find_by_url(
-            self.airtable.pending_table, url, field=BILL_OVERVIEW_FIELD
         )
         if existing:
             logger.info("Record already in pending, deleting live: %s", url)
@@ -127,8 +163,6 @@ class ApprovalSync:
 
         verify = self.airtable.find_by_url(
             self.airtable.pending_table, url, field=BILL_OVERVIEW_LINK_FIELD
-        ) or self.airtable.find_by_url(
-            self.airtable.pending_table, url, field=BILL_OVERVIEW_FIELD
         )
         if not verify:
             raise RuntimeError(f"Pending record verification failed for {url}")
