@@ -27,3 +27,7 @@ Only when the user **explicitly** requests a manual deploy in the current conver
 ## Rationale
 
 Manual deploys can diverge from `main` (rsync full working tree, uncommitted files, missing excludes). GitHub CD is the canonical path to prod.
+
+## Related: commit before prod
+
+GitHub CD only ships **tracked** files. Rsyncing untracked modules onto the host is not a deploy — the next CD checkout **wipes** them. See `.cursor/rules/commit-before-prod.mdc` (status_refresh wipe, Aug 2026). Never claim a scheduler feature is deployed while its implementation files are still untracked.
