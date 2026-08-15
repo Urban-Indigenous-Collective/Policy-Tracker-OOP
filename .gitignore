@@ -1,11 +1,17 @@
 .venv/
+venv/
 __pycache__/
 *.pyc
 *.pyo
 .env
+.env.*
+!.env.example
 .DS_Store
 bill_details.xlsx
 report.xlsx
+*.pem
+id_rsa
+id_rsa.pub
 cloudflared/credentials.json
 data/*
 !data/indigenous_politicians.json
@@ -13,3 +19,8 @@ data/*
 !data/indigenous_ethnicity_enrichment.json
 !data/indigenous_wikipedia_title_aliases.json
 cache/
+.probe_tmp/
+*.log
+*.db
+*.sqlite
+*.sqlite3

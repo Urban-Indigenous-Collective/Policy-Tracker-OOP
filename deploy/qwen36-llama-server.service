@@ -1,0 +1,27 @@
+[Unit]
+Description=Qwen3.6-27B Q8 multimodal llama-server (Policy Tracker LLM)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/llama.cpp-cuda
+Environment=LD_LIBRARY_PATH=/opt/llama.cpp-cuda:/usr/local/lib/ollama/cuda_v12
+Environment=LLAMA_ARG_HOST=0.0.0.0
+Environment=LLAMA_ARG_PORT=8080
+ExecStart=/opt/llama.cpp-cuda/llama-server \
+  -m /opt/models/qwen3.6-27b/Qwen3.6-27B-Q8_0.gguf \
+  --mmproj /opt/models/qwen3.6-27b/mmproj-Qwen3.6-27B-Q8_0.gguf \
+  --host 0.0.0.0 \
+  --port 8080 \
+  -c 32768 \
+  -ngl 99 \
+  --reasoning off \
+  --jinja \
+  --image-min-tokens 1024
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,659 @@
+{
+  "source": "https://www.justice.gov/usao/find-your-united-states-attorney",
+  "district_count": 94,
+  "office_count": 93,
+  "note": "94 federal judicial districts; Guam and Northern Mariana Islands share usao-gu (93 office sites).",
+  "districts": [
+    {
+      "slug": "usao-ak",
+      "name": "Alaska",
+      "office_url": "https://www.justice.gov/usao-ak",
+      "press_url": "https://www.justice.gov/usao-ak/pr",
+      "news_url": "https://www.justice.gov/usao-ak/news"
+    },
+    {
+      "slug": "usao-az",
+      "name": "Arizona",
+      "office_url": "https://www.justice.gov/usao-az",
+      "press_url": "https://www.justice.gov/usao-az/pr",
+      "news_url": "https://www.justice.gov/usao-az/news"
+    },
+    {
+      "slug": "usao-cdca",
+      "name": "California, Central",
+      "office_url": "https://www.justice.gov/usao-cdca",
+      "press_url": "https://www.justice.gov/usao-cdca/pr",
+      "news_url": "https://www.justice.gov/usao-cdca/news"
+    },
+    {
+      "slug": "usao-cdil",
+      "name": "Illinois, Central",
+      "office_url": "https://www.justice.gov/usao-cdil",
+      "press_url": "https://www.justice.gov/usao-cdil/pr",
+      "news_url": "https://www.justice.gov/usao-cdil/news"
+    },
+    {
+      "slug": "usao-co",
+      "name": "Colorado",
+      "office_url": "https://www.justice.gov/usao-co",
+      "press_url": "https://www.justice.gov/usao-co/pr",
+      "news_url": "https://www.justice.gov/usao-co/news"
+    },
+    {
+      "slug": "usao-ct",
+      "name": "Connecticut",
+      "office_url": "https://www.justice.gov/usao-ct",
+      "press_url": "https://www.justice.gov/usao-ct/pr",
+      "news_url": "https://www.justice.gov/usao-ct/news"
+    },
+    {
+      "slug": "usao-dc",
+      "name": "District of Columbia",
+      "office_url": "https://www.justice.gov/usao-dc",
+      "press_url": "https://www.justice.gov/usao-dc/pr",
+      "news_url": "https://www.justice.gov/usao-dc/news"
+    },
+    {
+      "slug": "usao-de",
+      "name": "Delaware",
+      "office_url": "https://www.justice.gov/usao-de",
+      "press_url": "https://www.justice.gov/usao-de/pr",
+      "news_url": "https://www.justice.gov/usao-de/news"
+    },
+    {
+      "slug": "usao-edar",
+      "name": "Arkansas, Eastern",
+      "office_url": "https://www.justice.gov/usao-edar",
+      "press_url": "https://www.justice.gov/usao-edar/pr",
+      "news_url": "https://www.justice.gov/usao-edar/news"
+    },
+    {
+      "slug": "usao-edca",
+      "name": "California, Eastern",
+      "office_url": "https://www.justice.gov/usao-edca",
+      "press_url": "https://www.justice.gov/usao-edca/pr",
+      "news_url": "https://www.justice.gov/usao-edca/news"
+    },
+    {
+      "slug": "usao-edky",
+      "name": "Kentucky, Eastern",
+      "office_url": "https://www.justice.gov/usao-edky",
+      "press_url": "https://www.justice.gov/usao-edky/pr",
+      "news_url": "https://www.justice.gov/usao-edky/news"
+    },
+    {
+      "slug": "usao-edla",
+      "name": "Louisiana, Eastern",
+      "office_url": "https://www.justice.gov/usao-edla",
+      "press_url": "https://www.justice.gov/usao-edla/pr",
+      "news_url": "https://www.justice.gov/usao-edla/news"
+    },
+    {
+      "slug": "usao-edmi",
+      "name": "Michigan, Eastern",
+      "office_url": "https://www.justice.gov/usao-edmi",
+      "press_url": "https://www.justice.gov/usao-edmi/pr",
+      "news_url": "https://www.justice.gov/usao-edmi/news"
+    },
+    {
+      "slug": "usao-edmo",
+      "name": "Missouri, Eastern",
+      "office_url": "https://www.justice.gov/usao-edmo",
+      "press_url": "https://www.justice.gov/usao-edmo/pr",
+      "news_url": "https://www.justice.gov/usao-edmo/news"
+    },
+    {
+      "slug": "usao-ednc",
+      "name": "North Carolina, Eastern",
+      "office_url": "https://www.justice.gov/usao-ednc",
+      "press_url": "https://www.justice.gov/usao-ednc/pr",
+      "news_url": "https://www.justice.gov/usao-ednc/news"
+    },
+    {
+      "slug": "usao-edny",
+      "name": "New York, Eastern",
+      "office_url": "https://www.justice.gov/usao-edny",
+      "press_url": "https://www.justice.gov/usao-edny/pr",
+      "news_url": "https://www.justice.gov/usao-edny/news"
+    },
+    {
+      "slug": "usao-edok",
+      "name": "Oklahoma, Eastern",
+      "office_url": "https://www.justice.gov/usao-edok",
+      "press_url": "https://www.justice.gov/usao-edok/pr",
+      "news_url": "https://www.justice.gov/usao-edok/news"
+    },
+    {
+      "slug": "usao-edpa",
+      "name": "Pennsylvania, Eastern",
+      "office_url": "https://www.justice.gov/usao-edpa",
+      "press_url": "https://www.justice.gov/usao-edpa/pr",
+      "news_url": "https://www.justice.gov/usao-edpa/news"
+    },
+    {
+      "slug": "usao-edtn",
+      "name": "Tennessee, Eastern",
+      "office_url": "https://www.justice.gov/usao-edtn",
+      "press_url": "https://www.justice.gov/usao-edtn/pr",
+      "news_url": "https://www.justice.gov/usao-edtn/news"
+    },
+    {
+      "slug": "usao-edtx",
+      "name": "Texas, Eastern",
+      "office_url": "https://www.justice.gov/usao-edtx",
+      "press_url": "https://www.justice.gov/usao-edtx/pr",
+      "news_url": "https://www.justice.gov/usao-edtx/news"
+    },
+    {
+      "slug": "usao-edva",
+      "name": "Virginia, Eastern",
+      "office_url": "https://www.justice.gov/usao-edva",
+      "press_url": "https://www.justice.gov/usao-edva/pr",
+      "news_url": "https://www.justice.gov/usao-edva/news"
+    },
+    {
+      "slug": "usao-edwa",
+      "name": "Washington, Eastern",
+      "office_url": "https://www.justice.gov/usao-edwa",
+      "press_url": "https://www.justice.gov/usao-edwa/pr",
+      "news_url": "https://www.justice.gov/usao-edwa/news"
+    },
+    {
+      "slug": "usao-edwi",
+      "name": "Wisconsin, Eastern",
+      "office_url": "https://www.justice.gov/usao-edwi",
+      "press_url": "https://www.justice.gov/usao-edwi/pr",
+      "news_url": "https://www.justice.gov/usao-edwi/news"
+    },
+    {
+      "slug": "usao-gu",
+      "name": "Guam & N. Mariana Islands",
+      "office_url": "https://www.justice.gov/usao-gu",
+      "press_url": "https://www.justice.gov/usao-gu/pr",
+      "news_url": "https://www.justice.gov/usao-gu/news"
+    },
+    {
+      "slug": "usao-hi",
+      "name": "Hawaii",
+      "office_url": "https://www.justice.gov/usao-hi",
+      "press_url": "https://www.justice.gov/usao-hi/pr",
+      "news_url": "https://www.justice.gov/usao-hi/news"
+    },
+    {
+      "slug": "usao-id",
+      "name": "Idaho",
+      "office_url": "https://www.justice.gov/usao-id",
+      "press_url": "https://www.justice.gov/usao-id/pr",
+      "news_url": "https://www.justice.gov/usao-id/news"
+    },
+    {
+      "slug": "usao-ks",
+      "name": "Kansas",
+      "office_url": "https://www.justice.gov/usao-ks",
+      "press_url": "https://www.justice.gov/usao-ks/pr",
+      "news_url": "https://www.justice.gov/usao-ks/news"
+    },
+    {
+      "slug": "usao-ma",
+      "name": "Massachusetts",
+      "office_url": "https://www.justice.gov/usao-ma",
+      "press_url": "https://www.justice.gov/usao-ma/pr",
+      "news_url": "https://www.justice.gov/usao-ma/news"
+    },
+    {
+      "slug": "usao-md",
+      "name": "Maryland",
+      "office_url": "https://www.justice.gov/usao-md",
+      "press_url": "https://www.justice.gov/usao-md/pr",
+      "news_url": "https://www.justice.gov/usao-md/news"
+    },
+    {
+      "slug": "usao-mdal",
+      "name": "Alabama, Middle",
+      "office_url": "https://www.justice.gov/usao-mdal",
+      "press_url": "https://www.justice.gov/usao-mdal/pr",
+      "news_url": "https://www.justice.gov/usao-mdal/news"
+    },
+    {
+      "slug": "usao-mdfl",
+      "name": "Florida, Middle",
+      "office_url": "https://www.justice.gov/usao-mdfl",
+      "press_url": "https://www.justice.gov/usao-mdfl/pr",
+      "news_url": "https://www.justice.gov/usao-mdfl/news"
+    },
+    {
+      "slug": "usao-mdga",
+      "name": "Georgia, Middle",
+      "office_url": "https://www.justice.gov/usao-mdga",
+      "press_url": "https://www.justice.gov/usao-mdga/pr",
+      "news_url": "https://www.justice.gov/usao-mdga/news"
+    },
+    {
+      "slug": "usao-mdla",
+      "name": "Louisiana, Middle",
+      "office_url": "https://www.justice.gov/usao-mdla",
+      "press_url": "https://www.justice.gov/usao-mdla/pr",
+      "news_url": "https://www.justice.gov/usao-mdla/news"
+    },
+    {
+      "slug": "usao-mdnc",
+      "name": "North Carolina, Middle",
+      "office_url": "https://www.justice.gov/usao-mdnc",
+      "press_url": "https://www.justice.gov/usao-mdnc/pr",
+      "news_url": "https://www.justice.gov/usao-mdnc/news"
+    },
+    {
+      "slug": "usao-mdpa",
+      "name": "Pennsylvania, Middle",
+      "office_url": "https://www.justice.gov/usao-mdpa",
+      "press_url": "https://www.justice.gov/usao-mdpa/pr",
+      "news_url": "https://www.justice.gov/usao-mdpa/news"
+    },
+    {
+      "slug": "usao-mdtn",
+      "name": "Tennessee, Middle",
+      "office_url": "https://www.justice.gov/usao-mdtn",
+      "press_url": "https://www.justice.gov/usao-mdtn/pr",
+      "news_url": "https://www.justice.gov/usao-mdtn/news"
+    },
+    {
+      "slug": "usao-me",
+      "name": "Maine",
+      "office_url": "https://www.justice.gov/usao-me",
+      "press_url": "https://www.justice.gov/usao-me/pr",
+      "news_url": "https://www.justice.gov/usao-me/news"
+    },
+    {
+      "slug": "usao-mn",
+      "name": "Minnesota",
+      "office_url": "https://www.justice.gov/usao-mn",
+      "press_url": "https://www.justice.gov/usao-mn/pr",
+      "news_url": "https://www.justice.gov/usao-mn/news"
+    },
+    {
+      "slug": "usao-mt",
+      "name": "Montana",
+      "office_url": "https://www.justice.gov/usao-mt",
+      "press_url": "https://www.justice.gov/usao-mt/pr",
+      "news_url": "https://www.justice.gov/usao-mt/news"
+    },
+    {
+      "slug": "usao-nd",
+      "name": "North Dakota",
+      "office_url": "https://www.justice.gov/usao-nd",
+      "press_url": "https://www.justice.gov/usao-nd/pr",
+      "news_url": "https://www.justice.gov/usao-nd/news"
+    },
+    {
+      "slug": "usao-ndal",
+      "name": "Alabama, Northern",
+      "office_url": "https://www.justice.gov/usao-ndal",
+      "press_url": "https://www.justice.gov/usao-ndal/pr",
+      "news_url": "https://www.justice.gov/usao-ndal/news"
+    },
+    {
+      "slug": "usao-ndca",
+      "name": "California, Northern",
+      "office_url": "https://www.justice.gov/usao-ndca",
+      "press_url": "https://www.justice.gov/usao-ndca/pr",
+      "news_url": "https://www.justice.gov/usao-ndca/news"
+    },
+    {
+      "slug": "usao-ndfl",
+      "name": "Florida, Northern",
+      "office_url": "https://www.justice.gov/usao-ndfl",
+      "press_url": "https://www.justice.gov/usao-ndfl/pr",
+      "news_url": "https://www.justice.gov/usao-ndfl/news"
+    },
+    {
+      "slug": "usao-ndga",
+      "name": "Georgia, Northern",
+      "office_url": "https://www.justice.gov/usao-ndga",
+      "press_url": "https://www.justice.gov/usao-ndga/pr",
+      "news_url": "https://www.justice.gov/usao-ndga/news"
+    },
+    {
+      "slug": "usao-ndia",
+      "name": "Iowa, Northern",
+      "office_url": "https://www.justice.gov/usao-ndia",
+      "press_url": "https://www.justice.gov/usao-ndia/pr",
+      "news_url": "https://www.justice.gov/usao-ndia/news"
+    },
+    {
+      "slug": "usao-ndil",
+      "name": "Illinois, Northern",
+      "office_url": "https://www.justice.gov/usao-ndil",
+      "press_url": "https://www.justice.gov/usao-ndil/pr",
+      "news_url": "https://www.justice.gov/usao-ndil/news"
+    },
+    {
+      "slug": "usao-ndin",
+      "name": "Indiana, Northern",
+      "office_url": "https://www.justice.gov/usao-ndin",
+      "press_url": "https://www.justice.gov/usao-ndin/pr",
+      "news_url": "https://www.justice.gov/usao-ndin/news"
+    },
+    {
+      "slug": "usao-ndms",
+      "name": "Mississippi, Northern",
+      "office_url": "https://www.justice.gov/usao-ndms",
+      "press_url": "https://www.justice.gov/usao-ndms/pr",
+      "news_url": "https://www.justice.gov/usao-ndms/news"
+    },
+    {
+      "slug": "usao-ndny",
+      "name": "New York, Northern",
+      "office_url": "https://www.justice.gov/usao-ndny",
+      "press_url": "https://www.justice.gov/usao-ndny/pr",
+      "news_url": "https://www.justice.gov/usao-ndny/news"
+    },
+    {
+      "slug": "usao-ndoh",
+      "name": "Ohio, Northern",
+      "office_url": "https://www.justice.gov/usao-ndoh",
+      "press_url": "https://www.justice.gov/usao-ndoh/pr",
+      "news_url": "https://www.justice.gov/usao-ndoh/news"
+    },
+    {
+      "slug": "usao-ndok",
+      "name": "Oklahoma, Northern",
+      "office_url": "https://www.justice.gov/usao-ndok",
+      "press_url": "https://www.justice.gov/usao-ndok/pr",
+      "news_url": "https://www.justice.gov/usao-ndok/news"
+    },
+    {
+      "slug": "usao-ndtx",
+      "name": "Texas, Northern",
+      "office_url": "https://www.justice.gov/usao-ndtx",
+      "press_url": "https://www.justice.gov/usao-ndtx/pr",
+      "news_url": "https://www.justice.gov/usao-ndtx/news"
+    },
+    {
+      "slug": "usao-ndwv",
+      "name": "West Virginia, Northern",
+      "office_url": "https://www.justice.gov/usao-ndwv",
+      "press_url": "https://www.justice.gov/usao-ndwv/pr",
+      "news_url": "https://www.justice.gov/usao-ndwv/news"
+    },
+    {
+      "slug": "usao-ne",
+      "name": "Nebraska",
+      "office_url": "https://www.justice.gov/usao-ne",
+      "press_url": "https://www.justice.gov/usao-ne/pr",
+      "news_url": "https://www.justice.gov/usao-ne/news"
+    },
+    {
+      "slug": "usao-nh",
+      "name": "New Hampshire",
+      "office_url": "https://www.justice.gov/usao-nh",
+      "press_url": "https://www.justice.gov/usao-nh/pr",
+      "news_url": "https://www.justice.gov/usao-nh/news"
+    },
+    {
+      "slug": "usao-nj",
+      "name": "New Jersey",
+      "office_url": "https://www.justice.gov/usao-nj",
+      "press_url": "https://www.justice.gov/usao-nj/pr",
+      "news_url": "https://www.justice.gov/usao-nj/news"
+    },
+    {
+      "slug": "usao-nm",
+      "name": "New Mexico",
+      "office_url": "https://www.justice.gov/usao-nm",
+      "press_url": "https://www.justice.gov/usao-nm/pr",
+      "news_url": "https://www.justice.gov/usao-nm/news"
+    },
+    {
+      "slug": "usao-nv",
+      "name": "Nevada",
+      "office_url": "https://www.justice.gov/usao-nv",
+      "press_url": "https://www.justice.gov/usao-nv/pr",
+      "news_url": "https://www.justice.gov/usao-nv/news"
+    },
+    {
+      "slug": "usao-or",
+      "name": "Oregon",
+      "office_url": "https://www.justice.gov/usao-or",
+      "press_url": "https://www.justice.gov/usao-or/pr",
+      "news_url": "https://www.justice.gov/usao-or/news"
+    },
+    {
+      "slug": "usao-pr",
+      "name": "Puerto Rico",
+      "office_url": "https://www.justice.gov/usao-pr",
+      "press_url": "https://www.justice.gov/usao-pr/pr",
+      "news_url": "https://www.justice.gov/usao-pr/news"
+    },
+    {
+      "slug": "usao-ri",
+      "name": "Rhode Island",
+      "office_url": "https://www.justice.gov/usao-ri",
+      "press_url": "https://www.justice.gov/usao-ri/pr",
+      "news_url": "https://www.justice.gov/usao-ri/news"
+    },
+    {
+      "slug": "usao-sc",
+      "name": "South Carolina",
+      "office_url": "https://www.justice.gov/usao-sc",
+      "press_url": "https://www.justice.gov/usao-sc/pr",
+      "news_url": "https://www.justice.gov/usao-sc/news"
+    },
+    {
+      "slug": "usao-sd",
+      "name": "South Dakota",
+      "office_url": "https://www.justice.gov/usao-sd",
+      "press_url": "https://www.justice.gov/usao-sd/pr",
+      "news_url": "https://www.justice.gov/usao-sd/news"
+    },
+    {
+      "slug": "usao-sdal",
+      "name": "Alabama, Southern",
+      "office_url": "https://www.justice.gov/usao-sdal",
+      "press_url": "https://www.justice.gov/usao-sdal/pr",
+      "news_url": "https://www.justice.gov/usao-sdal/news"
+    },
+    {
+      "slug": "usao-sdca",
+      "name": "California, Southern",
+      "office_url": "https://www.justice.gov/usao-sdca",
+      "press_url": "https://www.justice.gov/usao-sdca/pr",
+      "news_url": "https://www.justice.gov/usao-sdca/news"
+    },
+    {
+      "slug": "usao-sdfl",
+      "name": "Florida, Southern",
+      "office_url": "https://www.justice.gov/usao-sdfl",
+      "press_url": "https://www.justice.gov/usao-sdfl/pr",
+      "news_url": "https://www.justice.gov/usao-sdfl/news"
+    },
+    {
+      "slug": "usao-sdga",
+      "name": "Georgia, Southern",
+      "office_url": "https://www.justice.gov/usao-sdga",
+      "press_url": "https://www.justice.gov/usao-sdga/pr",
+      "news_url": "https://www.justice.gov/usao-sdga/news"
+    },
+    {
+      "slug": "usao-sdia",
+      "name": "Iowa, Southern",
+      "office_url": "https://www.justice.gov/usao-sdia",
+      "press_url": "https://www.justice.gov/usao-sdia/pr",
+      "news_url": "https://www.justice.gov/usao-sdia/news"
+    },
+    {
+      "slug": "usao-sdil",
+      "name": "Illinois, Southern",
+      "office_url": "https://www.justice.gov/usao-sdil",
+      "press_url": "https://www.justice.gov/usao-sdil/pr",
+      "news_url": "https://www.justice.gov/usao-sdil/news"
+    },
+    {
+      "slug": "usao-sdin",
+      "name": "Indiana, Southern",
+      "office_url": "https://www.justice.gov/usao-sdin",
+      "press_url": "https://www.justice.gov/usao-sdin/pr",
+      "news_url": "https://www.justice.gov/usao-sdin/news"
+    },
+    {
+      "slug": "usao-sdms",
+      "name": "Mississippi, Southern",
+      "office_url": "https://www.justice.gov/usao-sdms",
+      "press_url": "https://www.justice.gov/usao-sdms/pr",
+      "news_url": "https://www.justice.gov/usao-sdms/news"
+    },
+    {
+      "slug": "usao-sdny",
+      "name": "New York, Southern",
+      "office_url": "https://www.justice.gov/usao-sdny",
+      "press_url": "https://www.justice.gov/usao-sdny/pr",
+      "news_url": "https://www.justice.gov/usao-sdny/news"
+    },
+    {
+      "slug": "usao-sdoh",
+      "name": "Ohio, Southern",
+      "office_url": "https://www.justice.gov/usao-sdoh",
+      "press_url": "https://www.justice.gov/usao-sdoh/pr",
+      "news_url": "https://www.justice.gov/usao-sdoh/news"
+    },
+    {
+      "slug": "usao-sdtx",
+      "name": "Texas, Southern",
+      "office_url": "https://www.justice.gov/usao-sdtx",
+      "press_url": "https://www.justice.gov/usao-sdtx/pr",
+      "news_url": "https://www.justice.gov/usao-sdtx/news"
+    },
+    {
+      "slug": "usao-sdwv",
+      "name": "West Virginia, Southern",
+      "office_url": "https://www.justice.gov/usao-sdwv",
+      "press_url": "https://www.justice.gov/usao-sdwv/pr",
+      "news_url": "https://www.justice.gov/usao-sdwv/news"
+    },
+    {
+      "slug": "usao-ut",
+      "name": "Utah",
+      "office_url": "https://www.justice.gov/usao-ut",
+      "press_url": "https://www.justice.gov/usao-ut/pr",
+      "news_url": "https://www.justice.gov/usao-ut/news"
+    },
+    {
+      "slug": "usao-vi",
+      "name": "Virgin Islands",
+      "office_url": "https://www.justice.gov/usao-vi",
+      "press_url": "https://www.justice.gov/usao-vi/pr",
+      "news_url": "https://www.justice.gov/usao-vi/news"
+    },
+    {
+      "slug": "usao-vt",
+      "name": "Vermont",
+      "office_url": "https://www.justice.gov/usao-vt",
+      "press_url": "https://www.justice.gov/usao-vt/pr",
+      "news_url": "https://www.justice.gov/usao-vt/news"
+    },
+    {
+      "slug": "usao-wdar",
+      "name": "Arkansas, Western",
+      "office_url": "https://www.justice.gov/usao-wdar",
+      "press_url": "https://www.justice.gov/usao-wdar/pr",
+      "news_url": "https://www.justice.gov/usao-wdar/news"
+    },
+    {
+      "slug": "usao-wdky",
+      "name": "Kentucky, Western",
+      "office_url": "https://www.justice.gov/usao-wdky",
+      "press_url": "https://www.justice.gov/usao-wdky/pr",
+      "news_url": "https://www.justice.gov/usao-wdky/news"
+    },
+    {
+      "slug": "usao-wdla",
+      "name": "Louisiana, Western",
+      "office_url": "https://www.justice.gov/usao-wdla",
+      "press_url": "https://www.justice.gov/usao-wdla/pr",
+      "news_url": "https://www.justice.gov/usao-wdla/news"
+    },
+    {
+      "slug": "usao-wdmi",
+      "name": "Michigan, Western",
+      "office_url": "https://www.justice.gov/usao-wdmi",
+      "press_url": "https://www.justice.gov/usao-wdmi/pr",
+      "news_url": "https://www.justice.gov/usao-wdmi/news"
+    },
+    {
+      "slug": "usao-wdmo",
+      "name": "Missouri, Western",
+      "office_url": "https://www.justice.gov/usao-wdmo",
+      "press_url": "https://www.justice.gov/usao-wdmo/pr",
+      "news_url": "https://www.justice.gov/usao-wdmo/news"
+    },
+    {
+      "slug": "usao-wdnc",
+      "name": "North Carolina, Western",
+      "office_url": "https://www.justice.gov/usao-wdnc",
+      "press_url": "https://www.justice.gov/usao-wdnc/pr",
+      "news_url": "https://www.justice.gov/usao-wdnc/news"
+    },
+    {
+      "slug": "usao-wdny",
+      "name": "New York, Western",
+      "office_url": "https://www.justice.gov/usao-wdny",
+      "press_url": "https://www.justice.gov/usao-wdny/pr",
+      "news_url": "https://www.justice.gov/usao-wdny/news"
+    },
+    {
+      "slug": "usao-wdok",
+      "name": "Oklahoma, Western",
+      "office_url": "https://www.justice.gov/usao-wdok",
+      "press_url": "https://www.justice.gov/usao-wdok/pr",
+      "news_url": "https://www.justice.gov/usao-wdok/news"
+    },
+    {
+      "slug": "usao-wdpa",
+      "name": "Pennsylvania, Western",
+      "office_url": "https://www.justice.gov/usao-wdpa",
+      "press_url": "https://www.justice.gov/usao-wdpa/pr",
+      "news_url": "https://www.justice.gov/usao-wdpa/news"
+    },
+    {
+      "slug": "usao-wdtn",
+      "name": "Tennessee, Western",
+      "office_url": "https://www.justice.gov/usao-wdtn",
+      "press_url": "https://www.justice.gov/usao-wdtn/pr",
+      "news_url": "https://www.justice.gov/usao-wdtn/news"
+    },
+    {
+      "slug": "usao-wdtx",
+      "name": "Texas, Western",
+      "office_url": "https://www.justice.gov/usao-wdtx",
+      "press_url": "https://www.justice.gov/usao-wdtx/pr",
+      "news_url": "https://www.justice.gov/usao-wdtx/news"
+    },
+    {
+      "slug": "usao-wdva",
+      "name": "Virginia, Western",
+      "office_url": "https://www.justice.gov/usao-wdva",
+      "press_url": "https://www.justice.gov/usao-wdva/pr",
+      "news_url": "https://www.justice.gov/usao-wdva/news"
+    },
+    {
+      "slug": "usao-wdwa",
+      "name": "Washington, Western",
+      "office_url": "https://www.justice.gov/usao-wdwa",
+      "press_url": "https://www.justice.gov/usao-wdwa/pr",
+      "news_url": "https://www.justice.gov/usao-wdwa/news"
+    },
+    {
+      "slug": "usao-wdwi",
+      "name": "Wisconsin, Western",
+      "office_url": "https://www.justice.gov/usao-wdwi",
+      "press_url": "https://www.justice.gov/usao-wdwi/pr",
+      "news_url": "https://www.justice.gov/usao-wdwi/news"
+    },
+    {
+      "slug": "usao-wy",
+      "name": "Wyoming",
+      "office_url": "https://www.justice.gov/usao-wy",
+      "press_url": "https://www.justice.gov/usao-wy/pr",
+      "news_url": "https://www.justice.gov/usao-wy/news"
+    }
+  ]
+}

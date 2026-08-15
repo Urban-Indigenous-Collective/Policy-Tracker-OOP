@@ -27,6 +27,9 @@ class StateSiteSource:
         sources_path: str | Path | None = None,
         user_agent: str | None = None,
         per_domain_delay: float = 2.0,
+        state_filter: str | None = None,
+        source_id_filter: str | None = None,
+        include_review_needed: bool = False,
     ):
         self.sources_path = Path(sources_path or os.getenv("STATE_SOURCES_PATH", DEFAULT_SOURCES_PATH))
         self.user_agent = user_agent or os.getenv(
@@ -34,6 +37,9 @@ class StateSiteSource:
             "UIC-PolicyTracker/1.0 (+https://urbanindigenouscollective.org)",
         )
         self.per_domain_delay = per_domain_delay
+        self.state_filter = (state_filter or "").strip().upper() or None
+        self.source_id_filter = (source_id_filter or "").strip() or None
+        self.include_review_needed = include_review_needed
         self._robots_cache: dict[str, RobotFileParser] = {}
         self._last_fetch: dict[str, float] = {}
         self._page_hashes: dict[str, str] = {}
@@ -110,11 +116,16 @@ class StateSiteSource:
     def discover(self) -> Iterator[Candidate]:
         sources = self.load_sources()
         for source in sources:
-            if source.get("review_needed"):
+            state = source.get("state", "")
+            source_id = source.get("source_id") or source.get("id") or ""
+            if self.state_filter and state.upper() != self.state_filter:
+                continue
+            if self.source_id_filter and source_id != self.source_id_filter:
+                continue
+            if source.get("review_needed") and not self.include_review_needed:
                 logger.debug("Skipping source pending review: %s", source.get("name"))
                 continue
             index_url = source.get("url", "")
-            state = source.get("state", "")
             if not index_url:
                 continue
 
