@@ -1,6 +1,10 @@
 # Policy Tracker
 
-Flask app for processing LegiScan bills and executive orders with local Qwen analysis via Ollama, deployed on UIC's self-hosted server via Docker and Cloudflare Tunnel.
+Flask app used by the [Urban Indigenous Collective](https://urbanindigenouscollective.org) to find, analyze, and review **MMIP-related** legislation, executive orders, and agency actions. LegiScan covers state bills; configured government sites cover federal and state pages that LegiScan does not index. Analysis runs through an OpenAI-compatible LLM (Ollama or llama-server). Reviewers work in Airtable (**Pending** → **Main v3**).
+
+Public app: https://policy.urbanindigenouscollective.org
+
+A clone with empty `.env.example` keys will start the Flask UI; LegiScan search, Airtable, and Slack stay inactive until you add your own credentials.
 
 ## Local development
 
@@ -10,7 +14,8 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 cp .env.example .env
-# Edit .env with LEGISCAN_KEY, AIRTABLE_* keys, and Ollama settings
+# Optional: LEGISCAN_KEY, AIRTABLE_*, SLACK_WEBHOOK_URL
+# LLM defaults to local Ollama (see .env.example)
 
 brew install poppler   # required for pdf2image OCR
 ollama pull qwen2.5vl:32b
@@ -21,45 +26,48 @@ python app.py
 
 First startup scrapes Wikipedia to build the Indigenous politicians database (30–60s).
 
-## Production architecture
+Run tests: `pytest tests/`
 
-```text
-Internet → Cloudflare Tunnel → Docker (gunicorn :8000) on 100.71.124.8 (WSL)
-GitHub push → Tailscale → SSH/rsync → docker compose up
-```
+## Cutover timeline
 
-Public URL: https://policy.urbanindigenouscollective.org
+Dates below come from git history (and, for Qwen3.6, from scripts in `deploy/` that are not yet a completed git-dated cutover).
 
-## LLM (provider-agnostic)
+| Date | Change |
+|------|--------|
+| 2026-04-15 | Initial Policy Tracker (API keys via environment variables). |
+| 2026-08-01 | Bill analysis moved from OpenAI to local Ollama `qwen2.5vl:32b`. |
+| 2026-08-01 | App moved off Render onto Docker + **Cloudflare Tunnel** on UIC’s self-hosted host. |
+| 2026-08-01 | Nightly MMIP discovery pipeline (LegiScan + Pending workflow + Slack). |
+| 2026-08-05 | Status refresh, Slack digests, ethnicity enrichment, one sequential nightly pipeline. |
+| Prepared (see `deploy/`) | LLM cutover scripts: Ollama `qwen2.5vl:32b` → **Qwen3.6-27B Q8** on llama-server (`:8080`). |
 
-Policy Tracker uses structured JSON analysis via a pluggable LLM backend:
+Hosting today: Internet → Cloudflare Tunnel → Docker (gunicorn) on a private UIC host. Pushes to `main` deploy through GitHub Actions (`.github/workflows/deploy.yml`). Do not use ad-hoc rsync as the ship path.
 
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `LLM_BASE_URL` | `http://localhost:11434/v1` | OpenAI-compatible API (Ollama, vLLM, etc.) |
+## LLM
+
+| Variable | Local default | Purpose |
+|----------|---------------|---------|
+| `LLM_BASE_URL` | `http://localhost:11434/v1` | OpenAI-compatible API (Ollama, vLLM, llama-server) |
 | `LLM_MODEL` | `qwen2.5vl:32b` | Model name |
 | `LLM_TEMPERATURE` | `0` | Deterministic inference |
 | `LLM_SEED` | `42` | Reproducibility seed |
 | `LLM_CACHE_ENABLED` | `true` | Cache analysis results on disk |
 
-For Docker on the server, point at the host running Ollama:
+On the production Docker host, Ollama is typically `http://host.docker.internal:11434/v1`. After the Qwen3.6 cutover, llama-server is `http://host.docker.internal:8080/v1` (see `deploy/llm-cutover.env.snippet`). The production inference host is private (Tailscale); clones should keep the localhost default.
+
+Cutover helpers (run on the GPU host, not from a laptop clone):
 
 ```bash
-LLM_BASE_URL=http://host.docker.internal:11434/v1
+bash deploy/setup-qwen36-llama.sh    # download weights; do not load GPU
+bash deploy/check-qwen36-ready.sh
+bash deploy/cutover-qwen36-llama.sh  # unload Qwen2.5, start llama-server, rewrite .env
 ```
-
-Optional shared gateway for multiple apps (wocconwaker, etc.):
-
-```bash
-docker compose --profile gateway up -d
-LLM_GATEWAY_URL=http://inference-gateway:8090
-```
-
-Run tests: `pytest tests/`
 
 ## Nightly MMIP discovery
 
-Automated pipeline searches LegiScan and configured state websites for new MMIP policy, runs the UIC analysis, writes to Airtable **Pending**, and alerts Slack.
+Automated pipeline searches LegiScan and configured government sites, runs analysis, writes to Airtable **Pending**, and alerts Slack.
+
+State and federal source manifests live in `sources/` (see [docs/STATE_SOURCES.md](docs/STATE_SOURCES.md) and [docs/FEDERAL_SOURCES.md](docs/FEDERAL_SOURCES.md)).
 
 ### Setup
 
@@ -67,12 +75,13 @@ Automated pipeline searches LegiScan and configured state websites for new MMIP 
 2. Add to `.env`:
    - `SLACK_WEBHOOK_URL` — incoming webhook for the review channel
    - `AIRTABLE_PENDING_TABLE=Pending`
-3. Bootstrap state website links from existing Airtable entries:
+3. Bootstrap / merge state website links:
    ```bash
-   python scripts/bootstrap_state_sources.py
-   # Edit sources/state_sources.json — point URLs at index pages, set review_needed=false
+   python scripts/bootstrap_state_sources_agents.py
+   python scripts/merge_state_manifests.py
+   # Review sources/manifests/*.json — set review_needed=false on approved rows
    ```
-4. Tune the relevance gate with a dry run:
+4. Dry run:
    ```bash
    python scripts/run_discovery.py --dry-run --legiscan-only
    ```
@@ -106,41 +115,9 @@ docker compose --profile tunnel up -d   # includes web + tunnel + scheduler
 | `DISCOVERY_RELEVANCE_MIN_CONFIDENCE` | `0.6` | MMIP relevance gate threshold |
 | `SLACK_QUIET_RUNS` | `true` | Suppress Slack when no new policies found |
 
-## Deploy manually
-
-```bash
-# One-time on server (WSL at /opt/policy-tracker):
-#   .env with production secrets
-#   cloudflared/credentials.json for policy-uic tunnel
-
-./deploy/deploy.sh
-```
-
-## Cloudflare Worker (Render → self-hosted cutover)
-
-The `render-redirect` Worker previously proxied to Render and returned `{"status":"waiting"}` when cold. After migrating to the tunnel, update it to passthrough:
-
-```bash
-# Add CLOUDFLARE_API_TOKEN to .env (Workers Scripts:Edit)
-./scripts/deploy-worker.sh
-```
-
-Or delete the Worker route `policy.urbanindigenouscollective.org/*` in the Cloudflare dashboard.
-
 ## GitHub Actions CD
 
-Pushes to `main` deploy via `.github/workflows/deploy.yml`.
-
-Required secrets (copied from UIC-Learning):
-
-| Secret | Value |
-|--------|-------|
-| `DEPLOY_SSH_KEY` | `~/.ssh/uic-learning-deploy` private key |
-| `DEPLOY_HOST` | `100.71.124.8` |
-| `DEPLOY_USER` | `info@urbanindigenouscollective.org` |
-| `DEPLOY_PATH` | `C:/Users/info/policy-tracker` |
-| `TS_OAUTH_CLIENT_ID` | Tailscale OAuth client (tag:ci) |
-| `TS_OAUTH_SECRET` | Tailscale OAuth secret |
+Pushes to `main` deploy via `.github/workflows/deploy.yml`. Required repository secrets (not needed for a local clone): `DEPLOY_SSH_KEY`, `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_PATH`, `TS_OAUTH_CLIENT_ID`, `TS_OAUTH_SECRET`.
 
 ## Dependencies
 
@@ -150,6 +127,6 @@ Required secrets (copied from UIC-Learning):
 
 ## Security notes
 
-- Never commit `.env` (see `.env.example`)
+- Never commit `.env` or `cloudflared/credentials.json` (see `.env.example`)
 - Rotate any API keys that were ever committed to git
-- Render service can be disabled after tunnel cutover is verified
+- LegiScan and Airtable calls need keys in your local `.env`; they are not in this repository

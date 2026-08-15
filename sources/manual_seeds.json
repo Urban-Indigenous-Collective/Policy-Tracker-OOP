@@ -1,0 +1,427 @@
+{
+  "CA": [
+    {
+      "role": "governor_news",
+      "method": "index",
+      "url": "https://www.gov.ca.gov/news",
+      "notes": "Probe-verified during Wave 1 gap fill",
+      "ignore_robots": true
+    },
+    {
+      "role": "executive_order",
+      "method": "index",
+      "url": "https://www.gov.ca.gov/executive-actions",
+      "notes": "Probe-verified during Wave 1 gap fill",
+      "ignore_robots": true
+    },
+    {
+      "role": "proclamation",
+      "method": "index",
+      "url": "https://www.gov.ca.gov/news/category/proclamation",
+      "notes": "Probe-verified during Wave 1 gap fill",
+      "ignore_robots": true
+    },
+    {
+      "role": "legislature_search",
+      "method": "search",
+      "search_url": "https://leginfo.legislature.ca.gov/faces/billSearchClient.xhtml?keyword={query}",
+      "ignore_robots": true
+    },
+    {
+      "role": "legislature_session",
+      "method": "index",
+      "url": "https://leginfo.legislature.ca.gov/faces/billSearchClient.xhtml",
+      "ignore_robots": true
+    },
+    {
+      "role": "agency_press",
+      "method": "index",
+      "url": "https://cdss.ca.gov/inforesources/tribal-affairs",
+      "notes": "California tribal affairs program page"
+    }
+  ],
+  "CO": [
+    {
+      "role": "governor_news",
+      "base": "https://www.colorado.gov/governor"
+    },
+    {
+      "role": "executive_order",
+      "base": "https://www.colorado.gov/governor"
+    },
+    {
+      "role": "proclamation",
+      "base": "https://www.colorado.gov/governor"
+    },
+    {
+      "role": "legislature_search",
+      "method": "search",
+      "search_url": "https://leg.colorado.gov/bill-search?search_api_views_fulltext={query}"
+    },
+    {
+      "role": "legislature_session",
+      "method": "index",
+      "url": "https://leg.colorado.gov/bills"
+    }
+  ],
+  "GA": [
+    {
+      "role": "governor_news",
+      "method": "index",
+      "url": "https://gov.georgia.gov/news",
+      "notes": "Probe-verified during Wave 1 gap fill",
+      "ignore_robots": true
+    },
+    {
+      "role": "executive_order",
+      "method": "index",
+      "url": "https://gov.georgia.gov/executive-orders",
+      "notes": "Probe-verified during Wave 1 gap fill",
+      "ignore_robots": true
+    },
+    {
+      "role": "proclamation",
+      "method": "index",
+      "url": "https://gov.georgia.gov/proclamations",
+      "notes": "Probe-verified during Wave 1 gap fill",
+      "ignore_robots": true
+    },
+    {
+      "role": "legislature_search",
+      "method": "search",
+      "search_url": "https://www.legis.ga.gov/search?query={query}"
+    },
+    {
+      "role": "legislature_session",
+      "method": "index",
+      "url": "https://www.legis.ga.gov/legislation/all"
+    }
+  ],
+  "IA": [
+    {
+      "role": "governor_news",
+      "method": "index",
+      "url": "https://governor.iowa.gov/newsroom",
+      "notes": "Probe-verified during Wave 1 gap fill",
+      "ignore_robots": true
+    },
+    {
+      "role": "executive_order",
+      "method": "index",
+      "url": "https://governor.iowa.gov/newsroom?category=executive-orders",
+      "notes": "Probe-verified during Wave 1 gap fill",
+      "ignore_robots": true
+    },
+    {
+      "role": "proclamation",
+      "method": "index",
+      "url": "https://governor.iowa.gov/newsroom?category=proclamations",
+      "notes": "Probe-verified during Wave 1 gap fill",
+      "ignore_robots": true
+    },
+    {
+      "role": "legislature_search",
+      "method": "search",
+      "search_url": "https://www.legis.iowa.gov/search?q={query}"
+    },
+    {
+      "role": "legislature_session",
+      "method": "index",
+      "url": "https://www.legis.iowa.gov/legislation/billTracking"
+    }
+  ],
+  "LA": [
+    {
+      "role": "governor_news",
+      "method": "index",
+      "url": "https://gov.louisiana.gov/news",
+      "notes": "Probe-verified during Wave 1 gap fill"
+    },
+    {
+      "role": "executive_order",
+      "method": "index",
+      "url": "https://gov.louisiana.gov/index.cfm?md=newsroom&tmp=archive&cat=Executive%20Orders",
+      "notes": "Probe-verified during Wave 1 gap fill"
+    },
+    {
+      "role": "proclamation",
+      "method": "index",
+      "url": "https://gov.louisiana.gov/index.cfm?md=newsroom&tmp=archive&cat=Proclamations",
+      "notes": "Probe-verified during Wave 1 gap fill"
+    },
+    {
+      "role": "legislature_search",
+      "method": "search",
+      "search_url": "https://www.legis.la.gov/legis/Law.aspx?d={query}"
+    },
+    {
+      "role": "legislature_session",
+      "method": "index",
+      "url": "https://www.legis.la.gov/legis/BillSearch.aspx"
+    }
+  ],
+  "ME": [
+    {
+      "role": "governor_news",
+      "method": "index",
+      "url": "https://www.maine.gov/governor/mills/newsroom",
+      "notes": "Probe-verified during Wave 1 gap fill"
+    },
+    {
+      "role": "executive_order",
+      "method": "index",
+      "url": "https://www.maine.gov/governor/mills/newsroom?category=executive-orders",
+      "notes": "Probe-verified during Wave 1 gap fill"
+    },
+    {
+      "role": "proclamation",
+      "method": "index",
+      "url": "https://www.maine.gov/governor/mills/official_documents/proclamations",
+      "notes": "Probe-verified during Wave 1 gap fill"
+    },
+    {
+      "role": "legislature_search",
+      "method": "search",
+      "search_url": "https://legislature.maine.gov/search?q={query}"
+    },
+    {
+      "role": "legislature_session",
+      "method": "index",
+      "url": "https://legislature.maine.gov/bills/"
+    },
+    {
+      "role": "agency_press",
+      "method": "index",
+      "url": "https://www.maine.gov/tribal-state/",
+      "notes": "Maine tribal-state relations"
+    }
+  ],
+  "MS": [
+    {
+      "role": "governor_news",
+      "method": "index",
+      "url": "https://governorreeves.ms.gov/news",
+      "notes": "Probe-verified during Wave 1 gap fill"
+    },
+    {
+      "role": "executive_order",
+      "method": "index",
+      "url": "https://governorreeves.ms.gov/category/executive-orders",
+      "notes": "Probe-verified during Wave 1 gap fill"
+    },
+    {
+      "role": "proclamation",
+      "method": "index",
+      "url": "https://governorreeves.ms.gov/category/proclamations",
+      "notes": "Probe-verified during Wave 1 gap fill"
+    },
+    {
+      "role": "legislature_search",
+      "method": "search",
+      "search_url": "http://billstatus.ls.state.ms.us/sessions.htm?q={query}"
+    },
+    {
+      "role": "legislature_session",
+      "method": "index",
+      "url": "http://billstatus.ls.state.ms.us/"
+    }
+  ],
+  "MT": [
+    {
+      "role": "governor_news",
+      "method": "index",
+      "url": "https://governor.mt.gov/newsroom",
+      "notes": "Probe-verified during Wave 1 gap fill"
+    },
+    {
+      "role": "executive_order",
+      "method": "index",
+      "url": "https://governor.mt.gov/executive-orders",
+      "notes": "Probe-verified during Wave 1 gap fill"
+    },
+    {
+      "role": "proclamation",
+      "method": "index",
+      "url": "https://governor.mt.gov/newsroom/proclamations",
+      "notes": "Probe-verified during Wave 1 gap fill"
+    },
+    {
+      "role": "legislature_search",
+      "method": "search",
+      "search_url": "https://bills.legmt.gov/#/laws/bills?search={query}",
+      "notes": "Montana bill explorer is a JS app; may require render_js"
+    },
+    {
+      "role": "legislature_session",
+      "method": "index",
+      "url": "https://leg.mt.gov/bills/"
+    },
+    {
+      "role": "agency_press",
+      "method": "index",
+      "url": "https://dojmt.gov/news/",
+      "notes": "Montana DOJ hosts the state MMIP task force"
+    }
+  ],
+  "NE": [
+    {
+      "role": "governor_news",
+      "method": "index",
+      "url": "https://governor.nebraska.gov/news",
+      "notes": "Probe-verified during Wave 1 gap fill"
+    },
+    {
+      "role": "executive_order",
+      "method": "index",
+      "url": "https://governor.nebraska.gov/news?category=executive-orders",
+      "notes": "Probe-verified during Wave 1 gap fill"
+    },
+    {
+      "role": "proclamation",
+      "method": "index",
+      "url": "https://governor.nebraska.gov/news?category=proclamations",
+      "notes": "Probe-verified during Wave 1 gap fill"
+    },
+    {
+      "role": "legislature_search",
+      "method": "search",
+      "search_url": "https://nebraskalegislature.gov/bills/search_by_keyword.php?Keyword={query}",
+      "notes": "Unicameral legislature"
+    },
+    {
+      "role": "legislature_session",
+      "method": "index",
+      "url": "https://nebraskalegislature.gov/bills/",
+      "notes": "Unicameral legislature"
+    }
+  ],
+  "RI": [
+    {
+      "role": "governor_news",
+      "method": "index",
+      "url": "https://governor.ri.gov/press-releases",
+      "notes": "RI governor site uses /press-releases, not /news",
+      "ignore_robots": true
+    },
+    {
+      "role": "executive_order",
+      "method": "index",
+      "url": "https://governor.ri.gov/executive-orders",
+      "notes": "Probe-verified during Wave 1 gap fill",
+      "ignore_robots": true
+    },
+    {
+      "role": "proclamation",
+      "method": "index",
+      "url": "https://governor.ri.gov/press-releases?category=proclamations",
+      "notes": "Probe-verified during Wave 1 gap fill",
+      "ignore_robots": true
+    },
+    {
+      "role": "legislature_search",
+      "method": "search",
+      "search_url": "https://webserver.rilegislature.gov/Search/?q={query}"
+    },
+    {
+      "role": "legislature_session",
+      "method": "index",
+      "url": "https://www.rilegislature.gov/Pages/Bills.aspx"
+    }
+  ],
+  "SC": [
+    {
+      "role": "governor_news",
+      "method": "index",
+      "url": "https://governor.sc.gov/news",
+      "notes": "Probe-verified during Wave 1 gap fill",
+      "ignore_robots": true
+    },
+    {
+      "role": "executive_order",
+      "method": "index",
+      "url": "https://governor.sc.gov/news?category=executive-orders",
+      "notes": "Probe-verified during Wave 1 gap fill",
+      "ignore_robots": true
+    },
+    {
+      "role": "proclamation",
+      "method": "index",
+      "url": "https://governor.sc.gov/news?category=proclamations",
+      "notes": "Probe-verified during Wave 1 gap fill",
+      "ignore_robots": true
+    },
+    {
+      "role": "legislature_search",
+      "method": "search",
+      "search_url": "https://www.scstatehouse.gov/billsearch.php?searchtext={query}",
+      "search_param": "searchtext",
+      "ignore_robots": true
+    },
+    {
+      "role": "legislature_session",
+      "method": "index",
+      "url": "https://www.scstatehouse.gov/legislation.php",
+      "ignore_robots": true
+    }
+  ],
+  "TX": [
+    {
+      "role": "governor_news",
+      "method": "index",
+      "url": "https://gov.texas.gov/news",
+      "notes": "Probe-verified during Wave 1 gap fill"
+    },
+    {
+      "role": "executive_order",
+      "method": "index",
+      "url": "https://gov.texas.gov/news/category/executive-orders",
+      "notes": "Probe-verified during Wave 1 gap fill"
+    },
+    {
+      "role": "proclamation",
+      "method": "index",
+      "url": "https://gov.texas.gov/news/category/proclamation",
+      "notes": "Probe-verified during Wave 1 gap fill"
+    },
+    {
+      "role": "legislature_search",
+      "method": "search",
+      "search_url": "https://capitol.texas.gov/Search/BillSearchResults.aspx?NSP=1&SPL=True&SPC=False&SPA=False&SPS=False&Leg=89&Sess=R&ChamberH=True&ChamberS=True&Search={query}"
+    },
+    {
+      "role": "legislature_session",
+      "method": "index",
+      "url": "https://capitol.texas.gov/Home.aspx"
+    }
+  ],
+  "VA": [
+    {
+      "role": "governor_news",
+      "method": "index",
+      "url": "https://www.governor.virginia.gov/newsroom",
+      "notes": "Probe-verified during Wave 1 gap fill"
+    },
+    {
+      "role": "executive_order",
+      "method": "index",
+      "url": "https://www.governor.virginia.gov/executive-actions",
+      "notes": "Probe-verified during Wave 1 gap fill"
+    },
+    {
+      "role": "proclamation",
+      "method": "index",
+      "url": "https://www.governor.virginia.gov/newsroom/proclamations",
+      "notes": "Probe-verified during Wave 1 gap fill"
+    },
+    {
+      "role": "legislature_search",
+      "method": "search",
+      "search_url": "https://lis.virginia.gov/cgi-bin/legp604.exe?251+men+BIL&q={query}"
+    },
+    {
+      "role": "legislature_session",
+      "method": "index",
+      "url": "https://lis.virginia.gov/"
+    }
+  ]
+}
