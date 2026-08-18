@@ -16,6 +16,7 @@ from airtable_coercion import coerce_bill_fields
 from airtable_fields import BILL_OVERVIEW_LINK_FIELD, REVIEW_STATUS_REJECTED
 from api_client import APIClient
 from content_guard import merge_warnings
+from discovery.legiscan_quota import is_legiscan_limit_error, legiscan_quota_payload, merge_legiscan_quota
 from discovery.models import utc_now_iso
 from discovery.seen_store import SeenStore
 from discovery.slack_report import (
@@ -60,6 +61,9 @@ def append_status_refresh_run_log(
         "skipped_non_legiscan": stats.skipped_non_legiscan,
         "resolve_failed": stats.resolve_failed,
         "getbill_failed": stats.getbill_failed,
+        "skipped_unchanged_hash": stats.skipped_unchanged_hash,
+        "masterlists_fetched": stats.masterlists_fetched,
+        "getbills_fetched": stats.getbills_fetched,
         "identity_mismatch": stats.identity_mismatch,
         "identity_mismatch_items": stats.identity_mismatch_items,
         "errors": stats.errors,
@@ -76,10 +80,15 @@ class StatusRefreshStats:
     updated: int = 0
     unchanged: int = 0
     skipped_non_legiscan: int = 0
+    skipped_unchanged_hash: int = 0
+    masterlists_fetched: int = 0
+    getbills_fetched: int = 0
     errors: int = 0
     resolve_failed: int = 0
     getbill_failed: int = 0
     identity_mismatch: int = 0
+    legiscan_limited: bool = False
+    legiscan_limit_reason: str = ""
     status_items: list[dict[str, Any]] = field(default_factory=list)
     identity_mismatch_items: list[dict[str, Any]] = field(default_factory=list)
 
@@ -167,6 +176,46 @@ class StatusRefreshPipeline:
         )
         self.slack = slack or SlackNotifier()
         self.dry_run = dry_run
+        self._masterlist_sessions_loaded: set[str] = set()
+
+    def _legiscan_state_code(self, state: str, url: str = "") -> str:
+        code = (state or "").strip().upper()
+        if code in ("NATIONAL", "US", "FEDERAL", "DC"):
+            if code == "NATIONAL" or code == "FEDERAL":
+                return "US"
+            return code
+        parsed = parse_legiscan_bill_url(url)
+        if parsed:
+            return parsed[0]
+        return code
+
+    def _resolve_session_id_for_record(
+        self,
+        fields: dict[str, Any],
+        overview_url: str,
+        seen_record: dict[str, Any] | None,
+    ) -> str | None:
+        if seen_record and seen_record.get("session_id"):
+            return str(seen_record["session_id"])
+        state_code = self._legiscan_state_code(str(fields.get("State") or ""), overview_url)
+        year = _year_from_fields(fields, overview_url)
+        return self.legiscan.resolve_session_id(state_code, year)
+
+    def _track_masterlist_fetch(self, session_id: str, stats: StatusRefreshStats) -> None:
+        if session_id and session_id not in self._masterlist_sessions_loaded:
+            self._masterlist_sessions_loaded.add(session_id)
+            stats.masterlists_fetched += 1
+
+    def _masterlist_entry(
+        self,
+        session_id: str,
+        bill_id: str,
+        stats: StatusRefreshStats,
+    ) -> dict | None:
+        if not session_id:
+            return None
+        self._track_masterlist_fetch(session_id, stats)
+        return self.legiscan.masterlist_entry_for_bill(session_id, bill_id)
 
     def _record_url(self, record: dict) -> str:
         fields = record.get("fields") or {}
@@ -211,6 +260,7 @@ class StatusRefreshPipeline:
         bill_id: str,
         *,
         state: str = "",
+        session_id: str = "",
     ) -> None:
         if self.dry_run:
             return
@@ -223,18 +273,25 @@ class StatusRefreshPipeline:
                 source="LegiScan",
                 state=state or bill.get("state", ""),
                 external_id=bill_id,
+                session_id=session_id,
                 change_hash=change_hash,
                 status="pending",
             )
         seen = self.seen_store.get(url)
         if seen:
-            self.seen_store.update_metadata(url, external_id=bill_id, change_hash=change_hash)
+            self.seen_store.update_metadata(
+                url,
+                external_id=bill_id,
+                session_id=session_id,
+                change_hash=change_hash,
+            )
         elif url != canonical_url:
             self.seen_store.upsert(
                 url,
                 source="LegiScan",
                 state=state or bill.get("state", ""),
                 external_id=bill_id,
+                session_id=session_id,
                 change_hash=change_hash,
                 status="pending",
             )
@@ -353,15 +410,89 @@ class StatusRefreshPipeline:
 
         stats.checked += 1
         try:
+            seen_record = self.seen_store.get(url)
             bill_id = self._resolve_bill_id_for_record(fields, url)
             if not bill_id:
                 stats.resolve_failed += 1
                 logger.warning("Could not resolve bill_id for %s", url)
                 return
 
+            session_id = self._resolve_session_id_for_record(fields, url, seen_record) or ""
+            stored_hash = str((seen_record or {}).get("change_hash") or "")
+            master_entry = self._masterlist_entry(session_id, bill_id, stats)
+            master_hash = str((master_entry or {}).get("change_hash") or "")
+
+            if (
+                session_id
+                and master_hash
+                and stored_hash
+                and master_hash == stored_hash
+            ):
+                stats.skipped_unchanged_hash += 1
+                stats.unchanged += 1
+                if session_id and not (seen_record or {}).get("session_id"):
+                    if not self.dry_run:
+                        self.seen_store.update_metadata(url, session_id=session_id)
+                logger.debug(
+                    "Skipping unchanged bill_id=%s session=%s hash=%s",
+                    bill_id,
+                    session_id,
+                    master_hash,
+                )
+                return
+
+            if master_entry:
+                airtable_bill_number = normalize_bill_number(
+                    str(fields.get("Bill Number") or "")
+                )
+                master_bill_number = normalize_bill_number(
+                    str(master_entry.get("number") or "")
+                )
+                if (
+                    airtable_bill_number
+                    and master_bill_number
+                    and airtable_bill_number != master_bill_number
+                ):
+                    self._handle_identity_mismatch(
+                        record,
+                        table_label,
+                        table,
+                        fields,
+                        title=title,
+                        state=state,
+                        url=url,
+                        airtable_bill_number=airtable_bill_number,
+                        legiscan_bill_number=str(master_entry.get("number") or ""),
+                        stats=stats,
+                    )
+                    return
+
+            stats.getbills_fetched += 1
             bill_details = self.api_client.get_bill_details(bill_id)
             if not bill_details or not isinstance(bill_details, dict) or "bill" not in bill_details:
                 stats.getbill_failed += 1
+                if getattr(self.api_client, "quota_exhausted", False) or self.api_client.response_indicates_overlimit(
+                    bill_details if isinstance(bill_details, dict) else None
+                ):
+                    stats.legiscan_limited = True
+                    stats.legiscan_limit_reason = (
+                        getattr(self.api_client, "last_error_alert", "")
+                        or "LegiScan API monthly limit reached"
+                    )
+                    logger.warning(
+                        "Status refresh stopping after getBill failure (LegiScan quota): bill_id=%s",
+                        bill_id,
+                    )
+                    return
+                if stats.getbill_failed >= 2 and stats.updated == 0 and stats.unchanged == 0:
+                    stats.legiscan_limited = True
+                    stats.legiscan_limit_reason = (
+                        f"LegiScan getBill failed {stats.getbill_failed} times with no successes"
+                    )
+                    logger.warning(
+                        "Status refresh stopping after repeated getBill failures (likely quota)"
+                    )
+                    return
                 logger.warning("getBill failed for bill_id=%s url=%s", bill_id, url)
                 return
 
@@ -387,7 +518,13 @@ class StatusRefreshPipeline:
                 )
                 return
 
-            self._persist_bill_metadata(url, bill_details, bill_id, state=state)
+            self._persist_bill_metadata(
+                url,
+                bill_details,
+                bill_id,
+                state=state,
+                session_id=session_id,
+            )
             fresh = self.legiscan.extract_status_fields(bill_details)
             updates, changes = diff_status_fields(fields, fresh)
             self._maybe_repair_overview_url(url, bill_details, updates, changes)
@@ -419,36 +556,59 @@ class StatusRefreshPipeline:
                 }
             )
         except Exception as exc:
+            if is_legiscan_limit_error(exc):
+                stats.legiscan_limited = True
+                stats.legiscan_limit_reason = str(exc)
+                logger.warning("Status refresh stopped (LegiScan quota): %s", exc)
+                return
             stats.errors += 1
             logger.exception("Status refresh failed for %s: %s", url, exc)
 
     def run(self) -> StatusRefreshStats:
         stats = StatusRefreshStats()
+        self._masterlist_sessions_loaded.clear()
         logger.info("Starting status refresh pass (dry_run=%s)", self.dry_run)
 
-        pending_records = self.airtable.list_pending_for_refresh()
-        for record in pending_records:
-            review = (record.get("fields") or {}).get("Review Status")
-            if review == REVIEW_STATUS_REJECTED:
-                continue
-            self._refresh_record(record, "Pending", self.airtable.pending_table, stats)
+        try:
+            pending_records = self.airtable.list_pending_for_refresh()
+            for record in pending_records:
+                if stats.legiscan_limited:
+                    break
+                review = (record.get("fields") or {}).get("Review Status")
+                if review == REVIEW_STATUS_REJECTED:
+                    continue
+                self._refresh_record(record, "Pending", self.airtable.pending_table, stats)
 
-        for record in self.airtable.all_live_records():
-            self._refresh_record(record, "Live", self.airtable.live_table, stats)
+            if not stats.legiscan_limited:
+                for record in self.airtable.all_live_records():
+                    self._refresh_record(record, "Live", self.airtable.live_table, stats)
+        except Exception as exc:
+            if is_legiscan_limit_error(exc):
+                stats.legiscan_limited = True
+                stats.legiscan_limit_reason = str(exc)
+                logger.warning("Status refresh aborted (LegiScan quota): %s", exc)
+            else:
+                raise
 
         logger.info(
             "Status refresh finished: checked=%d updated=%d unchanged=%d "
+            "skipped_unchanged_hash=%d masterlists_fetched=%d getbills_fetched=%d "
             "skipped_non_legiscan=%d resolve_failed=%d getbill_failed=%d "
             "identity_mismatch=%d errors=%d",
             stats.checked,
             stats.updated,
             stats.unchanged,
+            stats.skipped_unchanged_hash,
+            stats.masterlists_fetched,
+            stats.getbills_fetched,
             stats.skipped_non_legiscan,
             stats.resolve_failed,
             stats.getbill_failed,
             stats.identity_mismatch,
             stats.errors,
         )
+
+        self.api_client.log_stats()
 
         run_at = utc_now_iso()
         append_status_refresh_run_log(stats, dry_run=self.dry_run, run_at=run_at)
@@ -460,10 +620,15 @@ class StatusRefreshPipeline:
             "checked": stats.checked,
             "updated": stats.updated,
             "unchanged": stats.unchanged,
+            "skipped_unchanged_hash": stats.skipped_unchanged_hash,
+            "masterlists_fetched": stats.masterlists_fetched,
+            "getbills_fetched": stats.getbills_fetched,
             "skipped_non_legiscan": stats.skipped_non_legiscan,
             "resolve_failed": stats.resolve_failed,
             "getbill_failed": stats.getbill_failed,
             "identity_mismatch": stats.identity_mismatch,
+            "legiscan_limited": stats.legiscan_limited,
+            "legiscan_limit_reason": stats.legiscan_limit_reason,
             "errors": stats.errors,
         }
         if should_defer_slack():
@@ -472,6 +637,14 @@ class StatusRefreshPipeline:
                 refresh_stats,
                 run_at=run_at,
                 identity_mismatch_items=stats.identity_mismatch_items,
+                legiscan_quota=(
+                    legiscan_quota_payload(
+                        reason=stats.legiscan_limit_reason,
+                        status_refresh_limited=True,
+                    )
+                    if stats.legiscan_limited
+                    else None
+                ),
             )
         else:
             if stats.status_items:

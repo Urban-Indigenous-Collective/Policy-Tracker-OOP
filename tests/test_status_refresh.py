@@ -5,8 +5,58 @@ from legiscan_processor import LegiScanProcessor
 
 
 class FakeApi:
+    def __init__(
+        self,
+        sessions=None,
+        masterlists=None,
+        masterlists_raw=None,
+        search_results=None,
+        text_docs=None,
+    ):
+        self.sessions = sessions or {}
+        self.masterlists = masterlists or {}
+        self.masterlists_raw = masterlists_raw or {}
+        self.search_results = search_results or {}
+        self.text_docs = text_docs or {}
+        self._session_list_calls = 0
+
     def get_api_key(self):
         return "test-key"
+
+    def get_session_list(self, state):
+        self._session_list_calls += 1
+        return {"sessions": self.sessions.get(state, [])}
+
+    def get_master_list(self, session_id):
+        return {"masterlist": self._lookup(self.masterlists, session_id)}
+
+    def get_master_list_raw(self, session_id):
+        raw = self._lookup(self.masterlists_raw, session_id)
+        if raw:
+            return {"masterlist": raw}
+        return {"masterlist": self._lookup(self.masterlists, session_id)}
+
+    @staticmethod
+    def _lookup(store: dict, session_id) -> dict:
+        if session_id in store:
+            return store[session_id]
+        try:
+            alt = int(session_id)
+            if alt in store:
+                return store[alt]
+        except (TypeError, ValueError):
+            pass
+        return {}
+
+    def get_search_raw(self, query, state="ALL", year=2, page=1, session_id=None):
+        key = (state, year, query)
+        return self.search_results.get(key, {"status": "ERROR"})
+
+    def get_bill_text_doc(self, doc_id):
+        return self.text_docs.get(str(doc_id))
+
+    def log_stats(self):
+        pass
 
 
 def _sample_bill_details(status_code=1, completed=0, year_end=2026):
@@ -109,6 +159,124 @@ def test_diff_status_fields_blocks_backwards_last_update_only():
     updates, changes = diff_status_fields(current, fresh)
     assert "Last Update" not in updates
     assert changes == []
+
+
+def test_status_refresh_skips_unchanged_change_hash():
+    proc = LegiScanProcessor(
+        indigenous_db=None,
+        api_client=FakeApi(
+            sessions={"NM": [{"session_id": 99, "year_start": 2026, "year_end": 2026}]},
+            masterlists_raw={
+                99: {
+                    "0": {
+                        "bill_id": 12345,
+                        "number": "SB123",
+                        "change_hash": "abc123",
+                    }
+                }
+            },
+        ),
+    )
+    api = MagicMock()
+    api.log_stats = MagicMock()
+
+    airtable = MagicMock()
+    pending_record = {
+        "id": "recPending1",
+        "fields": {
+            "Name": "MMIP Task Force Act",
+            "State": "NM",
+            "Bill Overview (Link)": "https://legiscan.com/NM/bill/SB123/2026",
+            "Status": "Pending",
+            "Progression": "Introduced",
+            "Chamber": "Senate",
+            "Chamber Details": "2026-02-01 - S: Introduced",
+            "Last Update": "2026-02-01",
+        },
+    }
+    airtable.list_pending_for_refresh.return_value = [pending_record]
+    airtable.all_live_records.return_value = []
+
+    seen = MagicMock()
+    seen.get.return_value = {
+        "external_id": "12345",
+        "change_hash": "abc123",
+        "status": "pending",
+    }
+
+    pipeline = StatusRefreshPipeline(
+        api_client=api,
+        legiscan_processor=proc,
+        airtable=airtable,
+        seen_store=seen,
+        slack=MagicMock(),
+        dry_run=True,
+    )
+    stats = pipeline.run()
+
+    assert stats.checked == 1
+    assert stats.skipped_unchanged_hash == 1
+    assert stats.getbills_fetched == 0
+    api.get_bill_details.assert_not_called()
+
+
+def test_status_refresh_fetches_bill_when_change_hash_differs():
+    proc = LegiScanProcessor(
+        indigenous_db=None,
+        api_client=FakeApi(
+            sessions={"NM": [{"session_id": 99, "year_start": 2026, "year_end": 2026}]},
+            masterlists_raw={
+                99: {
+                    "0": {
+                        "bill_id": 12345,
+                        "number": "SB123",
+                        "change_hash": "new_hash",
+                    }
+                }
+            },
+        ),
+    )
+    api = MagicMock()
+    api.get_bill_details.return_value = _sample_bill_details(status_code=2)
+    api.log_stats = MagicMock()
+
+    airtable = MagicMock()
+    pending_record = {
+        "id": "recPending1",
+        "fields": {
+            "Name": "MMIP Task Force Act",
+            "State": "NM",
+            "Bill Number": "SB123",
+            "Bill Overview (Link)": "https://legiscan.com/NM/bill/SB123/2026",
+            "Status": "Pending",
+            "Progression": "Introduced",
+            "Chamber": "Senate",
+            "Chamber Details": "2026-02-01 - S: Introduced",
+            "Last Update": "2026-02-01",
+        },
+    }
+    airtable.list_pending_for_refresh.return_value = [pending_record]
+    airtable.all_live_records.return_value = []
+
+    seen = MagicMock()
+    seen.get.return_value = {
+        "external_id": "12345",
+        "change_hash": "old_hash",
+        "status": "pending",
+    }
+
+    pipeline = StatusRefreshPipeline(
+        api_client=api,
+        legiscan_processor=proc,
+        airtable=airtable,
+        seen_store=seen,
+        slack=MagicMock(),
+        dry_run=True,
+    )
+    stats = pipeline.run()
+
+    assert stats.getbills_fetched == 1
+    api.get_bill_details.assert_called_once_with("12345")
 
 
 def test_status_refresh_pipeline_updates_airtable(monkeypatch):

@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 from typing import Any
 
+from discovery.legiscan_quota import merge_legiscan_quota, legiscan_quota_payload, ensure_legiscan_quota_in_report
 from discovery.models import utc_now_iso
 from slack_client import SlackNotifier
 
@@ -34,6 +35,15 @@ def save_deferred_report(stats, run_at: str | None = None) -> None:
     path = report_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     existing = load_deferred_report() or {}
+    legiscan_quota = dict(existing.get("legiscan_quota") or {})
+    if getattr(stats, "legiscan_limited", False):
+        legiscan_quota = merge_legiscan_quota(
+            legiscan_quota,
+            legiscan_quota_payload(
+                reason=getattr(stats, "legiscan_limit_reason", ""),
+                discovery_limited=True,
+            ),
+        )
     payload = {
         "run_at": run_at or stats.run_started_at or utc_now_iso(),
         "run_started_at": stats.run_started_at or existing.get("run_started_at") or "",
@@ -49,6 +59,7 @@ def save_deferred_report(stats, run_at: str | None = None) -> None:
         "status_items": existing.get("status_items") or [],
         "identity_mismatch_items": existing.get("identity_mismatch_items") or [],
         "status_refresh": existing.get("status_refresh") or {},
+        "legiscan_quota": legiscan_quota,
     }
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     logger.info("Deferred Slack report saved to %s", path)
@@ -59,6 +70,7 @@ def merge_status_refresh_report(
     refresh_stats: dict[str, Any],
     run_at: str | None = None,
     identity_mismatch_items: list[dict[str, Any]] | None = None,
+    legiscan_quota: dict[str, Any] | None = None,
 ) -> None:
     """Append status refresh results to the overnight deferred Slack report."""
     path = report_path()
@@ -71,6 +83,12 @@ def merge_status_refresh_report(
             report.get("identity_mismatch_items") or []
         ) + identity_mismatch_items
     report["status_refresh"] = refresh_stats
+    if legiscan_quota:
+        report["legiscan_quota"] = merge_legiscan_quota(
+            report.get("legiscan_quota"), legiscan_quota
+        )
+    elif int(refresh_stats.get("getbill_failed", 0)) > 0:
+        report = ensure_legiscan_quota_in_report(report)
     report.setdefault("run_at", run_at or utc_now_iso())
     report.setdefault("discovered", 0)
     report.setdefault("analyzed", 0)
@@ -132,6 +150,7 @@ def send_deferred_report(slack: SlackNotifier | None = None) -> bool:
         logger.info("No deferred discovery report to send")
         return False
 
+    report = ensure_legiscan_quota_in_report(report)
     notifier = slack or SlackNotifier(backfill_summary=True)
     status_items = report.get("status_items") or []
     identity_items = report.get("identity_mismatch_items") or []
@@ -156,13 +175,18 @@ def send_deferred_report(slack: SlackNotifier | None = None) -> bool:
         return False
 
     ok = True
+    quota = report.get("legiscan_quota") or {}
+    quota_limited = bool(quota.get("limited"))
+    if quota_limited:
+        ok = notifier.notify_legiscan_quota_digest(report) and ok
+
     if status_items:
         ok = notifier.notify_status_changes(status_items) and ok
     if identity_items:
         ok = notifier.notify_identity_mismatches(identity_items) and ok
     if slack_items:
         ok = notifier.notify_discovery_batch(slack_items) and ok
-    if has_status_refresh or discovery_slack_always():
+    if not quota_limited and (has_status_refresh or discovery_slack_always()):
         ok = notifier.notify_status_refresh_complete(
             checked=int(status_refresh.get("checked", 0)),
             updated=int(status_refresh.get("updated", 0)),
@@ -174,7 +198,7 @@ def send_deferred_report(slack: SlackNotifier | None = None) -> bool:
             errors=int(status_refresh.get("errors", 0)),
             always_notify=discovery_slack_always(),
         ) and ok
-    if has_discovery or send_empty or discovery_slack_always():
+    if not quota_limited and (has_discovery or send_empty or discovery_slack_always()):
         ok = notifier.notify_run_complete(
             discovered=int(report.get("discovered", 0)),
             analyzed=int(report.get("analyzed", 0)),

@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock
+
 from discovery.legiscan_search import LegiScanSearchSource
 
 
@@ -5,11 +7,11 @@ class FakeAPIClient:
     def __init__(self, pages, bills=None):
         self.pages = pages
         self.bills = bills or {}
+        self.get_bill_details = MagicMock(
+            side_effect=lambda bill_id: self._get_bill_details(bill_id)
+        )
 
-    def iter_search_raw_pages(self, query, state="ALL", year=2, max_pages=None):
-        yield from self.pages
-
-    def get_bill_details(self, bill_id):
+    def _get_bill_details(self, bill_id):
         bid = str(bill_id)
         if bid in self.bills:
             return {"status": "OK", "bill": self.bills[bid]}
@@ -19,6 +21,9 @@ class FakeAPIClient:
             "title": f"Bill {bid}",
             "history": [{"action": "Introduced"}],
         }}
+
+    def iter_search_raw_pages(self, query, state="ALL", year=2, max_pages=None):
+        yield from self.pages
 
 
 SAMPLE_SEARCH_RESPONSE = {
@@ -63,6 +68,15 @@ def test_legiscan_search_dedupes_bill_ids():
     assert candidates[0].external_id == "12345"
     assert candidates[0].state == "NM"
     assert candidates[1].external_id == "67890"
+    source.api.get_bill_details.assert_not_called()
+
+
+def test_legiscan_search_uses_search_fields_without_hydration():
+    source = LegiScanSearchSource(FakeAPIClient([SAMPLE_SEARCH_RESPONSE]))
+    candidates = list(source.discover(queries=["MMIP"]))
+    assert candidates[0].title == "Missing and Murdered Indigenous Persons Task Force"
+    assert candidates[0].snippet == "Passed Senate"
+    source.api.get_bill_details.assert_not_called()
 
 
 def test_legiscan_search_handles_dict_results():

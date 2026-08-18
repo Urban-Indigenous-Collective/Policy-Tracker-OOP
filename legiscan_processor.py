@@ -1,6 +1,5 @@
 import datetime
 import re
-import requests
 
 TRACKED_STATUS_FIELD_NAMES = (
     "Status",
@@ -82,32 +81,39 @@ class LegiScanProcessor:
         return "legiscan.com" in url
 
     def _get_session_list(self, state_code: str) -> list[dict]:
-        getter = getattr(self.api_client, "get_session_list", None)
-        if callable(getter):
-            payload = getter(state_code) or {}
-            return payload.get("sessions") or []
-        api_key = self.api_client.get_api_key()
-        response = requests.get(
-            f"https://api.legiscan.com/?key={api_key}&op=getSessionList&state={state_code}",
-            timeout=60,
-        )
-        if response.status_code != 200:
-            return []
-        return response.json().get("sessions") or []
+        payload = self.api_client.get_session_list(state_code) or {}
+        return payload.get("sessions") or []
 
     def _get_master_list(self, session_id: int | str) -> dict:
-        getter = getattr(self.api_client, "get_master_list", None)
-        if callable(getter):
-            payload = getter(session_id) or {}
-            return payload.get("masterlist") or {}
-        api_key = self.api_client.get_api_key()
-        response = requests.get(
-            f"https://api.legiscan.com/?key={api_key}&op=getMasterList&id={session_id}",
-            timeout=60,
-        )
-        if response.status_code != 200:
-            return {}
-        return response.json().get("masterlist") or {}
+        payload = self.api_client.get_master_list(session_id) or {}
+        return payload.get("masterlist") or {}
+
+    def _get_master_list_raw(self, session_id: int | str) -> dict:
+        payload = self.api_client.get_master_list_raw(session_id) or {}
+        return payload.get("masterlist") or {}
+
+    def resolve_session_id(self, state_code: str, session_year: int | None) -> str | None:
+        """Return LegiScan session_id for a state and calendar year."""
+        if not state_code or session_year is None:
+            return None
+        sessions = self._get_session_list(state_code)
+        for session in sessions:
+            if session.get("year_start", 0) <= session_year <= session.get("year_end", 0):
+                return str(session["session_id"])
+        return None
+
+    def masterlist_entry_for_bill(
+        self, session_id: int | str, bill_id: int | str
+    ) -> dict | None:
+        """Find a bill row in getMasterListRaw output by bill_id."""
+        master_list = self._get_master_list_raw(session_id)
+        target = str(bill_id)
+        for key, entry in master_list.items():
+            if key == "session" or not isinstance(entry, dict):
+                continue
+            if str(entry.get("bill_id")) == target:
+                return entry
+        return None
 
     def get_latest_bill_id(self, state_code, session_year, bill_number):
         """Fetch bill_id for state/year/bill_number, trying all matching sessions."""

@@ -187,6 +187,106 @@ class SlackNotifier:
         ]
         return self._post({"blocks": blocks, "text": f"{len(items)} new MMIP policies ready for review"})
 
+    def notify_legiscan_quota_digest(self, report: dict[str, Any]) -> bool:
+        """Post a human-readable note when LegiScan quota blocks bill monitoring."""
+        quota = report.get("legiscan_quota") or {}
+        if not quota.get("limited"):
+            return False
+
+        resume = quota.get("resume_date_display") or "the 1st of next month"
+        paused: list[str] = []
+        if quota.get("discovery_limited"):
+            paused.append("LegiScan bill search (new state/federal legislation)")
+        if quota.get("status_refresh_limited"):
+            paused.append("LegiScan status updates for tracked bills")
+        if not paused:
+            paused.append("LegiScan bill search and status updates")
+
+        active = quota.get("active_sources") or []
+        active_lines = "\n".join(f"• {line}" for line in active)
+
+        discovery_bits = []
+        if int(report.get("discovered", 0)) or report.get("sources_attempted"):
+            sources = report.get("sources_attempted") or {}
+            if sources:
+                src_text = ", ".join(f"{k}={v}" for k, v in sorted(sources.items()))
+                discovery_bits.append(f"Discovery sources checked: {src_text}")
+            discovery_bits.append(
+                f"Candidates found: {int(report.get('discovered', 0))} "
+                f"({int(report.get('analyzed', 0))} analyzed)"
+            )
+
+        status_refresh = report.get("status_refresh") or {}
+        status_bits = []
+        if quota.get("status_refresh_limited"):
+            status_bits.append("Legislative status refresh paused for this run.")
+        elif status_refresh:
+            status_bits.append(
+                "Status refresh: "
+                f"checked={status_refresh.get('checked', 0)}, "
+                f"updated={status_refresh.get('updated', 0)}"
+            )
+
+        detail_lines = "\n".join(discovery_bits + status_bits)
+        detail_section = f"\n\n{detail_lines}" if detail_lines else ""
+
+        text = (
+            f"LegiScan API monthly limit reached. "
+            f"Legislation updates resume on {resume}.\n\n"
+            f"Paused until then:\n"
+            + "\n".join(f"• {item}" for item in paused)
+            + f"\n\nStill running:\n{active_lines}"
+            + detail_section
+        )
+
+        blocks: list[dict[str, Any]] = [
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": "LegiScan API limit reached",
+                    "emoji": True,
+                },
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": (
+                        f"*Legislation updates resume on {resume}.*\n"
+                        "The public LegiScan API quota resets at midnight on the 1st of each month."
+                    ),
+                },
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "*Paused until then:*\n" + "\n".join(f"• {item}" for item in paused),
+                },
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "*Still running:*\n" + active_lines,
+                },
+            },
+        ]
+        if detail_lines:
+            blocks.append(
+                {
+                    "type": "section",
+                    "text": {"type": "mrkdwn", "text": detail_lines},
+                }
+            )
+        return self._post(
+            {
+                "blocks": blocks,
+                "text": text,
+            }
+        )
+
     def notify_run_complete(
         self,
         analyzed: int = 0,
