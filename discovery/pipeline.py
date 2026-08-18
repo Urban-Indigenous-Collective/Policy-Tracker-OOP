@@ -4,7 +4,9 @@ from dataclasses import dataclass, field
 from typing import Any, Optional
 
 from airtable_client import AirtableClient
+from discovery.federal_crawler import FederalSiteSource
 from discovery.legiscan_search import LegiScanSearchSource
+from discovery.legiscan_quota import is_legiscan_limit_error, legiscan_quota_payload
 from discovery.models import Candidate, utc_now_iso
 from discovery.relevance import MMIPRelevanceGate
 from discovery.seen_store import SeenStore
@@ -26,6 +28,8 @@ class DiscoveryRunStats:
     slack_items: list[dict[str, Any]] = field(default_factory=list)
     by_state: dict[str, Any] = field(default_factory=dict)
     sources_attempted: dict[str, Any] = field(default_factory=dict)
+    legiscan_limited: bool = False
+    legiscan_limit_reason: str = ""
     run_started_at: str = ""
     run_finished_at: str = ""
 
@@ -42,6 +46,7 @@ class DiscoveryPipeline:
         relevance_gate: MMIPRelevanceGate | None = None,
         legiscan_source: LegiScanSearchSource | None = None,
         state_source: StateSiteSource | None = None,
+        federal_source: FederalSiteSource | None = None,
         dry_run: bool = False,
     ):
         self.main_app = main_app
@@ -53,6 +58,7 @@ class DiscoveryPipeline:
         self.relevance_gate = relevance_gate or MMIPRelevanceGate(main_app.llm_provider)
         self.legiscan_source = legiscan_source or LegiScanSearchSource(main_app.api_client)
         self.state_source = state_source or StateSiteSource()
+        self.federal_source = federal_source or FederalSiteSource()
         self.dry_run = dry_run
         self.max_analyses = int(os.getenv("DISCOVERY_MAX_ANALYSES_PER_RUN", "25"))
         self.discovery_enabled = os.getenv("DISCOVERY_ENABLED", "true").lower() in (
@@ -60,11 +66,42 @@ class DiscoveryPipeline:
             "true",
             "yes",
         )
+        self._legiscan_limited = False
+        self._legiscan_limit_reason = ""
+        self._source_counts: dict[str, int] = {}
 
     def collect_candidates(self) -> list[Candidate]:
         candidates: list[Candidate] = []
-        candidates.extend(self.legiscan_source.discover())
-        candidates.extend(self.state_source.discover())
+        source_counts = {"legiscan": 0, "state_site": 0, "federal_site": 0}
+
+        try:
+            legiscan_candidates = list(self.legiscan_source.discover())
+            source_counts["legiscan"] = len(legiscan_candidates)
+            candidates.extend(legiscan_candidates)
+        except Exception as exc:
+            if is_legiscan_limit_error(exc):
+                logger.warning("LegiScan discovery skipped (quota): %s", exc)
+                self._legiscan_limited = True
+                self._legiscan_limit_reason = str(exc)
+            else:
+                raise
+
+        state_candidates = list(self.state_source.discover())
+        source_counts["state_site"] = len(state_candidates)
+        candidates.extend(state_candidates)
+
+        federal_candidates = list(self.federal_source.discover())
+        source_counts["federal_site"] = len(federal_candidates)
+        candidates.extend(federal_candidates)
+
+        if getattr(self.main_app.api_client, "quota_exhausted", False):
+            self._legiscan_limited = True
+            self._legiscan_limit_reason = (
+                getattr(self.main_app.api_client, "last_error_alert", "")
+                or "LegiScan API monthly limit reached"
+            )
+
+        self._source_counts = source_counts
         return candidates
 
     def _get_excerpt(self, candidate: Candidate) -> str:
@@ -73,6 +110,11 @@ class DiscoveryPipeline:
             return combined
         if candidate.source == "state_site":
             text, content_hash = self.state_source.fetch_page_text(candidate.url)
+            if content_hash:
+                candidate.content_hash = content_hash
+            return text or combined
+        if candidate.source == "federal_site":
+            text, content_hash = self.federal_source.fetch_page_text(candidate.url)
             if content_hash:
                 candidate.content_hash = content_hash
             return text or combined
@@ -185,7 +227,13 @@ class DiscoveryPipeline:
 
             record = self.airtable.create_pending_record(
                 bill_data=bill_data,
-                source="LegiScan" if candidate.source == "legiscan" else "State Site",
+                source=(
+                    "LegiScan"
+                    if candidate.source == "legiscan"
+                    else "Federal Site"
+                    if candidate.source == "federal_site"
+                    else "State Site"
+                ),
                 relevance_confidence=relevance_result.confidence if relevance_result else 0.0,
                 relevance_rationale=relevance_result.rationale if relevance_result else "",
                 discovered_on=utc_now_iso()[:10],
@@ -237,6 +285,9 @@ class DiscoveryPipeline:
         stats = DiscoveryRunStats(run_started_at=utc_now_iso())
         candidates = self.collect_candidates()
         stats.discovered = len(candidates)
+        stats.sources_attempted = dict(self._source_counts)
+        stats.legiscan_limited = self._legiscan_limited
+        stats.legiscan_limit_reason = self._legiscan_limit_reason
         logger.info("Collected %d discovery candidates", len(candidates))
 
         for candidate in candidates:
@@ -260,4 +311,5 @@ class DiscoveryPipeline:
                     sources_attempted=stats.sources_attempted,
                     always_notify=discovery_slack_always(),
                 )
+        self.main_app.api_client.log_stats()
         return stats

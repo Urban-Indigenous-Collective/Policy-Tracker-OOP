@@ -46,13 +46,23 @@ def run_discovery_job():
         pipeline = DiscoveryPipeline(main_app=app)
         stats = pipeline.run()
         logger.info(
-            "Discovery run finished: analyzed=%d rejected=%d skipped=%d errors=%d",
+            "Discovery run finished: analyzed=%d rejected=%d skipped=%d errors=%d legiscan_limited=%s",
             stats.analyzed,
             stats.rejected,
             stats.skipped,
             stats.errors,
+            stats.legiscan_limited,
         )
     except Exception as exc:
+        from discovery.legiscan_quota import is_legiscan_limit_error
+
+        if is_legiscan_limit_error(exc):
+            logger.warning("Discovery hit LegiScan quota limit: %s", exc)
+            slack.notify_error(
+                f"LegiScan API limit reached during discovery; "
+                f"non-LegiScan sources may still run. {exc}"
+            )
+            return
         logger.exception("Discovery job failed: %s", exc)
         slack.notify_error(str(exc))
         raise
@@ -68,11 +78,14 @@ def run_status_refresh_job():
         stats = pipeline.run()
         logger.info(
             "Status refresh finished: checked=%d updated=%d unchanged=%d "
+            "skipped_unchanged_hash=%d getbills_fetched=%d "
             "skipped_non_legiscan=%d resolve_failed=%d getbill_failed=%d "
             "identity_mismatch=%d errors=%d",
             stats.checked,
             stats.updated,
             stats.unchanged,
+            stats.skipped_unchanged_hash,
+            stats.getbills_fetched,
             stats.skipped_non_legiscan,
             stats.resolve_failed,
             stats.getbill_failed,

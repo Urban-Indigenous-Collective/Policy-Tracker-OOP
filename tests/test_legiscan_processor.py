@@ -1,5 +1,9 @@
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
+import pytest
+
+from api_client import APIClient
+from legiscan_cache import LegiScanCache
 from legiscan_processor import (
     LegiScanProcessor,
     normalize_bill_number,
@@ -19,15 +23,29 @@ class FakeApi:
         self.masterlists = masterlists or {}
         self.search_results = search_results or {}
         self.text_docs = text_docs or {}
+        self._session_list_calls = 0
 
     def get_api_key(self):
         return "test-key"
 
     def get_session_list(self, state):
+        self._session_list_calls += 1
         return {"sessions": self.sessions.get(state, [])}
 
     def get_master_list(self, session_id):
-        return {"masterlist": self.masterlists.get(session_id, {})}
+        return {"masterlist": self._lookup(self.masterlists, session_id)}
+
+    @staticmethod
+    def _lookup(store: dict, session_id) -> dict:
+        if session_id in store:
+            return store[session_id]
+        try:
+            alt = int(session_id)
+            if alt in store:
+                return store[alt]
+        except (TypeError, ValueError):
+            pass
+        return {}
 
     def get_search_raw(self, query, state="ALL", year=2, page=1, session_id=None):
         key = (state, year, query)
@@ -35,6 +53,16 @@ class FakeApi:
 
     def get_bill_text_doc(self, doc_id):
         return self.text_docs.get(str(doc_id))
+
+
+class FakeResponse:
+    def __init__(self, status_code: int, payload: dict):
+        self.status_code = status_code
+        self._payload = payload
+        self.text = str(payload)
+
+    def json(self):
+        return self._payload
 
 
 def test_parse_legiscan_bill_url_bill_and_text_paths():
@@ -62,6 +90,32 @@ def test_resolve_bill_id_does_not_use_text_doc_id_as_bill_id_for_getbill():
     assert proc.resolve_bill_id(
         "https://legiscan.com/MT/text/HB35/id/2349651/Montana-2021-HB35-Enrolled.pdf"
     ) != "2349651"
+
+
+def test_get_latest_bill_id_caches_session_list(tmp_path):
+    client = APIClient("test-key", cache=LegiScanCache(tmp_path / "cache.db"))
+    payload = {
+        "status": "OK",
+        "sessions": [{"session_id": 1, "year_start": 2024, "year_end": 2024}],
+    }
+    master_payload = {
+        "status": "OK",
+        "masterlist": {"0": {"number": "SJM2", "bill_id": 42}},
+    }
+
+    def fake_get(url, params=None, timeout=60):
+        if "op=getSessionList" in url:
+            return FakeResponse(200, payload)
+        if "op=getMasterList" in url:
+            return FakeResponse(200, master_payload)
+        return FakeResponse(500, {})
+
+    proc = LegiScanProcessor(indigenous_db=None, api_client=client)
+    with patch("api_client.requests.get", side_effect=fake_get) as mock_get:
+        assert proc.get_latest_bill_id("NM", 2024, "SJM2") == 42
+        assert proc.get_latest_bill_id("NM", 2024, "SJM2") == 42
+        session_calls = [c for c in mock_get.call_args_list if "op=getSessionList" in c.args[0]]
+        assert len(session_calls) == 1
 
 
 def test_get_latest_bill_id_tries_all_matching_sessions():

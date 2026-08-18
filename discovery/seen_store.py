@@ -31,6 +31,7 @@ class SeenStore:
                     source TEXT NOT NULL,
                     state TEXT,
                     external_id TEXT,
+                    session_id TEXT,
                     change_hash TEXT,
                     content_hash TEXT,
                     first_seen TEXT NOT NULL,
@@ -51,6 +52,12 @@ class SeenStore:
                 );
                 """
             )
+            self._ensure_session_id_column(conn)
+
+    def _ensure_session_id_column(self, conn: sqlite3.Connection) -> None:
+        cols = {row[1] for row in conn.execute("PRAGMA table_info(seen_candidates)")}
+        if "session_id" not in cols:
+            conn.execute("ALTER TABLE seen_candidates ADD COLUMN session_id TEXT")
 
     def get(self, url: str) -> Optional[dict[str, Any]]:
         with self._connect() as conn:
@@ -113,6 +120,7 @@ class SeenStore:
         source: str,
         state: str = "",
         external_id: str = "",
+        session_id: str = "",
         change_hash: str = "",
         content_hash: str = "",
         verdict: str = "",
@@ -133,7 +141,9 @@ class SeenStore:
                 conn.execute(
                     """
                     UPDATE seen_candidates SET
-                        source = ?, state = ?, external_id = ?, change_hash = ?,
+                        source = ?, state = ?, external_id = ?,
+                        session_id = COALESCE(NULLIF(?, ''), session_id),
+                        change_hash = ?,
                         content_hash = ?, last_seen = ?, verdict = COALESCE(?, verdict),
                         confidence = COALESCE(?, confidence), status = ?
                     WHERE url = ?
@@ -142,6 +152,7 @@ class SeenStore:
                         source,
                         state,
                         external_id,
+                        session_id or None,
                         change_hash,
                         content_hash,
                         now,
@@ -155,15 +166,16 @@ class SeenStore:
                 conn.execute(
                     """
                     INSERT INTO seen_candidates (
-                        url, source, state, external_id, change_hash, content_hash,
+                        url, source, state, external_id, session_id, change_hash, content_hash,
                         first_seen, last_seen, verdict, confidence, status
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         url_key,
                         source,
                         state,
                         external_id,
+                        session_id or None,
                         change_hash,
                         content_hash,
                         now,
@@ -178,6 +190,7 @@ class SeenStore:
         self,
         url: str,
         external_id: str = "",
+        session_id: str = "",
         change_hash: str = "",
     ) -> None:
         """Update LegiScan identifiers without changing workflow status."""
@@ -189,11 +202,12 @@ class SeenStore:
                 """
                 UPDATE seen_candidates SET
                     external_id = COALESCE(NULLIF(?, ''), external_id),
+                    session_id = COALESCE(NULLIF(?, ''), session_id),
                     change_hash = COALESCE(NULLIF(?, ''), change_hash),
                     last_seen = ?
                 WHERE url = ?
                 """,
-                (external_id, change_hash, utc_now_iso(), url_key),
+                (external_id, session_id, change_hash, utc_now_iso(), url_key),
             )
 
     def update_status(self, url: str, status: str, verdict: str = "") -> None:
