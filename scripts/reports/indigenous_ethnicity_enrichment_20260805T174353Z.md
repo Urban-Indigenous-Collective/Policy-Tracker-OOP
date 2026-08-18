@@ -1,0 +1,175 @@
+# Indigenous Ethnicity Enrichment Report
+
+Generated: 2026-08-05T17:43:53Z
+Mode: all-na
+
+## Summary
+
+- Targets: 217
+- Accepted: 36
+- Rejected: 119
+- Unresolved: 0
+- Page missing: 0
+- Skipped (override): 0
+- Skipped (known): 136
+
+## Accepted entries
+
+- **Cory T. Williams** → Cherokee Nation (infobox, Cory T. Williams)
+- **Edward T. Begay** → Navajo Nation (intro_regex, Edward T. Begay)
+- **Gregory E. Pyle** → Choctaw Nation (intro_regex, Gregory E. Pyle)
+- **Harry J. W. Belvin** → Choctaw Nation (intro_regex, Harry J. W. Belvin)
+- **Lawrence T. Morgan** → Navajo (intro_regex, Lawrence T. Morgan)
+- **Phyliss J. Anderson** → Choctaw (intro_regex, Phyliss J. Anderson)
+- **Reid D. Milanovich** → Cahuilla (intro_regex, Reid D. Milanovich)
+- **Alonzo D. Dick** → Brothertown Indian (llm_wikipedia, Alonzo D. Dick)
+- **Ben Johnson (Makah politician)** → Makah (llm_wikipedia, Ben Johnson (Makah politician))
+- **Davis Filfred** → Navajo Nation (llm_wikipedia, Davis Filfred)
+- **Edwin DeVries Vanderhoop** → Wampanoag (llm_wikipedia, Edwin DeVries Vanderhoop)
+- **F. Kay Wallis** → Gwichyaa Gwichʼin (llm_wikipedia, F. Kay Wallis)
+- **Fawn Sharp** → Quinault Indian Nation (llm_wikipedia, Fawn Sharp)
+- **Gilbert Blue** → Catawba Nation (llm_wikipedia, Gilbert Blue)
+- **James E. Billie** → Seminole Tribe of Florida (llm_wikipedia, James E. Billie)
+- **James R. Floyd** → Muscogee (Creek) Nation (llm_wikipedia, James R. Floyd)
+- **John Raymond Johnson** → Absentee Shawnee Tribe (llm_wikipedia, John Raymond Johnson)
+- **John Tyler Hammons** → Cherokee Nation (llm_wikipedia, John Tyler Hammons)
+- **Larry Pemberton** → Eastern Pequot Tribal Nation (llm_wikipedia, Larry Pemberton)
+- **LaRue Parker** → Caddo Nation (llm_wikipedia, LaRue Parker)
+- **Lisa Goree** → Shinnecock Indian Nation (llm_wikipedia, Lisa Goree)
+- **Marcellus Osceola Jr.** → Seminole Tribe of Florida (llm_wikipedia, Marcellus Osceola Jr.)
+- **Mark Quiet Hawk Gould** → Nanticoke Lenni-Lenape Tribal Nation (llm_wikipedia, Mark Quiet Hawk Gould)
+- **Mary Thomas (politician)** → Pima (llm_wikipedia, Mary Thomas (politician))
+- **Mike Fox (politician)** → Assiniboine and Chippewa Cree (llm_wikipedia, Mike Fox (politician))
+- **Priscilla Freeman Jacobs** → Waccamaw-Siouan (llm_wikipedia, Priscilla Freeman Jacobs)
+- **R. Perry Beaver** → Muscogee (Creek) Nation (llm_wikipedia, R. Perry Beaver)
+- **Rick Purcell** → Tohajiilee Indian (llm_wikipedia, Rick Purcell)
+- **Robbie Hedges** → Peoria tribe (llm_wikipedia, Robbie Hedges)
+- **Robert Miguel** → Ak-Chin (llm_wikipedia, Robert Miguel)
+- **Robyn Frier** → Iñupiaq (llm_wikipedia, Robyn Frier)
+- **Sharon Bryant (politician)** → Monacan Indian Nation (llm_wikipedia, Sharon Bryant (politician))
+- **Shelley Buck** → Dakota (llm_wikipedia, Shelley Buck)
+- **Timothy Nuvangyaoma** → Hopi (llm_wikipedia, Timothy Nuvangyaoma)
+- **Vivian Juan-Saunders** → Tohono O'odham Nation (llm_wikipedia, Vivian Juan-Saunders)
+- **William H. Dick** → Brothertown Indian (llm_wikipedia, William H. Dick)
+
+## Rejected / unresolved
+
+- Ada Brown (judge): rejected — no_tribe_match
+- Alexander Faribault: rejected — no_tribe_match
+- Alexis Bailly: rejected — no_tribe_match
+- Alonzo D. Dick: rejected — no_tribe_match
+- Anne McKeig: rejected — no_tribe_match
+- Annessa Hartman: rejected — no_tribe_match
+- Barbara Bessette: rejected — no_tribe_match
+- Ben Johnson (Makah politician): rejected — no_tribe_match
+- Brian Garcia (politician): rejected — no_tribe_match
+- Buzzy Peltola: rejected — no_tribe_match
+- Clarena Brockie: rejected — no_tribe_match
+- Davis Filfred: rejected — no_tribe_match
+- Diane E. Benson: rejected — no_tribe_match
+- Don Wright (politician): rejected — no_tribe_match
+- Donavon Hawk: rejected — no_tribe_match
+- Donne Trotter: rejected — no_tribe_match
+- Donny Olson: rejected — no_tribe_match
+- Doug Combs: rejected — no_tribe_match
+- Edwin DeVries Vanderhoop: rejected — no_tribe_match
+- Eldon Nygaard: rejected — no_tribe_match
+- F. Kay Wallis: rejected — no_tribe_match
+- Fawn Sharp: rejected — no_tribe_match
+- Frank DeGroat: rejected — no_tribe_match
+- Frank Warnke: rejected — no_tribe_match
+- Gilbert Blue: rejected — no_tribe_match
+- Hal Stratton: rejected — no_tribe_match
+- Henry G. Bailly: rejected — no_tribe_match
+- Ivan Ivan (politician): rejected — no_tribe_match
+- Jackie Fielder: rejected — no_tribe_match
+- Jade Sooktis: rejected — no_tribe_match
+- James E. Billie: rejected — no_tribe_match
+- James R. Floyd: rejected — no_tribe_match
+- Joe Donnell: rejected — no_tribe_match
+- John Raymond Johnson: rejected — no_tribe_match
+- John Tyler Hammons: rejected — no_tribe_match
+- Jules Wright (politician): rejected — no_tribe_match
+- Larry Pemberton: rejected — no_tribe_match
+- LaRue Parker: rejected — no_tribe_match
+- Lisa Goree: rejected — no_tribe_match
+- Lorena Austin: rejected — no_tribe_match
+- Marcellus Osceola Jr.: rejected — no_tribe_match
+- Mark Quiet Hawk Gould: rejected — no_tribe_match
+- Mary Peltola: rejected — no_tribe_match
+- Mary Thomas (politician): rejected — no_tribe_match
+- Maxine Dibert: rejected — no_tribe_match
+- Mike Fox (politician): rejected — no_tribe_match
+- Mitch O'Farrell: rejected — no_tribe_match
+- Nick Salazar: rejected — no_tribe_match
+- Patrick Goggles: rejected — no_tribe_match
+- Priscilla Freeman Jacobs: rejected — no_tribe_match
+- R. Perry Beaver: rejected — no_tribe_match
+- Raquel Montoya-Lewis: rejected — no_tribe_match
+- Rebecca Cryer: rejected — no_tribe_match
+- Rick Purcell: rejected — no_tribe_match
+- Robbie Hedges: rejected — no_tribe_match
+- Robert Miguel: rejected — no_tribe_match
+- Robyn Frier: rejected — no_tribe_match
+- Rudy Reyes (activist): rejected — no_tribe_match
+- Rynalea Whiteman Pena: rejected — no_tribe_match
+- Shannon Augare: rejected — no_tribe_match
+- Sharon Bryant (politician): rejected — no_tribe_match
+- Shelley Buck: rejected — no_tribe_match
+- Shelly Fyant: rejected — no_tribe_match
+- Sidney Fitzpatrick: rejected — no_tribe_match
+- Skip Finn: rejected — no_tribe_match
+- Steve Holland (politician): rejected — no_tribe_match
+- Sunshine Sykes: rejected — no_tribe_match
+- Theresa Becenti-Aguilar: rejected — no_tribe_match
+- Timothy Nuvangyaoma: rejected — no_tribe_match
+- Valerie Davidson: rejected — no_tribe_match
+- Vivian Juan-Saunders: rejected — no_tribe_match
+- Willard F. Bennett: rejected — no_tribe_match
+- William Fowler (Brothertown Indian): rejected — no_tribe_match
+- William H. Dick: rejected — no_tribe_match
+- Ada Brown (judge): rejected — no_ethnicity
+- Alexander Faribault: rejected — no_ethnicity
+- Alexis Bailly: rejected — no_ethnicity
+- Anne McKeig: rejected — no_ethnicity
+- Annessa Hartman: rejected — no_ethnicity
+- Barbara Bessette: rejected — no_ethnicity
+- Brian Garcia (politician): rejected — no_ethnicity
+- Buzzy Peltola: rejected — no_ethnicity
+- Clarena Brockie: rejected — no_ethnicity
+- Diane E. Benson: rejected — no_ethnicity
+- Don Wright (politician): rejected — no_ethnicity
+- Donavon Hawk: rejected — no_ethnicity
+- Donne Trotter: rejected — no_ethnicity
+- Donny Olson: rejected — no_ethnicity
+- Doug Combs: rejected — no_ethnicity
+- Eldon Nygaard: rejected — no_ethnicity
+- Frank DeGroat: rejected — no_ethnicity
+- Frank Warnke: rejected — no_ethnicity
+- Hal Stratton: rejected — no_ethnicity
+- Henry G. Bailly: rejected — no_ethnicity
+- Ivan Ivan (politician): rejected — no_ethnicity
+- Jackie Fielder: rejected — no_ethnicity
+- Jade Sooktis: rejected — no_ethnicity
+- Joe Donnell: rejected — no_ethnicity
+- Jules Wright (politician): rejected — no_ethnicity
+- Lorena Austin: rejected — no_ethnicity
+- Mary Peltola: rejected — no_ethnicity
+- Maxine Dibert: rejected — no_ethnicity
+- Mitch O'Farrell: rejected — no_ethnicity
+- Nick Salazar: rejected — no_ethnicity
+- Patrick Goggles: rejected — no_ethnicity
+- Raquel Montoya-Lewis: rejected — no_ethnicity
+- Rebecca Cryer: rejected — no_ethnicity
+- Rudy Reyes (activist): rejected — no_ethnicity
+- Rynalea Whiteman Pena: rejected — no_ethnicity
+- Shannon Augare: rejected — no_ethnicity
+- Shelly Fyant: rejected — no_ethnicity
+- Sidney Fitzpatrick: rejected — no_ethnicity
+- Skip Finn: rejected — no_ethnicity
+- Steve Holland (politician): rejected — no_ethnicity
+- Sunshine Sykes: rejected — no_ethnicity
+- Theresa Becenti-Aguilar: rejected — no_ethnicity
+- Valerie Davidson: rejected — no_ethnicity
+- Willard F. Bennett: rejected — no_ethnicity
+- William Fowler (Brothertown Indian): rejected — evidence_not_in_source

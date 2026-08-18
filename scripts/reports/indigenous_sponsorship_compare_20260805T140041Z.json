@@ -1,0 +1,424 @@
+{
+  "generated_at": "2026-08-05T14:00:41.144450+00:00",
+  "baseline_file": "data/backups/live-pre-indigenous-sponsor-trim-20260805-093100.json",
+  "current_file": "data/backups/live-post-indigenous-restore.json",
+  "baseline_records": 96,
+  "current_records": 68,
+  "only_in_baseline": 32,
+  "only_in_current": 4,
+  "shared_records": 64,
+  "metrics": {
+    "baseline_rows_with_indigenous": 41,
+    "current_rows_with_indigenous": 36,
+    "baseline_indigenous_entry_count": 101,
+    "current_indigenous_entry_count": 54
+  },
+  "counts_by_class": {
+    "unchanged": 0,
+    "restored": 0,
+    "cleared": 0,
+    "improved": 4,
+    "changed": 29,
+    "regression_noise": 0,
+    "still_missing": 5
+  },
+  "details": {
+    "unchanged": [],
+    "restored": [],
+    "cleared": [],
+    "improved": [
+      {
+        "identity": "url:https://azgovernor.gov/office-arizona-governor/executive-order/8",
+        "bill": "EO8",
+        "state": "AZ",
+        "title": "Establishing the Task Force on Missing and Murdered Indigenous People",
+        "old": "Sen. Theresa Hatathlie [D] (Navajo) - State Senator for A Z District 6, 2023 – present, Jasmine Blackwater-Nygren [Navajo Nation] (Navajo) - State representative 2020–2023[6]",
+        "new": "Sen. Theresa Hatathlie [D] (Navajo), Jasmine Blackwater-Nygren [Navajo Nation] (Navajo)"
+      },
+      {
+        "identity": "url:https://legiscan.com/AK/bill/HB38/2021",
+        "bill": "HB38",
+        "state": "AK",
+        "title": "An Act Relating to the Alaska Police Standards Council; Relating to the Departme",
+        "old": "Tiffany Zulkosky (D)* (Yup’ik) - State representative 2018–present, Neal Foster (D) (Inupiaq) - State representative 2009–present",
+        "new": "Tiffany Zulkosky (D)* (Yup’ik), Neal Foster (D) (Inupiaq)"
+      },
+      {
+        "identity": "url:https://legiscan.com/AZ/bill/HB2139/2022",
+        "bill": "HB2139",
+        "state": "AZ",
+        "title": "Establishing The Study Committee On Missing And Murdered Indigenous Peoples; App",
+        "old": "Rep. Jennifer Jermaine [D] (White Earth Ojibwe) - State representative for the 18th district (2019–present)[6], Rep. Jasmine Blackwater-Nygren [D] (Navajo) - State representative 2020–2023[6], Rep. Domingo Degrazia [D] (Cherokee) - State representative 2019–2023[6], Rep. Myron Tsosie [D] (Navajo) - State representative 2019–present[6], Sen. Sally Gonzales [D] (Pascua Yaqui) - State representative 1997–2001 and 2011–2019, Sen. Victoria Steele [D] (Seneca) - State representative 2013–2016, State senator 2019–2023",
+        "new": "Rep. Jennifer Jermaine [D] (White Earth Ojibwe), Rep. Jasmine Blackwater-Nygren [D] (Navajo), Rep. Domingo Degrazia [D] (Cherokee), Rep. Myron Tsosie [D] (Navajo), Sen. Victoria Steele [D] (Seneca)"
+      },
+      {
+        "identity": "url:https://legiscan.com/AZ/bill/SB1215/2022",
+        "bill": "SB1215",
+        "state": "AZ",
+        "title": "Missing and murdered indigenous peoples.",
+        "old": "Sen Victoria Steele (D) (Seneca) - State representative 2013–2016, State senator 2019–2023, Rep Jennifer Jermaine (D) (White Earth Ojibwe) - State representative for the 18th district (2019–present)[6]",
+        "new": "Sen Victoria Steele (D) (Seneca) - District SD-009, Rep Jennifer Jermaine (D) (White Earth Ojibwe) - District HD-018"
+      }
+    ],
+    "changed": [
+      {
+        "identity": "url:https://legiscan.com/CA/bill/ACR136/2021",
+        "bill": "ACR136",
+        "state": "CA",
+        "title": "Missing and Murdered Indigenous People Awareness Month.",
+        "old": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)",
+        "new": "Rep James Ramos (D) - District HD-040"
+      },
+      {
+        "identity": "url:https://legiscan.com/CA/bill/AR40/2021",
+        "bill": "AR40",
+        "state": "CA",
+        "title": "Relative to Missing and Murdered Indigenous Women and Girls Awareness Month.",
+        "old": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)",
+        "new": "Rep James Ramos (D) - District HD-040"
+      },
+      {
+        "identity": "url:https://legiscan.com/HI/bill/HCR11/2021",
+        "bill": "HCR11",
+        "state": "HI",
+        "title": "Requesting The Hawaii State Commission On The Status Of Women To Convene A Task ",
+        "old": "Representative Stacelynn Eli [D] (Native Hawaiian), Representative Patrick Branco [D] (Native Hawaiian), Representative Lynn Decoite [D] (Native Hawaiian), Representative Jeanne Kapela [D] (Native Hawaiian)",
+        "new": "Representative Patrick Branco [D] (Native Hawaiian), Representative Lynn Decoite [D] (Native Hawaiian), Representative Jeanne Kapela [D] (Native Hawaiian)"
+      },
+      {
+        "identity": "url:https://legiscan.com/HI/bill/HCR12/2021",
+        "bill": "HCR12",
+        "state": "HI",
+        "title": "Requesting the Hawaii State Commission on the Status of Women to Convene a Task ",
+        "old": "Representative Stacelynn Eli [D] (Native Hawaiian), Representative Patrick Branco [D] (Native Hawaiian), Representative Lynn Decoite [D] (Native Hawaiian), Representative Jeanne Kapela [D] (Native Hawaiian)",
+        "new": "Representative Patrick Branco [D] (Native Hawaiian), Representative Lynn Decoite [D] (Native Hawaiian), Representative Jeanne Kapela [D] (Native Hawaiian)"
+      },
+      {
+        "identity": "url:https://legiscan.com/KS/bill/HB2008/2021",
+        "bill": "HB2008",
+        "state": "KS",
+        "title": "Providing for the Attorney General to Coordinate Training for Law Enforcement Ag",
+        "old": "Rep. Ponka-We Victors [D] (Ponca–Tohono O'odham) - State representative, District 103 (2011–2023)[15], Rep. Christina Haswood [D] (Navajo) - State representative, District 10 (2021–2025)[17]",
+        "new": "Rep. Ponka-We Victors [D] (Ponca–Tohono O'odham), Rep. Christina Haswood [D] (Navajo)"
+      },
+      {
+        "identity": "url:https://legiscan.com/MN/bill/HF2124/2021",
+        "bill": "HF2124",
+        "state": "MN",
+        "title": "A Bill for an Act Relating to Human Rights; Creating an Office for Missing and M",
+        "old": "MN HF2124 Sponsors: Heather Keeler (D)*, Jamie Becker-Finn (D) (Leech Lake Ojibwe) - State representative (2017–present)",
+        "new": "Jamie Becker-Finn (D) (Leech Lake Ojibwe)"
+      },
+      {
+        "identity": "url:https://legiscan.com/MN/bill/HF3055/2021",
+        "bill": "HF3055",
+        "state": "MN",
+        "title": "A Bill for an Act Relating to Public Safety; Establishing a Reward Fund for Info",
+        "old": "Rep. Jamie Becker-Finn [D] (Leech Lake Ojibwe) - State representative (2017–present), Rep. Heather Keeler [D]",
+        "new": "Rep. Jamie Becker-Finn [D] (Leech Lake Ojibwe), Rep. Heather Keeler [D]"
+      },
+      {
+        "identity": "url:https://legiscan.com/MN/bill/SF1989/2021",
+        "bill": "SF1989",
+        "state": "MN",
+        "title": "Office for missing and murdered indigenous relatives office creation and appropr",
+        "old": "Sen Mary Kunesh-Podein (D) (Standing RockLakota) - State representative (2017–2021)State senator (2021–present)",
+        "new": "Sen Mary Kunesh-Podein (D) - District SD-039"
+      },
+      {
+        "identity": "url:https://legiscan.com/MN/bill/SF2828/2021",
+        "bill": "SF2828",
+        "state": "MN",
+        "title": "Reward fund for information on missing and murdered indigenous relatives establi",
+        "old": "Sen Mary Kunesh-Podein (D) (Standing RockLakota) - State representative (2017–2021)State senator (2021–present)",
+        "new": "Sen Mary Kunesh-Podein (D) - District SD-039"
+      },
+      {
+        "identity": "url:https://legiscan.com/MN/bill/SF36/2023",
+        "bill": "SF36",
+        "state": "MN",
+        "title": "Missing and murdered Indigenous relatives information reward fund establishment ",
+        "old": "Senator Mary Kunesh-Podein [D] (Standing RockLakota) - State representative (2017–2021)State senator (2021–present)",
+        "new": "Senator Mary Kunesh-Podein [D]"
+      },
+      {
+        "identity": "url:https://legiscan.com/MT/bill/HB35/2021",
+        "bill": "HB35",
+        "state": "MT",
+        "title": "Establishes a Missing Persons Review Commission",
+        "old": "Rep. Sharon Stewart-Peregoy [D] (Crow) - State senator (2009–2017)State representative (2017–present)",
+        "new": "Rep. Sharon Stewart-Peregoy [D] (Choctaw Nation)"
+      },
+      {
+        "identity": "url:https://legiscan.com/MT/bill/HB36/2021",
+        "bill": "HB36",
+        "state": "MT",
+        "title": "Establish missing persons response team training grant program",
+        "old": "Rep Sharon Stewart-Peregoy (D) (Crow) - State senator (2009–2017)State representative (2017–present)",
+        "new": "Rep Sharon Stewart-Peregoy (D) (Choctaw Nation) - District HD-042"
+      },
+      {
+        "identity": "url:https://legiscan.com/MT/bill/HB98/2021",
+        "bill": "HB98",
+        "state": "MT",
+        "title": "Extending the Missing Indigenous Persons Task Force and the LINC grant program",
+        "old": "Rep. Sharon Stewart-Peregoy (D) (Crow) - State senator (2009–2017)State representative (2017–present)",
+        "new": "Rep. Sharon Stewart-Peregoy (D) (Choctaw Nation)"
+      },
+      {
+        "identity": "url:https://legiscan.com/MT/bill/SB312/2019",
+        "bill": "SB312",
+        "state": "MT",
+        "title": "The Missing Persons Response Team Training Grant Program",
+        "old": "Sen. Jason Small (R) (Northern Cheyenne) - State senator (2017–present)",
+        "new": "Sen. Jason Small (R) (Northern Cheyenne)"
+      },
+      {
+        "identity": "url:https://legiscan.com/MT/bill/SB4/2021",
+        "bill": "SB4",
+        "state": "MT",
+        "title": "Extend the Missing Indigenous Persons Task Force",
+        "old": "Sen Jason Small (R) (Northern Cheyenne) - State senator (2017–present)",
+        "new": "Sen Jason Small (R) (Northern Cheyenne) - District SD-021"
+      },
+      {
+        "identity": "url:https://legiscan.com/NE/bill/LB154/2019",
+        "bill": "LB154",
+        "state": "NE",
+        "title": "Nebraska MMIP Study",
+        "old": "Sen. Tom Brewer [N] (Oglala) - State senator, District 43, 2017–2025[36]",
+        "new": "Sen. Tom Brewer [N] (Oglala)"
+      },
+      {
+        "identity": "url:https://legiscan.com/NM/bill/HB208/2021",
+        "bill": "HB208",
+        "state": "NM",
+        "title": "Requires an Extension of the MMIP Task Force",
+        "old": "Representative Derrick Lente [D] (Sandia & Isleta Pueblo) - State representative, District 26 (2013–)",
+        "new": "Representative Derrick Lente [D] (Sandia & Isleta Pueblo)"
+      },
+      {
+        "identity": "url:https://legiscan.com/NM/bill/SB12/2022",
+        "bill": "SB12",
+        "state": "NM",
+        "title": "Creating a Position in the Attorney General's Office for a Missing Indigenous Pe",
+        "old": "Sen. Shannon Pinto [D] (Navajo) - State senator, District 3 (2019–present)",
+        "new": "Sen. Shannon Pinto [D] (Navajo)"
+      },
+      {
+        "identity": "url:https://legiscan.com/OK/bill/HB2733/2021",
+        "bill": "HB2733",
+        "state": "OK",
+        "title": "Ida's Law (HB2733 — House companion, failed in committee)",
+        "old": "Representative Ajay Pittman [D] (Seminole Nation) - State representative (2019–2026)",
+        "new": "Representative Ajay Pittman [D] (Seminole Nation)"
+      },
+      {
+        "identity": "url:https://legiscan.com/OK/bill/SB172/2021",
+        "bill": "SB172",
+        "state": "OK",
+        "title": "Ida's Law (SB172 — enacted)",
+        "old": "Rep. Collin Walke [D] (Cherokee Nation) - State representative (2016–2023), Rep. Ken Luttrell [R] (Cherokee Nation) - State representative (2007–present), Sen. Shane Jett [R] (Cherokee Nation) - State representative (2004–2010),State senator (2021–present)",
+        "new": "Rep. Collin Walke [D] (Cherokee Nation), Rep. Ken Luttrell [R] (Cherokee Nation), Sen. Shane Jett [R] (Cherokee Nation)"
+      },
+      {
+        "identity": "url:https://legiscan.com/OK/bill/SB230/2021",
+        "bill": "SB230",
+        "state": "OK",
+        "title": "Ida's Law attempt (SB230 — 2021 session, failed)",
+        "old": "Rep Ken Luttrell (R) (Cherokee Nation) - State representative (2007–present)",
+        "new": "Rep Ken Luttrell (R) (Cherokee Nation) - District HD-037"
+      },
+      {
+        "identity": "url:https://legiscan.com/OK/bill/SB230/2022",
+        "bill": "SB230",
+        "state": "OK",
+        "title": "Ida's Law attempt (SB230 — 2022 session, failed)",
+        "old": "Rep Ken Luttrell (R) (Cherokee Nation) - State representative (2007–present)",
+        "new": "Rep Ken Luttrell (R) (Cherokee Nation) - District HD-037"
+      },
+      {
+        "identity": "url:https://legiscan.com/SD/bill/HB1199/2021",
+        "bill": "HB1199",
+        "state": "SD",
+        "title": "An Act to Establish the Office of Liaison for Missing and Murdered Indigenous Pe",
+        "old": "Representative Peri Pourier [D] (Oglala Sioux) - State representative (2019–present), Senator Red Foster [D] (Oglala Sioux/Navajo) - State representative (2019 –present), Senator Troy Heinert [D] (Rosebud Lakota) - State representative (2013–2015), State senator (2015–Present)",
+        "new": "Representative Peri Pourier [D] (Oglala Sioux), Senator Troy Heinert [D] (Rosebud Lakota)"
+      },
+      {
+        "identity": "url:https://legiscan.com/UT/bill/HB0041/2021",
+        "bill": "HB41",
+        "state": "UT",
+        "title": "Murdered and Missing Indigenous Women and Girls Task Force",
+        "old": "Angela Romero (D)* and David Hinkins (R) (Assiniboine) - State representative (2013–present)",
+        "new": "Angela Romero (D)* and David Hinkins (R) (Assiniboine)"
+      },
+      {
+        "identity": "url:https://legiscan.com/UT/bill/HB0480/2024",
+        "bill": "HB0480",
+        "state": "UT",
+        "title": "Murdered and Missing Indigenous Relatives Amendments",
+        "old": "Representative Angela Romero [D] (Assiniboine) - State representative (2013–present)",
+        "new": "Representative Angela Romero [D] (Assiniboine)"
+      },
+      {
+        "identity": "url:https://legiscan.com/WA/bill/HB1177/2023",
+        "bill": "HB1177",
+        "state": "WA",
+        "title": "Creating a Missing and Murdered Indigenous Women and People Cold Case Investigat",
+        "old": "Rep. Debra Lekanoff (D) (Tlingit) - State representative (2019–)",
+        "new": "Rep. Debra Lekanoff (D) (Tlingit)"
+      },
+      {
+        "identity": "url:https://legiscan.com/WA/bill/HB1571/2021",
+        "bill": "HB1571",
+        "state": "WA",
+        "title": "An Act Relating to Protections and Services for Indigenous Persons Who Are Missi",
+        "old": "Rep. Debra Lekanoff [D] (Tlingit) - State representative (2019–)",
+        "new": "Rep. Debra Lekanoff [D] (Tlingit)"
+      },
+      {
+        "identity": "url:https://legiscan.com/WA/bill/HB1639/2021",
+        "bill": "HB1639",
+        "state": "WA",
+        "title": "An Act Relating to the Creation of an Endangered Missing Person Advisory Designa",
+        "old": "Rep. Debra Lekanoff [D] (Tlingit) - State representative (2019–)",
+        "new": "Rep. Debra Lekanoff [D] (Tlingit)"
+      },
+      {
+        "identity": "url:https://legiscan.com/WA/bill/HB1725/2021",
+        "bill": "HB1725",
+        "state": "WA",
+        "title": "Concerning the creation of an endangered missing person advisory designation for",
+        "old": "Rep Debra Lekanoff (D) (Tlingit) - State representative (2019–)",
+        "new": "Rep Debra Lekanoff (D) (Tlingit) - District HD-040A"
+      }
+    ],
+    "regression_noise": [],
+    "still_missing": [
+      {
+        "identity": "url:https://legiscan.com/AZ/bill/HB2099/2021",
+        "bill": "HB2099",
+        "state": "AZ",
+        "title": "An Act Amending Laws 2019, Chapter 232, Section 1; Appropriating Monies; Relatin",
+        "old": "Bowers, Butler, DeGrazia (Cherokee) - State representative 2019–2023[6], Teller (Navajo) - State representative 2019–2021[6], Tsosie (Navajo) - State representative 2019–present[6], Gonzales (Pascua Yaqui) - State representative 1997–2001 and 2011–2019, Peshlakai (Navajo) - State representative, District 7 (2013-2015) State senator (2017-2021)[9], Steele (Seneca) - State representative 2013–2016, State senator 2019–2023"
+      },
+      {
+        "identity": "url:https://legiscan.com/ME/bill/HP1220/2021",
+        "bill": "HP1220",
+        "state": "ME",
+        "title": "Joint Resolution Recognizing May 5, 2021 as National Day of Awareness for Missin",
+        "old": "Representative Rena D. Newell (Passamaquoddy) - State representative (non-voting)"
+      },
+      {
+        "identity": "url:https://legiscan.com/NM/bill/SM18/2022",
+        "bill": "SM18",
+        "state": "NM",
+        "title": "A Memorial Honoring the Families of Missing and Murdered Indigenous Women and Re",
+        "old": "Sen.Shannon D. Pinto [D-NM] (Navajo) - State senator, District 3 (2019–present)"
+      },
+      {
+        "identity": "url:https://legiscan.com/US/bill/HR368/2021",
+        "bill": "HR368",
+        "state": "National",
+        "title": "Expressing Support for the Designation of May 5, 2021, as the “National Day of A",
+        "old": "Kelly [R-ND-At Large] (Standing RockLakota) - State representative (2017–2021)State senator (2021–present), Rep. Joyce, Rep. Herrell (Cherokee) - Assistant Secretary of Agriculture for Congressional Relations, 2025–present, Yvette [R-NM-2] (Cherokee) - Assistant Secretary of Agriculture for Congressional Relations, 2025–present, Rep. Cole (Chickasaw Nation) - State representative (1979–1984),State senator (1984-1988, 1991-1996), Tom [R-OK-4] (Hualapai) - State representative 1999–2001, Ashley [R-IA-1], Rep. Johnson ([?]) - State representative 1961, Ken [R-CA-42] (Cherokee Nation) - State representative (2007–present)"
+      },
+      {
+        "identity": "url:https://legiscan.com/US/bill/HR411/2021",
+        "bill": "HR411",
+        "state": "National",
+        "title": "Expressing the Sense of the House of Representatives to Recognize the Crisis of ",
+        "old": "Rep. Moore (Yup’ik) - State representative 1971–1973"
+      }
+    ]
+  },
+  "spot_checks_baseline": [
+    {
+      "name": "James Ramos",
+      "bill": "AR40",
+      "state": "CA",
+      "title": "Relative to Missing and Murdered Indigenous Women and Girls Awareness Month.",
+      "indigenous": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "ACR136",
+      "state": "CA",
+      "title": "Missing and Murdered Indigenous People Awareness Month.",
+      "indigenous": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "SF2828",
+      "state": "MN",
+      "title": "Reward fund for information on missing and murdered indigenous relatives establi",
+      "indigenous": "Sen Mary Kunesh-Podein (D) (Standing RockLakota) - State representative (2017–2021)State senator (2021–present)"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "SF36",
+      "state": "MN",
+      "title": "Missing and murdered Indigenous relatives information reward fund establishment ",
+      "indigenous": "Senator Mary Kunesh-Podein [D] (Standing RockLakota) - State representative (2017–2021)State senator (2021–present)"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "SF1989",
+      "state": "MN",
+      "title": "Office for missing and murdered indigenous relatives office creation and appropr",
+      "indigenous": "Sen Mary Kunesh-Podein (D) (Standing RockLakota) - State representative (2017–2021)State senator (2021–present)"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "HF2124",
+      "state": "MN",
+      "title": "A Bill for an Act Relating to Human Rights; Creating an Office for Missing and M",
+      "indigenous": "MN HF2124 Sponsors: Heather Keeler (D)*, Jamie Becker-Finn (D) (Leech Lake Ojibwe) - State representative (2017–present)"
+    }
+  ],
+  "spot_checks_current": [
+    {
+      "name": "James Ramos",
+      "bill": "AR40",
+      "state": "CA",
+      "title": "Relative to Missing and Murdered Indigenous Women and Girls Awareness Month.",
+      "indigenous": "Rep James Ramos (D) - District HD-040"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "ACR136",
+      "state": "CA",
+      "title": "Missing and Murdered Indigenous People Awareness Month.",
+      "indigenous": "Rep James Ramos (D) - District HD-040"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "SF2828",
+      "state": "MN",
+      "title": "Reward fund for information on missing and murdered indigenous relatives establi",
+      "indigenous": "Sen Mary Kunesh-Podein (D) - District SD-039"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "SF36",
+      "state": "MN",
+      "title": "Missing and murdered Indigenous relatives information reward fund establishment ",
+      "indigenous": "Senator Mary Kunesh-Podein [D]"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "SF1989",
+      "state": "MN",
+      "title": "Office for missing and murdered indigenous relatives office creation and appropr",
+      "indigenous": "Sen Mary Kunesh-Podein (D) - District SD-039"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "HF2124",
+      "state": "MN",
+      "title": "A Bill for an Act Relating to Human Rights; Creating an Office for Missing and M",
+      "indigenous": "Jamie Becker-Finn (D) (Leech Lake Ojibwe)"
+    }
+  ]
+}

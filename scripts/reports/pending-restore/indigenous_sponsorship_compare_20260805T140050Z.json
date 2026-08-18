@@ -1,0 +1,1465 @@
+{
+  "generated_at": "2026-08-05T14:00:50.693762+00:00",
+  "baseline_file": "data/backups/pending-pre-indigenous-sponsor-trim-20260805-093058.json",
+  "current_file": "data/backups/pending-post-indigenous-restore.json",
+  "baseline_records": 286,
+  "current_records": 286,
+  "only_in_baseline": 0,
+  "only_in_current": 0,
+  "shared_records": 286,
+  "metrics": {
+    "baseline_rows_with_indigenous": 115,
+    "current_rows_with_indigenous": 109,
+    "baseline_indigenous_entry_count": 308,
+    "current_indigenous_entry_count": 178
+  },
+  "counts_by_class": {
+    "unchanged": 0,
+    "restored": 0,
+    "cleared": 0,
+    "improved": 3,
+    "changed": 91,
+    "regression_noise": 0,
+    "still_missing": 6
+  },
+  "details": {
+    "unchanged": [],
+    "restored": [],
+    "cleared": [],
+    "improved": [
+      {
+        "identity": "url:https://legiscan.com/AK/bill/HR10/2019",
+        "bill": "HR10",
+        "state": "AK",
+        "title": "Reauthorize Violence Against Women Act",
+        "old": "Rep Tiffany Zulkosky (D) (Yup’ik) - State representative 2018–present, Rep Neal Foster (D) (Inupiaq) - State representative 2009–present, Rep Bryce Edgmon (I) (Yup'ik) - State representative 2007–present,speaker of the state house2017–2021, Rep John Lincoln (D) (Inupiaq) - State representative 2018–2021",
+        "new": "Rep Tiffany Zulkosky (D) (Yup’ik) - District HD-038, Rep Neal Foster (D) (Inupiaq) - District HD-039, Rep Bryce Edgmon (I) (Yup'ik) - District HD-037, Rep John Lincoln (D) (Inupiaq) - District HD-040"
+      },
+      {
+        "identity": "url:https://legiscan.com/AK/bill/SB151/2023",
+        "bill": "SB151",
+        "state": "AK",
+        "title": "Missing/murdered Indigenous People;report",
+        "old": "Sen Donald Olson (D) (Iñupiat) - District SD-T, Sen Lyman Hoffman (D) (Yup’ik) - State representative 1987–1991 and 1993–1995, state senator 1991–1993 and 1995–present, Rep Thomas Baker (R) (Inuit) - State representative 2023–2025, Rep Neal Foster (D) (Inupiaq) - State representative 2009–present, Rep Bryce Edgmon (I) (Yup'ik) - State representative 2007–present,speaker of the state house2017–2021",
+        "new": "Sen Donald Olson (D) (Iñupiat) - District SD-T, Sen Lyman Hoffman (D) (Yup’ik) - District SD-S, Rep Thomas Baker (R) (Inuit) - District HD-040, Rep Neal Foster (D) (Inupiaq) - District HD-039, Rep Bryce Edgmon (I) (Yup'ik) - District HD-037"
+      },
+      {
+        "identity": "url:https://legiscan.com/AZ/bill/HB2281/2025",
+        "bill": "HB2281",
+        "state": "AZ",
+        "title": "Missing indigenous person; alert system",
+        "old": "Rep Brian Garcia (D) - District HD-008, Rep Mae Peshlakai (D) (Navajo) - State representative, District 6 (2023–present), Rep Myron Tsosie (D) (Navajo) - State representative 2019–present[6]",
+        "new": "Rep Brian Garcia (D) - District HD-008, Rep Mae Peshlakai (D) (Navajo) - District HD-006, Rep Myron Tsosie (D) (Navajo) - District HD-006"
+      }
+    ],
+    "changed": [
+      {
+        "identity": "url:https://legiscan.com/CA/bill/AB1314/2021",
+        "bill": "AB1314",
+        "state": "CA",
+        "title": "Emergency notification: Feather Alert: endangered indigenous people.",
+        "old": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)",
+        "new": "Rep James Ramos (D) - District HD-040"
+      },
+      {
+        "identity": "url:https://legiscan.com/CA/bill/AB1863/2023",
+        "bill": "AB1863",
+        "state": "CA",
+        "title": "California Emergency Services Act: notification systems: Feather Alert.",
+        "old": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)",
+        "new": "Rep James Ramos (D) - District HD-045"
+      },
+      {
+        "identity": "url:https://legiscan.com/CA/bill/AB1881/2025",
+        "bill": "AB1881",
+        "state": "CA",
+        "title": "California Indian Freedom Act of 2026.",
+        "old": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)",
+        "new": "Rep James Ramos (D) - District HD-045"
+      },
+      {
+        "identity": "url:https://legiscan.com/CA/bill/AB2279/2023",
+        "bill": "AB2279",
+        "state": "CA",
+        "title": "Missing and Murdered Indigenous Persons Justice Program.",
+        "old": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)",
+        "new": "Rep James Ramos (D) - District HD-045"
+      },
+      {
+        "identity": "url:https://legiscan.com/CA/bill/AB2348/2023",
+        "bill": "AB2348",
+        "state": "CA",
+        "title": "California Emergency Services Act: notification systems: Feather Alert.",
+        "old": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)",
+        "new": "Rep James Ramos (D) - District HD-045"
+      },
+      {
+        "identity": "url:https://legiscan.com/CA/bill/AB3099/2019",
+        "bill": "AB3099",
+        "state": "CA",
+        "title": "Department of Justice: law enforcement assistance with tribal issues: study.",
+        "old": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)",
+        "new": "Rep James Ramos (D) - District HD-040"
+      },
+      {
+        "identity": "url:https://legiscan.com/CA/bill/AB31/2025",
+        "bill": "AB31",
+        "state": "CA",
+        "title": "Peace officers: tribal police.",
+        "old": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)",
+        "new": "Rep James Ramos (D) - District HD-045"
+      },
+      {
+        "identity": "url:https://legiscan.com/CA/bill/AB44/2023",
+        "bill": "AB44",
+        "state": "CA",
+        "title": "California Law Enforcement Telecommunications System: tribal police.",
+        "old": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)",
+        "new": "Rep James Ramos (D) - District HD-045"
+      },
+      {
+        "identity": "url:https://legiscan.com/CA/bill/ACR133/2023",
+        "bill": "ACR133",
+        "state": "CA",
+        "title": "Missing and Murdered Indigenous People Awareness Month.",
+        "old": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)",
+        "new": "Rep James Ramos (D) - District HD-045"
+      },
+      {
+        "identity": "url:https://legiscan.com/CA/bill/ACR163/2025",
+        "bill": "ACR163",
+        "state": "CA",
+        "title": "Missing and Murdered Indigenous People Awareness Month.",
+        "old": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)",
+        "new": "Rep James Ramos (D) - District HD-045"
+      },
+      {
+        "identity": "url:https://legiscan.com/CA/bill/ACR25/2023",
+        "bill": "ACR25",
+        "state": "CA",
+        "title": "Missing and Murdered Indigenous People Awareness Month.",
+        "old": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)",
+        "new": "Rep James Ramos (D) - District HD-045"
+      },
+      {
+        "identity": "url:https://legiscan.com/CA/bill/ACR39/2025",
+        "bill": "ACR39",
+        "state": "CA",
+        "title": "Missing and Murdered Indigenous People Awareness Month.",
+        "old": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)",
+        "new": "Rep James Ramos (D) - District HD-045"
+      },
+      {
+        "identity": "url:https://legiscan.com/CA/bill/ACR83/2019",
+        "bill": "ACR83",
+        "state": "CA",
+        "title": "Missing and Murdered Indigenous Women and Girls Awareness Month.",
+        "old": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present), Rep Todd Gloria (D) (Tlingit–Haida) - State assemblyman(2017–2020)Mayor of San Diego(2020–present)",
+        "new": "Rep James Ramos (D) - District HD-040, Rep Todd Gloria (D) (Tlingit–Haida) - District HD-078"
+      },
+      {
+        "identity": "url:https://legiscan.com/CA/bill/AJR17/2019",
+        "bill": "AJR17",
+        "state": "CA",
+        "title": "Missing and murdered Native American women and girls.",
+        "old": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present), Rep Todd Gloria (D) (Tlingit–Haida) - State assemblyman(2017–2020)Mayor of San Diego(2020–present)",
+        "new": "Rep James Ramos (D) - District HD-040, Rep Todd Gloria (D) (Tlingit–Haida) - District HD-078"
+      },
+      {
+        "identity": "url:https://legiscan.com/CA/bill/SB4/2025",
+        "bill": "SB4",
+        "state": "CA",
+        "title": "Missing and Murdered Indigenous Persons Justice Program.",
+        "old": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)",
+        "new": "Rep James Ramos (D) - District HD-045"
+      },
+      {
+        "identity": "url:https://legiscan.com/CA/bill/SB891/2025",
+        "bill": "SB891",
+        "state": "CA",
+        "title": "Missing and Murdered Indigenous Persons Justice Program.",
+        "old": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)",
+        "new": "Rep James Ramos (D) - District HD-045"
+      },
+      {
+        "identity": "url:https://legiscan.com/HI/bill/HR12/2021",
+        "bill": "HR12",
+        "state": "HI",
+        "title": "Requesting The Hawaii State Commission On The Status Of Women To Convene A Task ",
+        "old": "Rep Stacelynn Eli (D) (Native Hawaiian) - District HD-043, Rep Patrick Branco (D) (Native Hawaiian) - District HD-050, Rep Lynn Decoite (D) (Native Hawaiian) - District HD-013, Rep Jeanne Kapela (D) (Native Hawaiian) - District HD-005",
+        "new": "Rep Patrick Branco (D) (Native Hawaiian) - District HD-050, Rep Lynn Decoite (D) (Native Hawaiian) - District HD-013, Rep Jeanne Kapela (D) (Native Hawaiian) - District HD-005"
+      },
+      {
+        "identity": "url:https://legiscan.com/KS/bill/HB2646/2019",
+        "bill": "HB2646",
+        "state": "KS",
+        "title": "Allowing the attorney general to coordinate training for law enforcement agencie",
+        "old": "Rep Ponka-We Victors (D) (Ponca–Tohono O'odham) - State representative, District 103 (2011–2023)[15]",
+        "new": "Rep Ponka-We Victors (D) (Ponca–Tohono O'odham) - District HD-103"
+      },
+      {
+        "identity": "url:https://legiscan.com/KS/bill/HB2649/2023",
+        "bill": "HB2649",
+        "state": "KS",
+        "title": "Requiring the attorney general to submit an annual report to certain legislative",
+        "old": "Rep Christina Haswood (D) (Navajo) - State representative, District 10 (2021–2025)[17]",
+        "new": "Rep Christina Haswood (D) (Navajo) - District HD-010"
+      },
+      {
+        "identity": "url:https://legiscan.com/KS/bill/HB2735/2023",
+        "bill": "HB2735",
+        "state": "KS",
+        "title": "Establishing a task force on missing women and girls who are black, indigenous a",
+        "old": "Rep Christina Haswood (D) (Navajo) - State representative, District 10 (2021–2025)[17]",
+        "new": "Rep Christina Haswood (D) (Navajo) - District HD-010"
+      },
+      {
+        "identity": "url:https://legiscan.com/ME/bill/HP1203/2019",
+        "bill": "HP1203",
+        "state": "ME",
+        "title": "JOINT RESOLUTION RECOGNIZING MAY 5, 2019 AS NATIONAL DAY OF AWARENESS FOR MISSIN",
+        "old": "Rep Rena Newell (Passamaquoddy) - State representative (non-voting)",
+        "new": "Rep Rena Newell (Passamaquoddy) - District HD-TRIBE"
+      },
+      {
+        "identity": "url:https://legiscan.com/ME/bill/HP1543/2021",
+        "bill": "HP1543",
+        "state": "ME",
+        "title": "JOINT RESOLUTION RECOGNIZING MAY 5, 2022 AS MISSING AND MURDERED INDIGENOUS PERS",
+        "old": "Rep Rena Newell (Passamaquoddy) - State representative (non-voting)",
+        "new": "Rep Rena Newell (Passamaquoddy) - District HD-TRIBE"
+      },
+      {
+        "identity": "url:https://legiscan.com/MN/bill/HF111/2019",
+        "bill": "HF111",
+        "state": "MN",
+        "title": "Task Force on Missing and Murdered Indigenous Women created, violence against in",
+        "old": "Rep Mary Kunesh-Podein (D) (Standing RockLakota) - State representative (2017–2021)State senator (2021–present)",
+        "new": "Rep Mary Kunesh-Podein (D) - District HD-041B"
+      },
+      {
+        "identity": "url:https://legiscan.com/MN/bill/HF1212/2019",
+        "bill": "HF1212",
+        "state": "MN",
+        "title": "Task Force on Missing and Murdered Indigenous Women created, violence against in",
+        "old": "Rep Mary Kunesh-Podein (D) (Standing RockLakota) - State representative (2017–2021)State senator (2021–present)",
+        "new": "Rep Mary Kunesh-Podein (D) - District HD-041B"
+      },
+      {
+        "identity": "url:https://legiscan.com/MN/bill/HF1376/2023",
+        "bill": "HF1376",
+        "state": "MN",
+        "title": "Reward fund established for information on missing and murdered Indigenous relat",
+        "old": "Rep Heather Keeler (D) - District HD-004A, Rep Jamie Becker-finn (D) (Leech Lake Ojibwe) - State representative (2017–present)",
+        "new": "Rep Heather Keeler (D) - District HD-004A, Rep Jamie Becker-finn (D) (Leech Lake Ojibwe) - District HD-040B"
+      },
+      {
+        "identity": "url:https://legiscan.com/MN/bill/HF4634/2019",
+        "bill": "HF4634",
+        "state": "MN",
+        "title": "Missing and Murdered Indigenous Women task force deadline to submit final report",
+        "old": "Rep Mary Kunesh-Podein (D) (Standing RockLakota) - State representative (2017–2021)State senator (2021–present), Rep Jamie Becker-finn (D) (Leech Lake Ojibwe) - State representative (2017–present)",
+        "new": "Rep Mary Kunesh-Podein (D) - District HD-041B, Rep Jamie Becker-finn (D) (Leech Lake Ojibwe) - District HD-042B"
+      },
+      {
+        "identity": "url:https://legiscan.com/MN/bill/HF70/2019",
+        "bill": "HF70",
+        "state": "MN",
+        "title": "Task Force on Missing and Murdered Indigenous Women created, violence against in",
+        "old": "Rep Mary Kunesh-Podein (D) (Standing RockLakota) - State representative (2017–2021)State senator (2021–present), Rep Jamie Becker-finn (D) (Leech Lake Ojibwe) - State representative (2017–present)",
+        "new": "Rep Mary Kunesh-Podein (D) - District HD-041B, Rep Jamie Becker-finn (D) (Leech Lake Ojibwe) - District HD-042B"
+      },
+      {
+        "identity": "url:https://legiscan.com/MN/bill/SF105/2023",
+        "bill": "SF105",
+        "state": "MN",
+        "title": "Minnesota missing and murdered Indigenous relatives special license plates estab",
+        "old": "Sen Mary Kunesh-Podein (D) (Standing RockLakota) - State representative (2017–2021)State senator (2021–present)",
+        "new": "Sen Mary Kunesh-Podein (D) - District SD-039"
+      },
+      {
+        "identity": "url:https://legiscan.com/MN/bill/SF1558/2025",
+        "bill": "SF1558",
+        "state": "MN",
+        "title": "Office of Missing and Murdered Indigenous Relatives authorization to access addi",
+        "old": "Sen Mary Kunesh-Podein (D) (Standing RockLakota) - State representative (2017–2021)State senator (2021–present)",
+        "new": "Sen Mary Kunesh-Podein (D) - District SD-039"
+      },
+      {
+        "identity": "url:https://legiscan.com/MN/bill/SF2967/2025",
+        "bill": "SF2967",
+        "state": "MN",
+        "title": "Multidisciplinary child protection team and its duties modification",
+        "old": "Sen Mary Kunesh-Podein (D) (Standing RockLakota) - State representative (2017–2021)State senator (2021–present)",
+        "new": "Sen Mary Kunesh-Podein (D) - District SD-039"
+      },
+      {
+        "identity": "url:https://legiscan.com/MN/bill/SF3858/2023",
+        "bill": "SF3858",
+        "state": "MN",
+        "title": "Wambdi Alert system creation to aid in locating missing Indigenous persons",
+        "old": "Sen Mary Kunesh-Podein (D) (Standing RockLakota) - State representative (2017–2021)State senator (2021–present)",
+        "new": "Sen Mary Kunesh-Podein (D) - District SD-039"
+      },
+      {
+        "identity": "url:https://legiscan.com/MN/bill/SF3926/2021",
+        "bill": "SF3926",
+        "state": "MN",
+        "title": "Minnesota missing and murderer Indigenous relatives special license plates estab",
+        "old": "Sen Mary Kunesh-Podein (D) (Standing RockLakota) - State representative (2017–2021)State senator (2021–present)",
+        "new": "Sen Mary Kunesh-Podein (D) - District SD-039"
+      },
+      {
+        "identity": "url:https://legiscan.com/MN/bill/SF4249/2023",
+        "bill": "SF4249",
+        "state": "MN",
+        "title": "Office of Missing and Murdered Indigenous Relatives access to additional data au",
+        "old": "Sen Mary Kunesh-Podein (D) (Standing RockLakota) - State representative (2017–2021)State senator (2021–present)",
+        "new": "Sen Mary Kunesh-Podein (D) - District SD-039"
+      },
+      {
+        "identity": "url:https://legiscan.com/MN/bill/SF4282/2021",
+        "bill": "SF4282",
+        "state": "MN",
+        "title": "Missing and murdered indigenous women monument appropriation",
+        "old": "Sen Mary Kunesh-Podein (D) (Standing RockLakota) - State representative (2017–2021)State senator (2021–present)",
+        "new": "Sen Mary Kunesh-Podein (D) - District SD-039"
+      },
+      {
+        "identity": "url:https://legiscan.com/MT/bill/HB163/2023",
+        "bill": "HB163",
+        "state": "MT",
+        "title": "Revise and extend Missing Indigenous Persons Task Force",
+        "old": "Rep Tyson Running Wolf (D) (Blackfeet Nation) - Representative for Montana house district 16 (2019–present)",
+        "new": "Rep Tyson Running Wolf (D) (Blackfeet Nation) - District HD-016"
+      },
+      {
+        "identity": "url:https://legiscan.com/MT/bill/HB18/2023",
+        "bill": "HB18",
+        "state": "MT",
+        "title": "Establish missing persons response team training grant program",
+        "old": "Rep Tyson Running Wolf (D) (Blackfeet Nation) - Representative for Montana house district 16 (2019–present)",
+        "new": "Rep Tyson Running Wolf (D) (Blackfeet Nation) - District HD-016"
+      },
+      {
+        "identity": "url:https://legiscan.com/MT/bill/HB545/2025",
+        "bill": "HB545",
+        "state": "MT",
+        "title": "Revise laws related to missing and murdered indigenous persons",
+        "old": "Rep Tyson Running Wolf (D) (Blackfeet Nation) - Representative for Montana house district 16 (2019–present)",
+        "new": "Rep Tyson Running Wolf (D) (Blackfeet Nation) - District HD-016"
+      },
+      {
+        "identity": "url:https://legiscan.com/MT/bill/HB83/2025",
+        "bill": "HB83",
+        "state": "MT",
+        "title": "Establish state special revenue account for Montana Missing Indigenous Persons T",
+        "old": "Rep Tyson Running Wolf (D) (Blackfeet Nation) - Representative for Montana house district 16 (2019–present)",
+        "new": "Rep Tyson Running Wolf (D) (Blackfeet Nation) - District HD-016"
+      },
+      {
+        "identity": "url:https://legiscan.com/MT/bill/SB40/2019",
+        "bill": "SB40",
+        "state": "MT",
+        "title": "Require OPI to create and maintain electronic directory photograph repository",
+        "old": "Sen Frank Smith (D) (Assiniboine,Sioux[27]) - State representative (1998–2004, 2011–2013); State senator (2004–2009, 2017–2021)",
+        "new": "Sen Frank Smith (D) (Assiniboine,Sioux[27]) - District SD-016"
+      },
+      {
+        "identity": "url:https://legiscan.com/ND/bill/HB1199/2025",
+        "bill": "HB1199",
+        "state": "ND",
+        "title": "The criminal justice data information sharing system; to provide for a legislati",
+        "old": "Rep Collette Brown (D) (Spirit Lake) - State representative, 2024–present[72], Rep Jayme Davis (D) (Turtle Mountain Ojibwe) - State representative, 2022–present, Rep Lisa Finley-Deville (D) (Mandan, Hidatsa, and Arikara Nation) - State representative, 2023–present, Sen Richard Marcellais (D) (Turtle Mountain Ojibwe) - State senator, 2007-2022, 2024–present",
+        "new": "Rep Collette Brown (D) (Spirit Lake) - District HD-009, Rep Jayme Davis (D) (Turtle Mountain Ojibwe) - District HD-009, Rep Lisa Finley-Deville (D) (Mandan, Hidatsa, and Arikara Nation) - District HD-004, Sen Richard Marcellais (D) (Turtle Mountain Ojibwe) - District SD-009"
+      },
+      {
+        "identity": "url:https://legiscan.com/ND/bill/HB1311/2019",
+        "bill": "HB1311",
+        "state": "ND",
+        "title": "Law enforcement training on missing and murdered indigenous people.",
+        "old": "Rep Ruth Buffalo (D) (Mandan, Hidatsa, and Arikara Nation) - State representative, 2018-2022",
+        "new": "Rep Ruth Buffalo (D) (Mandan, Hidatsa, and Arikara Nation) - District HD-027"
+      },
+      {
+        "identity": "url:https://legiscan.com/ND/bill/HB1313/2019",
+        "bill": "HB1313",
+        "state": "ND",
+        "title": "The collection of data on missing persons.",
+        "old": "Rep Ruth Buffalo (D) (Mandan, Hidatsa, and Arikara Nation) - State representative, 2018-2022",
+        "new": "Rep Ruth Buffalo (D) (Mandan, Hidatsa, and Arikara Nation) - District HD-027"
+      },
+      {
+        "identity": "url:https://legiscan.com/ND/bill/HB1535/2025",
+        "bill": "HB1535",
+        "state": "ND",
+        "title": "A state alert notice system and the committee on tribal and state relations; and",
+        "old": "Rep Jayme Davis (D) (Turtle Mountain Ojibwe) - State representative, 2022–present, Rep Collette Brown (D) (Spirit Lake) - State representative, 2024–present[72], Rep Lisa Finley-Deville (D) (Mandan, Hidatsa, and Arikara Nation) - State representative, 2023–present",
+        "new": "Rep Jayme Davis (D) (Turtle Mountain Ojibwe) - District HD-009, Rep Collette Brown (D) (Spirit Lake) - District HD-009, Rep Lisa Finley-Deville (D) (Mandan, Hidatsa, and Arikara Nation) - District HD-004"
+      },
+      {
+        "identity": "url:https://legiscan.com/ND/bill/HCR3041/2019",
+        "bill": "HCR3041",
+        "state": "ND",
+        "title": "A concurrent resolution urging Congress to pass Savanna's Act.",
+        "old": "Rep Ruth Buffalo (D) (Mandan, Hidatsa, and Arikara Nation) - State representative, 2018-2022",
+        "new": "Rep Ruth Buffalo (D) (Mandan, Hidatsa, and Arikara Nation) - District HD-027"
+      },
+      {
+        "identity": "url:https://legiscan.com/ND/bill/HCR3056/2019",
+        "bill": "HCR3056",
+        "state": "ND",
+        "title": "A concurrent resolution directing the Legislative Management to consider studyin",
+        "old": "Rep Ruth Buffalo (D) (Mandan, Hidatsa, and Arikara Nation) - State representative, 2018-2022, Sen Richard Marcellais (D) (Turtle Mountain Ojibwe) - State senator, 2007-2022, 2024–present",
+        "new": "Rep Ruth Buffalo (D) (Mandan, Hidatsa, and Arikara Nation) - District HD-027, Sen Richard Marcellais (D) (Turtle Mountain Ojibwe) - District SD-009"
+      },
+      {
+        "identity": "url:https://legiscan.com/NM/bill/SB13/2022",
+        "bill": "SB13",
+        "state": "NM",
+        "title": "\"missing In New Mexico Event\"",
+        "old": "Sen Shannon Pinto (D) (Navajo) - State senator, District 3 (2019–present), Rep Patricia Roybal Caballero (D) (Piro-Manso-Tiwa[48]) - State representative (2013–present)",
+        "new": "Sen Shannon Pinto (D) (Navajo) - District SD-003, Rep Patricia Roybal Caballero (D) (Piro-Manso-Tiwa[48]) - District HD-013"
+      },
+      {
+        "identity": "url:https://legiscan.com/NM/bill/SB249/2026",
+        "bill": "SB249",
+        "state": "NM",
+        "title": "Missing & Murdered Indigenous Peoples",
+        "old": "Sen Shannon Pinto (D) (Navajo) - State senator, District 3 (2019–present)",
+        "new": "Sen Shannon Pinto (D) (Navajo) - District SD-003"
+      },
+      {
+        "identity": "url:https://legiscan.com/NM/bill/SB414/2023",
+        "bill": "SB414",
+        "state": "NM",
+        "title": "Indigenous People Crime Victim Reparations",
+        "old": "Sen Shannon Pinto (D) (Navajo) - State senator, District 3 (2019–present)",
+        "new": "Sen Shannon Pinto (D) (Navajo) - District SD-003"
+      },
+      {
+        "identity": "url:https://legiscan.com/NM/bill/SJM2/2024",
+        "bill": "SJM2",
+        "state": "NM",
+        "title": "Missing & Murdered Indigenous Task Force",
+        "old": "Sen Brenda McKenna (D) (Nambé Pueblo) - State senator, District 9 (2021-)[56], Sen Shannon Pinto (D) (Navajo) - State senator, District 3 (2019–present), Rep Patricia Roybal Caballero (D) (Piro-Manso-Tiwa[48]) - State representative (2013–present)",
+        "new": "Sen Brenda McKenna (D) (Nambé Pueblo) - District SD-009, Sen Shannon Pinto (D) (Navajo) - District SD-003, Rep Patricia Roybal Caballero (D) (Piro-Manso-Tiwa[48]) - District HD-013"
+      },
+      {
+        "identity": "url:https://legiscan.com/NV/bill/AB125/2023",
+        "bill": "AB125",
+        "state": "NV",
+        "title": "Revises provisions relating to public safety. (BDR 43-796)",
+        "old": "Rep Shea Backus (D) (Cherokee) - State representative, 2018–2020[39]",
+        "new": "Rep Shea Backus (D) (Cherokee) - District HD-037"
+      },
+      {
+        "identity": "url:https://legiscan.com/OK/bill/HB3345/2020",
+        "bill": "HB3345",
+        "state": "OK",
+        "title": "Missing and murdered indigenous persons; creating Ida's Law; effective date.",
+        "old": "Rep Ken Luttrell (R) (Cherokee Nation) - State representative (2007–present), Rep Chelsey Branham (D) (Chickasaw Nation) - State representative (2018–2020), Rep Collin Walke (D) (Cherokee Nation) - State representative (2016–2023)",
+        "new": "Rep Ken Luttrell (R) (Cherokee Nation) - District HD-037, Rep Chelsey Branham (D) (Chickasaw Nation) - District HD-083, Rep Collin Walke (D) (Cherokee Nation) - District HD-087"
+      },
+      {
+        "identity": "url:https://legiscan.com/OK/bill/HB4128/2024",
+        "bill": "HB4128",
+        "state": "OK",
+        "title": "Appropriations; Oklahoma State Bureau of Investigation; Ida's Law; effective dat",
+        "old": "Rep Amanda Swope (D) (Muscogee Creek Nation) - State representative (2022–2025), Rep Ken Luttrell (R) (Cherokee Nation) - State representative (2007–present)",
+        "new": "Rep Amanda Swope (D) (Muscogee Creek Nation) - District HD-071, Rep Ken Luttrell (R) (Cherokee Nation) - District HD-037"
+      },
+      {
+        "identity": "url:https://legiscan.com/OK/bill/SB242/2021",
+        "bill": "SB242",
+        "state": "OK",
+        "title": "Law enforcement training; modifying composition of the Council on Law Enforcemen",
+        "old": "Rep Dustin Roberts (R) (Choctaw Nation) - State representative (2010–2022)",
+        "new": "Rep Dustin Roberts (R) (Choctaw Nation) - District HD-021"
+      },
+      {
+        "identity": "url:https://legiscan.com/OR/bill/HB3198/2025",
+        "bill": "HB3198",
+        "state": "OR",
+        "title": "Relating to missing and murdered indigenous people.",
+        "old": "Rep Tawna Sanchez (D) (Shoshone,Bannock,Ute) - State representative (2017–present), Rep Annessa Hartman (D) - District HD-040",
+        "new": "Rep Tawna Sanchez (D) (Shoshone,Bannock,Ute) - District HD-043, Rep Annessa Hartman (D) - District HD-040"
+      },
+      {
+        "identity": "url:https://legiscan.com/SC/bill/H4269/2025",
+        "bill": "H4269",
+        "state": "SC",
+        "title": "Congressman Raul M. Grijalva, sympathy",
+        "old": "Rep Fawn Pedalino (R) (Natchez-Kusso) - State representative (2023–present)",
+        "new": "Rep Fawn Pedalino (R) (Natchez-Kusso) - District HD-064"
+      },
+      {
+        "identity": "url:https://legiscan.com/SC/bill/H4880/2025",
+        "bill": "H4880",
+        "state": "SC",
+        "title": "Missing and Murdered Indigenous Women Day",
+        "old": "Rep Fawn Pedalino (R) (Natchez-Kusso) - State representative (2023–present)",
+        "new": "Rep Fawn Pedalino (R) (Natchez-Kusso) - District HD-064"
+      },
+      {
+        "identity": "url:https://legiscan.com/SD/bill/HB1194/2022",
+        "bill": "HB1194",
+        "state": "SD",
+        "title": "Make an appropriation to the Office of Attorney General to temporarily fund a po",
+        "old": "Sen Red Foster (D) (Oglala Sioux/Navajo) - State representative (2019 –present), Rep Tamara St. John (R) (Dakota Sioux) - State representative (2019 – ), Rep Shawn Bordeaux (D) - District HD-026A",
+        "new": "Rep Tamara St. John (R) (Dakota Sioux) - District HD-001, Rep Shawn Bordeaux (D) - District HD-026A"
+      },
+      {
+        "identity": "url:https://legiscan.com/SD/bill/HB1264/2022",
+        "bill": "HB1264",
+        "state": "SD",
+        "title": "Make an appropriation for the Liaison for Missing and Murdered Indigenous Person",
+        "old": "Sen Red Foster (D) (Oglala Sioux/Navajo) - State representative (2019 –present), Rep Peri Pourier (D) (Oglala Sioux) - State representative (2019–present), Rep Shawn Bordeaux (D) - District HD-026A, Sen Troy Heinert (D) (Rosebud Lakota) - State representative (2013–2015), State senator (2015–Present)",
+        "new": "Rep Peri Pourier (D) (Oglala Sioux) - District HD-027, Rep Shawn Bordeaux (D) - District HD-026A, Sen Troy Heinert (D) (Rosebud Lakota) - District SD-026"
+      },
+      {
+        "identity": "url:https://legiscan.com/SD/bill/HCR6010/2022",
+        "bill": "HCR6010",
+        "state": "SD",
+        "title": "Supporting the initiatives of the Sisseton Wahpeton Oyate.",
+        "old": "Rep Peri Pourier (D) (Oglala Sioux) - State representative (2019–present)",
+        "new": "Rep Peri Pourier (D) (Oglala Sioux) - District HD-027"
+      },
+      {
+        "identity": "url:https://legiscan.com/US/bill/HB1292/2023",
+        "bill": "HB1292",
+        "state": "US",
+        "title": "BADGES for Native Communities Act Bridging Agency Data Gaps and Ensuring Safety ",
+        "old": "Rep Sharice Davids (D) - District HD-KS-3, Rep Tom Cole (R) (Chickasaw Nation) - State senator (1988–1991),26th Secretary of State of Oklahoma(1995–1999),U.S. Congressman (2003–present)",
+        "new": "Rep Sharice Davids (D) - District HD-KS-3, Rep Tom Cole (R) (Chickasaw Nation) - District HD-OK-4"
+      },
+      {
+        "identity": "url:https://legiscan.com/US/bill/HB2029/2019",
+        "bill": "HB2029",
+        "state": "National",
+        "title": "Studying the Missing and Murdered Indian Crisis Act of 2019",
+        "old": "Rep Debra Haaland (D) (Laguna Pueblo) - 54th United States Secretary of the Interior, 2021–2025,Democratic nominee for Governor in 2026, Rep Tom Cole (R) (Chickasaw Nation) - State senator (1988–1991),26th Secretary of State of Oklahoma(1995–1999),U.S. Congressman (2003–present), Rep Sharice Davids (D) - District HD-KS-3",
+        "new": "Rep Tom Cole (R) (Chickasaw Nation) - District HD-OK-4, Rep Sharice Davids (D) - District HD-KS-3"
+      },
+      {
+        "identity": "url:https://legiscan.com/US/bill/HB2438/2019",
+        "bill": "HB2438",
+        "state": "US",
+        "title": "Not Invisible Act of 2020",
+        "old": "Rep Debra Haaland (D) (Laguna Pueblo) - 54th United States Secretary of the Interior, 2021–2025,Democratic nominee for Governor in 2026, Rep Sharice Davids (D) - District HD-KS-3, Rep Tom Cole (R) (Chickasaw Nation) - State senator (1988–1991),26th Secretary of State of Oklahoma(1995–1999),U.S. Congressman (2003–present), Rep Markwayne Mullin (R) (Cherokee Nation) - 9th United States Secretary of Homeland Security, 2026–present",
+        "new": "Rep Sharice Davids (D) - District HD-KS-3, Rep Tom Cole (R) (Chickasaw Nation) - District HD-OK-4, Rep Markwayne Mullin (R) (Cherokee Nation) - District HD-OK-2"
+      },
+      {
+        "identity": "url:https://legiscan.com/US/bill/HB2733/2019",
+        "bill": "HB2733",
+        "state": "US",
+        "title": "Savanna’s Act",
+        "old": "Rep Debra Haaland (D) (Laguna Pueblo) - 54th United States Secretary of the Interior, 2021–2025,Democratic nominee for Governor in 2026, Rep Sharice Davids (D) - District HD-KS-3, Rep Tom Cole (R) (Chickasaw Nation) - State senator (1988–1991),26th Secretary of State of Oklahoma(1995–1999),U.S. Congressman (2003–present), Rep Markwayne Mullin (R) (Cherokee Nation) - 9th United States Secretary of Homeland Security, 2026–present",
+        "new": "Rep Sharice Davids (D) - District HD-KS-3, Rep Tom Cole (R) (Chickasaw Nation) - District HD-OK-4, Rep Markwayne Mullin (R) (Cherokee Nation) - District HD-OK-2"
+      },
+      {
+        "identity": "url:https://legiscan.com/US/bill/HB2740/2021",
+        "bill": "HB2740",
+        "state": "US",
+        "title": "Native Youth and Tribal Officer Protection Act",
+        "old": "Rep Tom Cole (R) (Chickasaw Nation) - State senator (1988–1991),26th Secretary of State of Oklahoma(1995–1999),U.S. Congressman (2003–present)",
+        "new": "Rep Tom Cole (R) (Chickasaw Nation) - District HD-OK-4"
+      },
+      {
+        "identity": "url:https://legiscan.com/US/bill/HB4289/2019",
+        "bill": "HB4289",
+        "state": "US",
+        "title": "BADGES for Native Communities Act Bridging Agency Data Gaps and Ensuring Safety ",
+        "old": "Rep Debra Haaland (D) (Laguna Pueblo) - 54th United States Secretary of the Interior, 2021–2025,Democratic nominee for Governor in 2026, Rep Sharice Davids (D) - District HD-KS-3, Rep Tom Cole (R) (Chickasaw Nation) - State senator (1988–1991),26th Secretary of State of Oklahoma(1995–1999),U.S. Congressman (2003–present), Rep Markwayne Mullin (R) (Cherokee Nation) - 9th United States Secretary of Homeland Security, 2026–present",
+        "new": "Rep Sharice Davids (D) - District HD-KS-3, Rep Tom Cole (R) (Chickasaw Nation) - District HD-OK-4, Rep Markwayne Mullin (R) (Cherokee Nation) - District HD-OK-2"
+      },
+      {
+        "identity": "url:https://legiscan.com/US/bill/HB8960/2021",
+        "bill": "HB8960",
+        "state": "US",
+        "title": "BADGES for Native Communities Act Bridging Agency Data Gaps and Ensuring Safety ",
+        "old": "Rep Tom Cole (R) (Chickasaw Nation) - State senator (1988–1991),26th Secretary of State of Oklahoma(1995–1999),U.S. Congressman (2003–present), Rep Sharice Davids (D) - District HD-KS-3",
+        "new": "Rep Tom Cole (R) (Chickasaw Nation) - District HD-OK-4, Rep Sharice Davids (D) - District HD-KS-3"
+      },
+      {
+        "identity": "url:https://legiscan.com/US/bill/HB958/2019",
+        "bill": "HB958",
+        "state": "US",
+        "title": "Native Youth and Tribal Officer Protection Act",
+        "old": "Rep Tom Cole (R) (Chickasaw Nation) - State senator (1988–1991),26th Secretary of State of Oklahoma(1995–1999),U.S. Congressman (2003–present), Rep Debra Haaland (D) (Laguna Pueblo) - 54th United States Secretary of the Interior, 2021–2025,Democratic nominee for Governor in 2026",
+        "new": "Rep Tom Cole (R) (Chickasaw Nation) - District HD-OK-4"
+      },
+      {
+        "identity": "url:https://legiscan.com/US/bill/HR1094/2021",
+        "bill": "HR1094",
+        "state": "National",
+        "title": "Expressing support for the designation of May 5, 2022, as the \"National Day of A",
+        "old": "Rep Tom Cole (R) (Chickasaw Nation) - State senator (1988–1991),26th Secretary of State of Oklahoma(1995–1999),U.S. Congressman (2003–present), Rep Markwayne Mullin (R) (Cherokee Nation) - 9th United States Secretary of Homeland Security, 2026–present",
+        "new": "Rep Tom Cole (R) (Chickasaw Nation) - District HD-OK-4, Rep Markwayne Mullin (R) (Cherokee Nation) - District HD-OK-2"
+      },
+      {
+        "identity": "url:https://legiscan.com/US/bill/HR1177/2023",
+        "bill": "HR1177",
+        "state": "National",
+        "title": "Expressing support for the designation of May 5, 2024, as the \"National Day of A",
+        "old": "Rep Tom Cole (R) (Chickasaw Nation) - State senator (1988–1991),26th Secretary of State of Oklahoma(1995–1999),U.S. Congressman (2003–present), Rep Sharice Davids (D) - District HD-KS-3",
+        "new": "Rep Tom Cole (R) (Chickasaw Nation) - District HD-OK-4, Rep Sharice Davids (D) - District HD-KS-3"
+      },
+      {
+        "identity": "url:https://legiscan.com/US/bill/HR278/2019",
+        "bill": "HR278",
+        "state": "National",
+        "title": "Expressing the sense of the House of Representatives to recognize the crisis of ",
+        "old": "Rep Debra Haaland (D) (Laguna Pueblo) - 54th United States Secretary of the Interior, 2021–2025,Democratic nominee for Governor in 2026, Rep Sharice Davids (D) - District HD-KS-3, Rep Tom Cole (R) (Chickasaw Nation) - State senator (1988–1991),26th Secretary of State of Oklahoma(1995–1999),U.S. Congressman (2003–present)",
+        "new": "Rep Sharice Davids (D) - District HD-KS-3, Rep Tom Cole (R) (Chickasaw Nation) - District HD-OK-4"
+      },
+      {
+        "identity": "url:https://legiscan.com/US/bill/HR353/2023",
+        "bill": "HR353",
+        "state": "National",
+        "title": "Expressing support for the designation of May 5, 2023, as the \"National Day of A",
+        "old": "Rep Tom Cole (R) (Chickasaw Nation) - State senator (1988–1991),26th Secretary of State of Oklahoma(1995–1999),U.S. Congressman (2003–present), Rep Sharice Davids (D) - District HD-KS-3",
+        "new": "Rep Tom Cole (R) (Chickasaw Nation) - District HD-OK-4, Rep Sharice Davids (D) - District HD-KS-3"
+      },
+      {
+        "identity": "url:https://legiscan.com/US/bill/HR381/2025",
+        "bill": "HR381",
+        "state": "National",
+        "title": "Expressing support for the designation of May 5, 2025, as the \"National Day of A",
+        "old": "Rep Tom Cole (R) (Chickasaw Nation) - State senator (1988–1991),26th Secretary of State of Oklahoma(1995–1999),U.S. Congressman (2003–present)",
+        "new": "Rep Tom Cole (R) (Chickasaw Nation) - District HD-OK-4"
+      },
+      {
+        "identity": "url:https://legiscan.com/US/bill/HR950/2019",
+        "bill": "HR950",
+        "state": "National",
+        "title": "Expressing support for the designation of May 5, 2020, as the \"National Day of A",
+        "old": "Rep Debra Haaland (D) (Laguna Pueblo) - 54th United States Secretary of the Interior, 2021–2025,Democratic nominee for Governor in 2026, Rep Sharice Davids (D) - District HD-KS-3, Rep Tom Cole (R) (Chickasaw Nation) - State senator (1988–1991),26th Secretary of State of Oklahoma(1995–1999),U.S. Congressman (2003–present), Rep Markwayne Mullin (R) (Cherokee Nation) - 9th United States Secretary of Homeland Security, 2026–present",
+        "new": "Rep Sharice Davids (D) - District HD-KS-3, Rep Tom Cole (R) (Chickasaw Nation) - District HD-OK-4, Rep Markwayne Mullin (R) (Cherokee Nation) - District HD-OK-2"
+      },
+      {
+        "identity": "url:https://legiscan.com/US/bill/SB227/2019",
+        "bill": "SB227",
+        "state": "US",
+        "title": "Savanna's Act",
+        "old": "Sen Dan Sullivan (R) (Choctaw Nation) - State representative (2004–2011)",
+        "new": "Sen Dan Sullivan (R) (Choctaw Nation) - District SD-AK"
+      },
+      {
+        "identity": "url:https://legiscan.com/US/bill/SR194/2023",
+        "bill": "SR194",
+        "state": "National",
+        "title": "A resolution designating May 5, 2023, as the \"National Day of Awareness for Miss",
+        "old": "Sen Dan Sullivan (R) (Choctaw Nation) - State representative (2004–2011)",
+        "new": "Sen Dan Sullivan (R) (Choctaw Nation) - District SD-AK"
+      },
+      {
+        "identity": "url:https://legiscan.com/US/bill/SR200/2025",
+        "bill": "SR200",
+        "state": "National",
+        "title": "A resolution expressing support for the designation of May 5, 2025, as the \"Nati",
+        "old": "Sen Dan Sullivan (R) (Choctaw Nation) - State representative (2004–2011)",
+        "new": "Sen Dan Sullivan (R) (Choctaw Nation) - District SD-AK"
+      },
+      {
+        "identity": "url:https://legiscan.com/US/bill/SR674/2023",
+        "bill": "SR674",
+        "state": "National",
+        "title": "A resolution designating May 5, 2024, as the \"National Day of Awareness for Miss",
+        "old": "Sen Dan Sullivan (R) (Choctaw Nation) - State representative (2004–2011)",
+        "new": "Sen Dan Sullivan (R) (Choctaw Nation) - District SD-AK"
+      },
+      {
+        "identity": "url:https://legiscan.com/US/bill/SR726/2025",
+        "bill": "SR726",
+        "state": "National",
+        "title": "A resolution expressing support for the designation of May 5, 2026, as \"National",
+        "old": "Sen Dan Sullivan (R) (Choctaw Nation) - State representative (2004–2011)",
+        "new": "Sen Dan Sullivan (R) (Choctaw Nation) - District SD-AK"
+      },
+      {
+        "identity": "url:https://legiscan.com/UT/bill/HB0015/2025",
+        "bill": "HB0015",
+        "state": "UT",
+        "title": "Murdered and Missing Indigenous Relatives Task Force Amendments",
+        "old": "Rep Angela Romero (D) (Assiniboine) - State representative (2013–present)",
+        "new": "Rep Angela Romero (D) (Assiniboine) - District HD-025"
+      },
+      {
+        "identity": "url:https://legiscan.com/UT/bill/HB0025/2023",
+        "bill": "HB0025",
+        "state": "UT",
+        "title": "Murdered and Missing Indigenous Women and Girls Task Force Sunset Extension",
+        "old": "Rep Angela Romero (D) (Assiniboine) - State representative (2013–present)",
+        "new": "Rep Angela Romero (D) (Assiniboine) - District HD-025"
+      },
+      {
+        "identity": "url:https://legiscan.com/UT/bill/HB0116/2020",
+        "bill": "HB0116",
+        "state": "UT",
+        "title": "Murdered and Missing Indigenous Women and Girls Task Force",
+        "old": "Rep Angela Romero (D) (Assiniboine) - State representative (2013–present)",
+        "new": "Rep Angela Romero (D) (Assiniboine) - District HD-026"
+      },
+      {
+        "identity": "url:https://legiscan.com/UT/bill/HB0125/2025",
+        "bill": "HB0125",
+        "state": "UT",
+        "title": "Murdered and Missing Indigenous Relatives Amendments",
+        "old": "Rep Angela Romero (D) (Assiniboine) - State representative (2013–present)",
+        "new": "Rep Angela Romero (D) (Assiniboine) - District HD-025"
+      },
+      {
+        "identity": "url:https://legiscan.com/UT/bill/HB0588/2026",
+        "bill": "HB0588",
+        "state": "UT",
+        "title": "Murdered and Missing Indigenous Relatives Amendments",
+        "old": "Rep Angela Romero (D) (Assiniboine) - State representative (2013–present)",
+        "new": "Rep Angela Romero (D) (Assiniboine) - District HD-025"
+      },
+      {
+        "identity": "url:https://legiscan.com/WA/bill/HB1713/2019",
+        "bill": "HB1713",
+        "state": "WA",
+        "title": "Improving law enforcement response to missing and murdered Native American women",
+        "old": "Rep Debra Lekanoff (D) (Tlingit) - State representative (2019–)",
+        "new": "Rep Debra Lekanoff (D) (Tlingit) - District HD-040A"
+      },
+      {
+        "identity": "url:https://legiscan.com/WA/bill/SB5137/2023",
+        "bill": "SB5137",
+        "state": "WA",
+        "title": "Creating a missing and murdered indigenous women and people cold case investigat",
+        "old": "Sen Claudia Kauffman (D) (Nez Perce) - State senator (2007–2011)",
+        "new": "Sen Claudia Kauffman (D) (Nez Perce) - District SD-047"
+      },
+      {
+        "identity": "url:https://legiscan.com/WA/bill/SB5477/2023",
+        "bill": "SB5477",
+        "state": "WA",
+        "title": "Implementing the recommendations of the Washington state missing and murdered in",
+        "old": "Sen Claudia Kauffman (D) (Nez Perce) - State senator (2007–2011)",
+        "new": "Sen Claudia Kauffman (D) (Nez Perce) - District SD-047"
+      },
+      {
+        "identity": "url:https://legiscan.com/WA/bill/SB5564/2023",
+        "bill": "SB5564",
+        "state": "WA",
+        "title": "Establishing a reward program for information related to missing or murdered ind",
+        "old": "Sen Claudia Kauffman (D) (Nez Perce) - State senator (2007–2011)",
+        "new": "Sen Claudia Kauffman (D) (Nez Perce) - District SD-047"
+      },
+      {
+        "identity": "url:https://legiscan.com/WA/bill/SB6070/2025",
+        "bill": "SB6070",
+        "state": "WA",
+        "title": "Supporting the recovery of missing persons.",
+        "old": "Sen Claudia Kauffman (D) (Nez Perce) - State senator (2007–2011)",
+        "new": "Sen Claudia Kauffman (D) (Nez Perce) - District SD-047"
+      },
+      {
+        "identity": "url:https://legiscan.com/WA/bill/SB6186/2023",
+        "bill": "SB6186",
+        "state": "WA",
+        "title": "Revised for 1st Substitute: Concerning disclosure of certain recipient informati",
+        "old": "Sen Claudia Kauffman (D) (Nez Perce) - State senator (2007–2011)",
+        "new": "Sen Claudia Kauffman (D) (Nez Perce) - District SD-047"
+      },
+      {
+        "identity": "url:https://legiscan.com/WA/bill/SR8648/2025",
+        "bill": "SR8648",
+        "state": "WA",
+        "title": "Honoring the lives of missing and murdered Indigenous women.",
+        "old": "Sen Claudia Kauffman (D) (Nez Perce) - State senator (2007–2011)",
+        "new": "Sen Claudia Kauffman (D) (Nez Perce) - District SD-047"
+      },
+      {
+        "identity": "url:https://legiscan.com/WY/bill/HJ0003/2020",
+        "bill": "HJ0003",
+        "state": "WY",
+        "title": "Supporting federal missing and murdered persons efforts.",
+        "old": "Sen Affie Ellis (R) (Navajo) - State senator (2017–2025)",
+        "new": "Sen Affie Ellis (R) (Navajo) - District SD-008"
+      }
+    ],
+    "regression_noise": [],
+    "still_missing": [
+      {
+        "identity": "url:https://goia.wa.gov/news/2025/governor-fergusons-proclamation-missing-and-murdered-indigenous-women-and-peoples-mmiwp-month-may",
+        "bill": "",
+        "state": "WA",
+        "title": "Governor Ferguson's Proclamation on Missing and Murdered Indigenous Women and Pe",
+        "old": "Governor Ferguson (Inupiaq) - State representative 1971–1975, state senator 1975–1986"
+      },
+      {
+        "identity": "url:https://iad.nm.gov/wp-content/uploads/2020/12/NM_MMIWR_Report_FINAL_WEB_v120920.pdf",
+        "bill": "",
+        "state": "NM",
+        "title": "New Mexico Missing and Murdered Indigenous Women and Relatives TASK FORCE REPORT",
+        "old": "Derrick J. Lente (Sandia & Isleta Pueblo) - State representative, District 26 (2013–), Wonda Johnson (Navajo[54]) - State representative (2015–present)"
+      },
+      {
+        "identity": "url:https://justice.gov/opa/pr/attorney-general-garland-secretary-haaland-department-interior-highlight-missing-and",
+        "bill": "",
+        "state": "National",
+        "title": "Attorney General Garland and Secretary Haaland Highlight Missing and Murdered In",
+        "old": "Secretary Deb Haaland (Laguna Pueblo) - 54th United States Secretary of the Interior, 2021–2025,Democratic nominee for Governor in 2026"
+      },
+      {
+        "identity": "url:https://legiscan.com/HI/bill/HCR157/2020",
+        "bill": "HCR157",
+        "state": "HI",
+        "title": "Requesting The Hawaii State Commission On The Status Of Women To Convene A Task ",
+        "old": "Rep Stacelynn Eli (D) (Native Hawaiian) - District HD-043"
+      },
+      {
+        "identity": "url:https://legiscan.com/HI/bill/HR136/2020",
+        "bill": "HR136",
+        "state": "HI",
+        "title": "Requesting The Hawaii State Commission On The Status Of Women To Convene A Task ",
+        "old": "Rep Stacelynn Eli (D) (Native Hawaiian) - District HD-043"
+      },
+      {
+        "identity": "url:https://legiscan.com/ME/bill/HP1211/2023",
+        "bill": "HP1211",
+        "state": "ME",
+        "title": "JOINT RESOLUTION RECOGNIZING MAY 5, 2023 AS MISSING AND MURDERED INDIGENOUS PERS",
+        "old": "Rep Aaron Dana - District HD-TRIBE"
+      }
+    ]
+  },
+  "spot_checks_baseline": [
+    {
+      "name": "Sharice Davids",
+      "bill": "HR411",
+      "state": "National",
+      "title": "Expressing the sense of the House of Representatives to recognize the crisis of ",
+      "indigenous": "Rep Sharice Davids (D) - District HD-KS-3"
+    },
+    {
+      "name": "Sharice Davids",
+      "bill": "HR950",
+      "state": "National",
+      "title": "Expressing support for the designation of May 5, 2020, as the \"National Day of A",
+      "indigenous": "Rep Debra Haaland (D) (Laguna Pueblo) - 54th United States Secretary of the Interior, 2021–2025,Democratic nominee for Governor in 2026, Rep Sharice Davids (D) - District HD-KS-3, Rep Tom Cole (R) (Chickasaw Nation) - State senator (1988–1991),26th Secretary of State of Oklahoma(1995–1999),U.S. Congressman (2003–present), Rep Markwayne Mullin (R) (Cherokee Nation) - 9th United States Secretary of Homeland Security, 2026–present"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "AJR17",
+      "state": "CA",
+      "title": "Missing and murdered Native American women and girls.",
+      "indigenous": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present), Rep Todd Gloria (D) (Tlingit–Haida) - State assemblyman(2017–2020)Mayor of San Diego(2020–present)"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "SF1558",
+      "state": "MN",
+      "title": "Office of Missing and Murdered Indigenous Relatives authorization to access addi",
+      "indigenous": "Sen Mary Kunesh-Podein (D) (Standing RockLakota) - State representative (2017–2021)State senator (2021–present)"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "AB2279",
+      "state": "CA",
+      "title": "Missing and Murdered Indigenous Persons Justice Program.",
+      "indigenous": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "ACR25",
+      "state": "CA",
+      "title": "Missing and Murdered Indigenous People Awareness Month.",
+      "indigenous": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)"
+    },
+    {
+      "name": "Tyson Running Wolf",
+      "bill": "HB83",
+      "state": "MT",
+      "title": "Establish state special revenue account for Montana Missing Indigenous Persons T",
+      "indigenous": "Rep Tyson Running Wolf (D) (Blackfeet Nation) - Representative for Montana house district 16 (2019–present)"
+    },
+    {
+      "name": "Tyson Running Wolf",
+      "bill": "HB18",
+      "state": "MT",
+      "title": "Establish missing persons response team training grant program",
+      "indigenous": "Rep Tyson Running Wolf (D) (Blackfeet Nation) - Representative for Montana house district 16 (2019–present)"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "AB31",
+      "state": "CA",
+      "title": "Peace officers: tribal police.",
+      "indigenous": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)"
+    },
+    {
+      "name": "Sharice Davids",
+      "bill": "HR1177",
+      "state": "National",
+      "title": "Expressing support for the designation of May 5, 2024, as the \"National Day of A",
+      "indigenous": "Rep Tom Cole (R) (Chickasaw Nation) - State senator (1988–1991),26th Secretary of State of Oklahoma(1995–1999),U.S. Congressman (2003–present), Rep Sharice Davids (D) - District HD-KS-3"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "AB2348",
+      "state": "CA",
+      "title": "California Emergency Services Act: notification systems: Feather Alert.",
+      "indigenous": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "HF4634",
+      "state": "MN",
+      "title": "Missing and Murdered Indigenous Women task force deadline to submit final report",
+      "indigenous": "Rep Mary Kunesh-Podein (D) (Standing RockLakota) - State representative (2017–2021)State senator (2021–present), Rep Jamie Becker-finn (D) (Leech Lake Ojibwe) - State representative (2017–present)"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "SF105",
+      "state": "MN",
+      "title": "Minnesota missing and murdered Indigenous relatives special license plates estab",
+      "indigenous": "Sen Mary Kunesh-Podein (D) (Standing RockLakota) - State representative (2017–2021)State senator (2021–present)"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "HF111",
+      "state": "MN",
+      "title": "Task Force on Missing and Murdered Indigenous Women created, violence against in",
+      "indigenous": "Rep Mary Kunesh-Podein (D) (Standing RockLakota) - State representative (2017–2021)State senator (2021–present)"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "HF1212",
+      "state": "MN",
+      "title": "Task Force on Missing and Murdered Indigenous Women created, violence against in",
+      "indigenous": "Rep Mary Kunesh-Podein (D) (Standing RockLakota) - State representative (2017–2021)State senator (2021–present)"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "AB1863",
+      "state": "CA",
+      "title": "California Emergency Services Act: notification systems: Feather Alert.",
+      "indigenous": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)"
+    },
+    {
+      "name": "Tyson Running Wolf",
+      "bill": "HB545",
+      "state": "MT",
+      "title": "Revise laws related to missing and murdered indigenous persons",
+      "indigenous": "Rep Tyson Running Wolf (D) (Blackfeet Nation) - Representative for Montana house district 16 (2019–present)"
+    },
+    {
+      "name": "Tyson Running Wolf",
+      "bill": "HB163",
+      "state": "MT",
+      "title": "Revise and extend Missing Indigenous Persons Task Force",
+      "indigenous": "Rep Tyson Running Wolf (D) (Blackfeet Nation) - Representative for Montana house district 16 (2019–present)"
+    },
+    {
+      "name": "Sharice Davids",
+      "bill": "HR278",
+      "state": "National",
+      "title": "Expressing the sense of the House of Representatives to recognize the crisis of ",
+      "indigenous": "Rep Debra Haaland (D) (Laguna Pueblo) - 54th United States Secretary of the Interior, 2021–2025,Democratic nominee for Governor in 2026, Rep Sharice Davids (D) - District HD-KS-3, Rep Tom Cole (R) (Chickasaw Nation) - State senator (1988–1991),26th Secretary of State of Oklahoma(1995–1999),U.S. Congressman (2003–present)"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "SB4",
+      "state": "CA",
+      "title": "Missing and Murdered Indigenous Persons Justice Program.",
+      "indigenous": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)"
+    },
+    {
+      "name": "Bryce Edgmon",
+      "bill": "HR10",
+      "state": "AK",
+      "title": "Reauthorize Violence Against Women Act",
+      "indigenous": "Rep Tiffany Zulkosky (D) (Yup’ik) - State representative 2018–present, Rep Neal Foster (D) (Inupiaq) - State representative 2009–present, Rep Bryce Edgmon (I) (Yup'ik) - State representative 2007–present,speaker of the state house2017–2021, Rep John Lincoln (D) (Inupiaq) - State representative 2018–2021"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "ACR39",
+      "state": "CA",
+      "title": "Missing and Murdered Indigenous People Awareness Month.",
+      "indigenous": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)"
+    },
+    {
+      "name": "Sharice Davids",
+      "bill": "HB4289",
+      "state": "US",
+      "title": "BADGES for Native Communities Act Bridging Agency Data Gaps and Ensuring Safety ",
+      "indigenous": "Rep Debra Haaland (D) (Laguna Pueblo) - 54th United States Secretary of the Interior, 2021–2025,Democratic nominee for Governor in 2026, Rep Sharice Davids (D) - District HD-KS-3, Rep Tom Cole (R) (Chickasaw Nation) - State senator (1988–1991),26th Secretary of State of Oklahoma(1995–1999),U.S. Congressman (2003–present), Rep Markwayne Mullin (R) (Cherokee Nation) - 9th United States Secretary of Homeland Security, 2026–present"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "SF3926",
+      "state": "MN",
+      "title": "Minnesota missing and murderer Indigenous relatives special license plates estab",
+      "indigenous": "Sen Mary Kunesh-Podein (D) (Standing RockLakota) - State representative (2017–2021)State senator (2021–present)"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "ACR133",
+      "state": "CA",
+      "title": "Missing and Murdered Indigenous People Awareness Month.",
+      "indigenous": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "SF4249",
+      "state": "MN",
+      "title": "Office of Missing and Murdered Indigenous Relatives access to additional data au",
+      "indigenous": "Sen Mary Kunesh-Podein (D) (Standing RockLakota) - State representative (2017–2021)State senator (2021–present)"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "ACR83",
+      "state": "CA",
+      "title": "Missing and Murdered Indigenous Women and Girls Awareness Month.",
+      "indigenous": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present), Rep Todd Gloria (D) (Tlingit–Haida) - State assemblyman(2017–2020)Mayor of San Diego(2020–present)"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "AB1881",
+      "state": "CA",
+      "title": "California Indian Freedom Act of 2026.",
+      "indigenous": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)"
+    },
+    {
+      "name": "Bryce Edgmon",
+      "bill": "SB151",
+      "state": "AK",
+      "title": "Missing/murdered Indigenous People;report",
+      "indigenous": "Sen Donald Olson (D) (Iñupiat) - District SD-T, Sen Lyman Hoffman (D) (Yup’ik) - State representative 1987–1991 and 1993–1995, state senator 1991–1993 and 1995–present, Rep Thomas Baker (R) (Inuit) - State representative 2023–2025, Rep Neal Foster (D) (Inupiaq) - State representative 2009–present, Rep Bryce Edgmon (I) (Yup'ik) - State representative 2007–present,speaker of the state house2017–2021"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "HF70",
+      "state": "MN",
+      "title": "Task Force on Missing and Murdered Indigenous Women created, violence against in",
+      "indigenous": "Rep Mary Kunesh-Podein (D) (Standing RockLakota) - State representative (2017–2021)State senator (2021–present), Rep Jamie Becker-finn (D) (Leech Lake Ojibwe) - State representative (2017–present)"
+    },
+    {
+      "name": "Sharice Davids",
+      "bill": "HB2733",
+      "state": "US",
+      "title": "Savanna’s Act",
+      "indigenous": "Rep Debra Haaland (D) (Laguna Pueblo) - 54th United States Secretary of the Interior, 2021–2025,Democratic nominee for Governor in 2026, Rep Sharice Davids (D) - District HD-KS-3, Rep Tom Cole (R) (Chickasaw Nation) - State senator (1988–1991),26th Secretary of State of Oklahoma(1995–1999),U.S. Congressman (2003–present), Rep Markwayne Mullin (R) (Cherokee Nation) - 9th United States Secretary of Homeland Security, 2026–present"
+    },
+    {
+      "name": "Sharice Davids",
+      "bill": "HR353",
+      "state": "National",
+      "title": "Expressing support for the designation of May 5, 2023, as the \"National Day of A",
+      "indigenous": "Rep Tom Cole (R) (Chickasaw Nation) - State senator (1988–1991),26th Secretary of State of Oklahoma(1995–1999),U.S. Congressman (2003–present), Rep Sharice Davids (D) - District HD-KS-3"
+    },
+    {
+      "name": "Sharice Davids",
+      "bill": "HB1292",
+      "state": "US",
+      "title": "BADGES for Native Communities Act Bridging Agency Data Gaps and Ensuring Safety ",
+      "indigenous": "Rep Sharice Davids (D) - District HD-KS-3, Rep Tom Cole (R) (Chickasaw Nation) - State senator (1988–1991),26th Secretary of State of Oklahoma(1995–1999),U.S. Congressman (2003–present)"
+    },
+    {
+      "name": "Sharice Davids",
+      "bill": "HB2438",
+      "state": "US",
+      "title": "Not Invisible Act of 2020",
+      "indigenous": "Rep Debra Haaland (D) (Laguna Pueblo) - 54th United States Secretary of the Interior, 2021–2025,Democratic nominee for Governor in 2026, Rep Sharice Davids (D) - District HD-KS-3, Rep Tom Cole (R) (Chickasaw Nation) - State senator (1988–1991),26th Secretary of State of Oklahoma(1995–1999),U.S. Congressman (2003–present), Rep Markwayne Mullin (R) (Cherokee Nation) - 9th United States Secretary of Homeland Security, 2026–present"
+    },
+    {
+      "name": "Sharice Davids",
+      "bill": "HB2029",
+      "state": "National",
+      "title": "Studying the Missing and Murdered Indian Crisis Act of 2019",
+      "indigenous": "Rep Debra Haaland (D) (Laguna Pueblo) - 54th United States Secretary of the Interior, 2021–2025,Democratic nominee for Governor in 2026, Rep Tom Cole (R) (Chickasaw Nation) - State senator (1988–1991),26th Secretary of State of Oklahoma(1995–1999),U.S. Congressman (2003–present), Rep Sharice Davids (D) - District HD-KS-3"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "SB891",
+      "state": "CA",
+      "title": "Missing and Murdered Indigenous Persons Justice Program.",
+      "indigenous": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "SF3858",
+      "state": "MN",
+      "title": "Wambdi Alert system creation to aid in locating missing Indigenous persons",
+      "indigenous": "Sen Mary Kunesh-Podein (D) (Standing RockLakota) - State representative (2017–2021)State senator (2021–present)"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "AB3099",
+      "state": "CA",
+      "title": "Department of Justice: law enforcement assistance with tribal issues: study.",
+      "indigenous": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "ACR163",
+      "state": "CA",
+      "title": "Missing and Murdered Indigenous People Awareness Month.",
+      "indigenous": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "AB1314",
+      "state": "CA",
+      "title": "Emergency notification: Feather Alert: endangered indigenous people.",
+      "indigenous": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)"
+    },
+    {
+      "name": "Sharice Davids",
+      "bill": "HB1010",
+      "state": "US",
+      "title": "BADGES for Native Communities Act Bridging Agency Data Gaps and Ensuring Safety ",
+      "indigenous": "Rep Sharice Davids (D) - District HD-KS-3"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "SF2967",
+      "state": "MN",
+      "title": "Multidisciplinary child protection team and its duties modification",
+      "indigenous": "Sen Mary Kunesh-Podein (D) (Standing RockLakota) - State representative (2017–2021)State senator (2021–present)"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "SF4282",
+      "state": "MN",
+      "title": "Missing and murdered indigenous women monument appropriation",
+      "indigenous": "Sen Mary Kunesh-Podein (D) (Standing RockLakota) - State representative (2017–2021)State senator (2021–present)"
+    },
+    {
+      "name": "Sharice Davids",
+      "bill": "HB8960",
+      "state": "US",
+      "title": "BADGES for Native Communities Act Bridging Agency Data Gaps and Ensuring Safety ",
+      "indigenous": "Rep Tom Cole (R) (Chickasaw Nation) - State senator (1988–1991),26th Secretary of State of Oklahoma(1995–1999),U.S. Congressman (2003–present), Rep Sharice Davids (D) - District HD-KS-3"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "AB44",
+      "state": "CA",
+      "title": "California Law Enforcement Telecommunications System: tribal police.",
+      "indigenous": "Rep James Ramos (D) (Serrano/Cahuilla) - San Bernardino Community College Board of Trustees(2005–12),San Bernardino County Board of Supervisors(2012–2018),California State Assemblymember(2018–present)"
+    }
+  ],
+  "spot_checks_current": [
+    {
+      "name": "Sharice Davids",
+      "bill": "HR411",
+      "state": "National",
+      "title": "Expressing the sense of the House of Representatives to recognize the crisis of ",
+      "indigenous": "Rep Sharice Davids (D) - District HD-KS-3"
+    },
+    {
+      "name": "Sharice Davids",
+      "bill": "HR950",
+      "state": "National",
+      "title": "Expressing support for the designation of May 5, 2020, as the \"National Day of A",
+      "indigenous": "Rep Sharice Davids (D) - District HD-KS-3, Rep Tom Cole (R) (Chickasaw Nation) - District HD-OK-4, Rep Markwayne Mullin (R) (Cherokee Nation) - District HD-OK-2"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "AJR17",
+      "state": "CA",
+      "title": "Missing and murdered Native American women and girls.",
+      "indigenous": "Rep James Ramos (D) - District HD-040, Rep Todd Gloria (D) (Tlingit–Haida) - District HD-078"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "SF1558",
+      "state": "MN",
+      "title": "Office of Missing and Murdered Indigenous Relatives authorization to access addi",
+      "indigenous": "Sen Mary Kunesh-Podein (D) - District SD-039"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "AB2279",
+      "state": "CA",
+      "title": "Missing and Murdered Indigenous Persons Justice Program.",
+      "indigenous": "Rep James Ramos (D) - District HD-045"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "ACR25",
+      "state": "CA",
+      "title": "Missing and Murdered Indigenous People Awareness Month.",
+      "indigenous": "Rep James Ramos (D) - District HD-045"
+    },
+    {
+      "name": "Tyson Running Wolf",
+      "bill": "HB83",
+      "state": "MT",
+      "title": "Establish state special revenue account for Montana Missing Indigenous Persons T",
+      "indigenous": "Rep Tyson Running Wolf (D) (Blackfeet Nation) - District HD-016"
+    },
+    {
+      "name": "Tyson Running Wolf",
+      "bill": "HB18",
+      "state": "MT",
+      "title": "Establish missing persons response team training grant program",
+      "indigenous": "Rep Tyson Running Wolf (D) (Blackfeet Nation) - District HD-016"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "AB31",
+      "state": "CA",
+      "title": "Peace officers: tribal police.",
+      "indigenous": "Rep James Ramos (D) - District HD-045"
+    },
+    {
+      "name": "Sharice Davids",
+      "bill": "HR1177",
+      "state": "National",
+      "title": "Expressing support for the designation of May 5, 2024, as the \"National Day of A",
+      "indigenous": "Rep Tom Cole (R) (Chickasaw Nation) - District HD-OK-4, Rep Sharice Davids (D) - District HD-KS-3"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "AB2348",
+      "state": "CA",
+      "title": "California Emergency Services Act: notification systems: Feather Alert.",
+      "indigenous": "Rep James Ramos (D) - District HD-045"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "HF4634",
+      "state": "MN",
+      "title": "Missing and Murdered Indigenous Women task force deadline to submit final report",
+      "indigenous": "Rep Mary Kunesh-Podein (D) - District HD-041B, Rep Jamie Becker-finn (D) (Leech Lake Ojibwe) - District HD-042B"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "SF105",
+      "state": "MN",
+      "title": "Minnesota missing and murdered Indigenous relatives special license plates estab",
+      "indigenous": "Sen Mary Kunesh-Podein (D) - District SD-039"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "HF111",
+      "state": "MN",
+      "title": "Task Force on Missing and Murdered Indigenous Women created, violence against in",
+      "indigenous": "Rep Mary Kunesh-Podein (D) - District HD-041B"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "HF1212",
+      "state": "MN",
+      "title": "Task Force on Missing and Murdered Indigenous Women created, violence against in",
+      "indigenous": "Rep Mary Kunesh-Podein (D) - District HD-041B"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "AB1863",
+      "state": "CA",
+      "title": "California Emergency Services Act: notification systems: Feather Alert.",
+      "indigenous": "Rep James Ramos (D) - District HD-045"
+    },
+    {
+      "name": "Tyson Running Wolf",
+      "bill": "HB545",
+      "state": "MT",
+      "title": "Revise laws related to missing and murdered indigenous persons",
+      "indigenous": "Rep Tyson Running Wolf (D) (Blackfeet Nation) - District HD-016"
+    },
+    {
+      "name": "Tyson Running Wolf",
+      "bill": "HB163",
+      "state": "MT",
+      "title": "Revise and extend Missing Indigenous Persons Task Force",
+      "indigenous": "Rep Tyson Running Wolf (D) (Blackfeet Nation) - District HD-016"
+    },
+    {
+      "name": "Sharice Davids",
+      "bill": "HR278",
+      "state": "National",
+      "title": "Expressing the sense of the House of Representatives to recognize the crisis of ",
+      "indigenous": "Rep Sharice Davids (D) - District HD-KS-3, Rep Tom Cole (R) (Chickasaw Nation) - District HD-OK-4"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "SB4",
+      "state": "CA",
+      "title": "Missing and Murdered Indigenous Persons Justice Program.",
+      "indigenous": "Rep James Ramos (D) - District HD-045"
+    },
+    {
+      "name": "Bryce Edgmon",
+      "bill": "HR10",
+      "state": "AK",
+      "title": "Reauthorize Violence Against Women Act",
+      "indigenous": "Rep Tiffany Zulkosky (D) (Yup’ik) - District HD-038, Rep Neal Foster (D) (Inupiaq) - District HD-039, Rep Bryce Edgmon (I) (Yup'ik) - District HD-037, Rep John Lincoln (D) (Inupiaq) - District HD-040"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "ACR39",
+      "state": "CA",
+      "title": "Missing and Murdered Indigenous People Awareness Month.",
+      "indigenous": "Rep James Ramos (D) - District HD-045"
+    },
+    {
+      "name": "Sharice Davids",
+      "bill": "HB4289",
+      "state": "US",
+      "title": "BADGES for Native Communities Act Bridging Agency Data Gaps and Ensuring Safety ",
+      "indigenous": "Rep Sharice Davids (D) - District HD-KS-3, Rep Tom Cole (R) (Chickasaw Nation) - District HD-OK-4, Rep Markwayne Mullin (R) (Cherokee Nation) - District HD-OK-2"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "SF3926",
+      "state": "MN",
+      "title": "Minnesota missing and murderer Indigenous relatives special license plates estab",
+      "indigenous": "Sen Mary Kunesh-Podein (D) - District SD-039"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "ACR133",
+      "state": "CA",
+      "title": "Missing and Murdered Indigenous People Awareness Month.",
+      "indigenous": "Rep James Ramos (D) - District HD-045"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "SF4249",
+      "state": "MN",
+      "title": "Office of Missing and Murdered Indigenous Relatives access to additional data au",
+      "indigenous": "Sen Mary Kunesh-Podein (D) - District SD-039"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "ACR83",
+      "state": "CA",
+      "title": "Missing and Murdered Indigenous Women and Girls Awareness Month.",
+      "indigenous": "Rep James Ramos (D) - District HD-040, Rep Todd Gloria (D) (Tlingit–Haida) - District HD-078"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "AB1881",
+      "state": "CA",
+      "title": "California Indian Freedom Act of 2026.",
+      "indigenous": "Rep James Ramos (D) - District HD-045"
+    },
+    {
+      "name": "Bryce Edgmon",
+      "bill": "SB151",
+      "state": "AK",
+      "title": "Missing/murdered Indigenous People;report",
+      "indigenous": "Sen Donald Olson (D) (Iñupiat) - District SD-T, Sen Lyman Hoffman (D) (Yup’ik) - District SD-S, Rep Thomas Baker (R) (Inuit) - District HD-040, Rep Neal Foster (D) (Inupiaq) - District HD-039, Rep Bryce Edgmon (I) (Yup'ik) - District HD-037"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "HF70",
+      "state": "MN",
+      "title": "Task Force on Missing and Murdered Indigenous Women created, violence against in",
+      "indigenous": "Rep Mary Kunesh-Podein (D) - District HD-041B, Rep Jamie Becker-finn (D) (Leech Lake Ojibwe) - District HD-042B"
+    },
+    {
+      "name": "Sharice Davids",
+      "bill": "HB2733",
+      "state": "US",
+      "title": "Savanna’s Act",
+      "indigenous": "Rep Sharice Davids (D) - District HD-KS-3, Rep Tom Cole (R) (Chickasaw Nation) - District HD-OK-4, Rep Markwayne Mullin (R) (Cherokee Nation) - District HD-OK-2"
+    },
+    {
+      "name": "Sharice Davids",
+      "bill": "HR353",
+      "state": "National",
+      "title": "Expressing support for the designation of May 5, 2023, as the \"National Day of A",
+      "indigenous": "Rep Tom Cole (R) (Chickasaw Nation) - District HD-OK-4, Rep Sharice Davids (D) - District HD-KS-3"
+    },
+    {
+      "name": "Sharice Davids",
+      "bill": "HB1292",
+      "state": "US",
+      "title": "BADGES for Native Communities Act Bridging Agency Data Gaps and Ensuring Safety ",
+      "indigenous": "Rep Sharice Davids (D) - District HD-KS-3, Rep Tom Cole (R) (Chickasaw Nation) - District HD-OK-4"
+    },
+    {
+      "name": "Sharice Davids",
+      "bill": "HB2438",
+      "state": "US",
+      "title": "Not Invisible Act of 2020",
+      "indigenous": "Rep Sharice Davids (D) - District HD-KS-3, Rep Tom Cole (R) (Chickasaw Nation) - District HD-OK-4, Rep Markwayne Mullin (R) (Cherokee Nation) - District HD-OK-2"
+    },
+    {
+      "name": "Sharice Davids",
+      "bill": "HB2029",
+      "state": "National",
+      "title": "Studying the Missing and Murdered Indian Crisis Act of 2019",
+      "indigenous": "Rep Tom Cole (R) (Chickasaw Nation) - District HD-OK-4, Rep Sharice Davids (D) - District HD-KS-3"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "SB891",
+      "state": "CA",
+      "title": "Missing and Murdered Indigenous Persons Justice Program.",
+      "indigenous": "Rep James Ramos (D) - District HD-045"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "SF3858",
+      "state": "MN",
+      "title": "Wambdi Alert system creation to aid in locating missing Indigenous persons",
+      "indigenous": "Sen Mary Kunesh-Podein (D) - District SD-039"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "AB3099",
+      "state": "CA",
+      "title": "Department of Justice: law enforcement assistance with tribal issues: study.",
+      "indigenous": "Rep James Ramos (D) - District HD-040"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "ACR163",
+      "state": "CA",
+      "title": "Missing and Murdered Indigenous People Awareness Month.",
+      "indigenous": "Rep James Ramos (D) - District HD-045"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "AB1314",
+      "state": "CA",
+      "title": "Emergency notification: Feather Alert: endangered indigenous people.",
+      "indigenous": "Rep James Ramos (D) - District HD-040"
+    },
+    {
+      "name": "Sharice Davids",
+      "bill": "HB1010",
+      "state": "US",
+      "title": "BADGES for Native Communities Act Bridging Agency Data Gaps and Ensuring Safety ",
+      "indigenous": "Rep Sharice Davids (D) - District HD-KS-3"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "SF2967",
+      "state": "MN",
+      "title": "Multidisciplinary child protection team and its duties modification",
+      "indigenous": "Sen Mary Kunesh-Podein (D) - District SD-039"
+    },
+    {
+      "name": "Mary Kunesh",
+      "bill": "SF4282",
+      "state": "MN",
+      "title": "Missing and murdered indigenous women monument appropriation",
+      "indigenous": "Sen Mary Kunesh-Podein (D) - District SD-039"
+    },
+    {
+      "name": "Sharice Davids",
+      "bill": "HB8960",
+      "state": "US",
+      "title": "BADGES for Native Communities Act Bridging Agency Data Gaps and Ensuring Safety ",
+      "indigenous": "Rep Tom Cole (R) (Chickasaw Nation) - District HD-OK-4, Rep Sharice Davids (D) - District HD-KS-3"
+    },
+    {
+      "name": "James Ramos",
+      "bill": "AB44",
+      "state": "CA",
+      "title": "California Law Enforcement Telecommunications System: tribal police.",
+      "indigenous": "Rep James Ramos (D) - District HD-045"
+    }
+  ]
+}
