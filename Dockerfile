@@ -1,4 +1,5 @@
-FROM python:3.12-slim
+# Bookworm is supported by Playwright's --with-deps; python:3.12-slim (Trixie) is not.
+FROM python:3.12-slim-bookworm
 
 WORKDIR /app
 
