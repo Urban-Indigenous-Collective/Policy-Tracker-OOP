@@ -90,7 +90,11 @@ class DiscoveryPipeline:
         source_counts["state_site"] = len(state_candidates)
         candidates.extend(state_candidates)
 
-        federal_candidates = list(self.federal_source.discover())
+        try:
+            federal_candidates = list(self.federal_source.discover())
+        except Exception as exc:
+            logger.exception("Federal site discovery failed: %s", exc)
+            federal_candidates = []
         source_counts["federal_site"] = len(federal_candidates)
         candidates.extend(federal_candidates)
 

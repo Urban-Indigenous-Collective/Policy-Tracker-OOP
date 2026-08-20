@@ -38,23 +38,40 @@ class BrowserRenderer:
         self.headless = headless
         self._playwright = None
         self._browser = None
+        self._unavailable_reason = ""
 
-    def start(self) -> None:
+    @property
+    def available(self) -> bool:
+        return self._browser is not None
+
+    def start(self) -> bool:
+        """Start Chromium; return False when Playwright is missing or launch fails."""
         if self._browser is not None:
-            return
+            return True
+        if self._unavailable_reason:
+            return False
         try:
             from playwright.sync_api import sync_playwright
-        except ImportError as exc:
-            raise RuntimeError(
+        except ImportError:
+            self._unavailable_reason = (
                 "Playwright is required for render_js sources. "
                 "Install with: pip install playwright && playwright install chromium"
-            ) from exc
-        self._playwright = sync_playwright().start()
-        self._browser = self._playwright.chromium.launch(
-            headless=self.headless,
-            args=_STEALTH_ARGS,
-        )
-        logger.info("Playwright browser started")
+            )
+            logger.error(self._unavailable_reason)
+            return False
+        try:
+            self._playwright = sync_playwright().start()
+            self._browser = self._playwright.chromium.launch(
+                headless=self.headless,
+                args=_STEALTH_ARGS,
+            )
+            logger.info("Playwright browser started")
+            return True
+        except Exception as exc:
+            self._unavailable_reason = f"Playwright browser launch failed: {exc}"
+            logger.error(self._unavailable_reason)
+            self.stop()
+            return False
 
     def stop(self) -> None:
         if self._browser is not None:
@@ -88,7 +105,8 @@ class BrowserRenderer:
         user_agent: str | None = None,
     ) -> tuple[str, str]:
         """Return rendered HTML and content hash."""
-        self.start()
+        if not self.start():
+            return "", ""
         context, page = self._new_page(ignore_https, user_agent)
         html = ""
         try:
@@ -136,7 +154,8 @@ class BrowserRenderer:
         user_agent: str | None = None,
     ) -> tuple[str, str]:
         """Fill a JS search form and return rendered results HTML."""
-        self.start()
+        if not self.start():
+            return "", ""
         context, page = self._new_page(ignore_https, user_agent)
         html = ""
         try:

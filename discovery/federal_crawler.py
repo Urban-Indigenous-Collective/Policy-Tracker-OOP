@@ -73,8 +73,19 @@ class FederalSiteSource:
         progress = get_progress()
         if progress:
             progress.begin_state_crawl(len(active))
-        if any(s.render_js for s in active):
+        render_js_count = sum(1 for s in active if s.render_js)
+        if render_js_count:
             self._needs_browser = True
+            if not self.browser.start():
+                reason = self.browser._unavailable_reason or "Playwright unavailable"
+                logger.warning(
+                    "Skipping %d render_js federal sources (%s)",
+                    render_js_count,
+                    reason,
+                )
+                active = [s for s in active if not s.render_js]
+                if not self.browser.available:
+                    self._needs_browser = False
         try:
             for idx, source in enumerate(active, start=1):
                 if progress:

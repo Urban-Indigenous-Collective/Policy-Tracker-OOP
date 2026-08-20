@@ -403,7 +403,7 @@ def _fetch_html(
     method: str = "GET",
     query: str | None = None,
 ) -> tuple[str, str, str]:
-    if source.render_js and browser is not None:
+    if source.render_js and browser is not None and browser.start():
         wait = source.browser_wait_selector or None
         if query and source.browser_input_selector and source.browser_submit_selector:
             html, content_hash = browser.fetch_search(
@@ -424,6 +424,11 @@ def _fetch_html(
                 user_agent=source.user_agent or None,
             )
         return html, content_hash, url
+    if source.render_js and browser is not None:
+        logger.warning(
+            "Browser unavailable for render_js source %s; falling back to HTTP",
+            getattr(source, "name", url),
+        )
     return http.fetch(
         url,
         method=method,
