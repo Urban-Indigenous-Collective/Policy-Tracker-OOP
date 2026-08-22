@@ -67,9 +67,11 @@ class FederalSiteSource:
             return True
         return False
 
+    def active_sources(self) -> list[FederalSource]:
+        return [s for s in self.load_sources() if not self._should_skip(s)]
+
     def discover(self) -> Iterator[Candidate]:
-        sources = self.load_sources()
-        active = [s for s in sources if not self._should_skip(s)]
+        active = self.active_sources()
         progress = get_progress()
         if progress:
             progress.begin_state_crawl(len(active))

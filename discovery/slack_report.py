@@ -56,6 +56,7 @@ def save_deferred_report(stats, run_at: str | None = None) -> None:
         "slack_items": stats.slack_items,
         "by_state": stats.by_state,
         "sources_attempted": stats.sources_attempted or existing.get("sources_attempted") or {},
+        "sources_crawled": stats.sources_crawled or existing.get("sources_crawled") or {},
         "status_items": existing.get("status_items") or [],
         "identity_mismatch_items": existing.get("identity_mismatch_items") or [],
         "status_refresh": existing.get("status_refresh") or {},
@@ -209,6 +210,7 @@ def send_deferred_report(slack: SlackNotifier | None = None) -> bool:
             run_started_at=report.get("run_started_at") or report.get("run_at") or "",
             run_finished_at=report.get("run_finished_at") or "",
             sources_attempted=report.get("sources_attempted") or {},
+            sources_crawled=report.get("sources_crawled") or {},
             always_notify=send_empty or discovery_slack_always(),
         ) and ok
 

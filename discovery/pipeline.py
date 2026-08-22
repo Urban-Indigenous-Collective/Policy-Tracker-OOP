@@ -28,6 +28,7 @@ class DiscoveryRunStats:
     slack_items: list[dict[str, Any]] = field(default_factory=list)
     by_state: dict[str, Any] = field(default_factory=dict)
     sources_attempted: dict[str, Any] = field(default_factory=dict)
+    sources_crawled: dict[str, Any] = field(default_factory=dict)
     legiscan_limited: bool = False
     legiscan_limit_reason: str = ""
     run_started_at: str = ""
@@ -69,14 +70,17 @@ class DiscoveryPipeline:
         self._legiscan_limited = False
         self._legiscan_limit_reason = ""
         self._source_counts: dict[str, int] = {}
+        self._sources_crawled: dict[str, int] = {}
 
     def collect_candidates(self) -> list[Candidate]:
         candidates: list[Candidate] = []
         source_counts = {"legiscan": 0, "state_site": 0, "federal_site": 0}
+        sources_crawled = {"legiscan": 0, "state_site": 0, "federal_site": 0}
 
         try:
             legiscan_candidates = list(self.legiscan_source.discover())
             source_counts["legiscan"] = len(legiscan_candidates)
+            sources_crawled["legiscan"] = 1
             candidates.extend(legiscan_candidates)
         except Exception as exc:
             if is_legiscan_limit_error(exc):
@@ -86,10 +90,16 @@ class DiscoveryPipeline:
             else:
                 raise
 
+        state_active = self.state_source.active_sources()
+        sources_crawled["state_site"] = len(state_active)
+        logger.info("Crawling %d state sources", len(state_active))
         state_candidates = list(self.state_source.discover())
         source_counts["state_site"] = len(state_candidates)
         candidates.extend(state_candidates)
 
+        federal_active = self.federal_source.active_sources()
+        sources_crawled["federal_site"] = len(federal_active)
+        logger.info("Crawling %d federal sources", len(federal_active))
         try:
             federal_candidates = list(self.federal_source.discover())
         except Exception as exc:
@@ -106,6 +116,7 @@ class DiscoveryPipeline:
             )
 
         self._source_counts = source_counts
+        self._sources_crawled = sources_crawled
         return candidates
 
     def _get_excerpt(self, candidate: Candidate) -> str:
@@ -290,6 +301,7 @@ class DiscoveryPipeline:
         candidates = self.collect_candidates()
         stats.discovered = len(candidates)
         stats.sources_attempted = dict(self._source_counts)
+        stats.sources_crawled = dict(self._sources_crawled)
         stats.legiscan_limited = self._legiscan_limited
         stats.legiscan_limit_reason = self._legiscan_limit_reason
         logger.info("Collected %d discovery candidates", len(candidates))
@@ -313,6 +325,7 @@ class DiscoveryPipeline:
                     run_started_at=stats.run_started_at,
                     run_finished_at=stats.run_finished_at,
                     sources_attempted=stats.sources_attempted,
+                    sources_crawled=stats.sources_crawled,
                     always_notify=discovery_slack_always(),
                 )
         self.main_app.api_client.log_stats()

@@ -33,6 +33,24 @@ def _discovery_slack_always() -> bool:
     return os.getenv("DISCOVERY_SLACK_ALWAYS", "true").lower() in ("1", "true", "yes")
 
 
+def _format_discovery_source_summary(
+    sources_attempted: dict[str, Any] | None,
+    sources_crawled: dict[str, Any] | None = None,
+) -> str:
+    """Human-readable per-channel candidate counts and configured source totals."""
+    attempted = sources_attempted or {}
+    crawled = sources_crawled or {}
+    bits: list[str] = []
+    for key in sorted(attempted):
+        count = attempted[key]
+        source_total = crawled.get(key)
+        if source_total is not None:
+            bits.append(f"{key}={count} candidates ({source_total} sources crawled)")
+        else:
+            bits.append(f"{key}={count}")
+    return ", ".join(bits)
+
+
 class SlackNotifier:
     """Post discovery and approval notifications via Slack incoming webhook."""
 
@@ -209,8 +227,11 @@ class SlackNotifier:
         if int(report.get("discovered", 0)) or report.get("sources_attempted"):
             sources = report.get("sources_attempted") or {}
             if sources:
-                src_text = ", ".join(f"{k}={v}" for k, v in sorted(sources.items()))
-                discovery_bits.append(f"Discovery sources checked: {src_text}")
+                src_text = _format_discovery_source_summary(
+                    sources,
+                    report.get("sources_crawled"),
+                )
+                discovery_bits.append(f"Discovery by channel: {src_text}")
             discovery_bits.append(
                 f"Candidates found: {int(report.get('discovered', 0))} "
                 f"({int(report.get('analyzed', 0))} analyzed)"
@@ -299,6 +320,7 @@ class SlackNotifier:
         run_started_at: str = "",
         run_finished_at: str = "",
         sources_attempted: dict[str, Any] | None = None,
+        sources_crawled: dict[str, Any] | None = None,
         always_notify: bool | None = None,
     ) -> bool:
         if always_notify is None:
@@ -320,8 +342,10 @@ class SlackNotifier:
         if run_finished_at:
             parts.append(f"Finished: {run_finished_at}")
         if sources_attempted:
-            bits = ", ".join(f"{k}={v}" for k, v in sorted(sources_attempted.items()))
-            parts.append(f"Sources: {bits}")
+            parts.append(
+                "Sources: "
+                + _format_discovery_source_summary(sources_attempted, sources_crawled)
+            )
         if by_state:
             parts.append(f"States touched: {len(by_state)}")
         return self._post({"text": "\n".join(parts)})

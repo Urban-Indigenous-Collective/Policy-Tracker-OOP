@@ -1,18 +1,18 @@
-import hashlib
+"""Crawl configured state government sources for MMIP policy links."""
+
+from __future__ import annotations
+
 import json
 import logging
 import os
-import time
 from pathlib import Path
 from typing import Iterator
-from urllib.parse import urljoin, urlparse
-from urllib.robotparser import RobotFileParser
 
-import requests
-from bs4 import BeautifulSoup
-
-from discovery.models import Candidate, utc_now_iso
-from discovery.queries import keyword_prescreen
+from discovery.browser_fetcher import BrowserRenderer
+from discovery.fetchers import ApiFetcher, HttpFetcher, IndexFetcher, RssFetcher, SearchFetcher
+from discovery.models import Candidate
+from discovery.progress import get_progress
+from discovery.source_schema import StateSource, load_sources_data
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ DEFAULT_SOURCES_PATH = Path(__file__).resolve().parent.parent / "sources" / "sta
 
 
 class StateSiteSource:
-    """Crawl configured state government index pages for MMIP policy links."""
+    """Crawl configured state government sources for MMIP policy links."""
 
     def __init__(
         self,
@@ -40,125 +40,109 @@ class StateSiteSource:
         self.state_filter = (state_filter or "").strip().upper() or None
         self.source_id_filter = (source_id_filter or "").strip() or None
         self.include_review_needed = include_review_needed
-        self._robots_cache: dict[str, RobotFileParser] = {}
-        self._last_fetch: dict[str, float] = {}
-        self._page_hashes: dict[str, str] = {}
+        self.http = HttpFetcher(self.user_agent, per_domain_delay)
+        self.browser = BrowserRenderer(self.user_agent)
+        self.index_fetcher = IndexFetcher(self.http, self.browser)
+        self.search_fetcher = SearchFetcher(self.http, self.browser)
+        self.rss_fetcher = RssFetcher(self.http)
+        self.api_fetcher = ApiFetcher(self.http)
+        self._needs_browser = False
 
-    def load_sources(self) -> list[dict]:
+    def load_sources(self) -> list[StateSource]:
         if not self.sources_path.exists():
             logger.warning("State sources file not found: %s", self.sources_path)
             return []
         with open(self.sources_path, encoding="utf-8") as f:
             data = json.load(f)
-        if isinstance(data, dict):
-            return data.get("sources", [])
-        return data
+        return load_sources_data(data)
 
-    def _domain(self, url: str) -> str:
-        return urlparse(url).netloc.lower()
-
-    def _can_fetch(self, url: str) -> bool:
-        domain = self._domain(url)
-        if domain not in self._robots_cache:
-            rp = RobotFileParser()
-            robots_url = f"{urlparse(url).scheme}://{domain}/robots.txt"
-            rp.set_url(robots_url)
-            try:
-                rp.read()
-            except Exception:
-                logger.debug("Could not read robots.txt for %s, allowing fetch", domain)
-                rp = None
-            self._robots_cache[domain] = rp
-        rp = self._robots_cache[domain]
-        if rp is None:
+    def _should_skip(self, source: StateSource) -> bool:
+        if self.state_filter and source.state.upper() != self.state_filter:
             return True
-        return rp.can_fetch(self.user_agent, url)
+        if self.source_id_filter and source.source_id != self.source_id_filter:
+            return True
+        if source.review_needed and not self.include_review_needed:
+            logger.debug("Skipping state source pending review: %s", source.name)
+            return True
+        return False
 
-    def _rate_limit(self, domain: str) -> None:
-        last = self._last_fetch.get(domain, 0)
-        elapsed = time.time() - last
-        if elapsed < self.per_domain_delay:
-            time.sleep(self.per_domain_delay - elapsed)
-        self._last_fetch[domain] = time.time()
-
-    def _fetch(self, url: str) -> tuple[str, str]:
-        domain = self._domain(url)
-        if not self._can_fetch(url):
-            logger.info("Robots.txt disallows fetch: %s", url)
-            return "", ""
-        self._rate_limit(domain)
-        headers = {"User-Agent": self.user_agent}
-        try:
-            response = requests.get(url, headers=headers, timeout=30)
-            response.raise_for_status()
-            content_hash = hashlib.sha256(response.content).hexdigest()
-            return response.text, content_hash
-        except Exception as exc:
-            logger.warning("Failed to fetch %s: %s", url, exc)
-            return "", ""
-
-    def _extract_links(self, base_url: str, html: str) -> list[tuple[str, str]]:
-        soup = BeautifulSoup(html, "html.parser")
-        base_domain = self._domain(base_url)
-        links: list[tuple[str, str]] = []
-        for anchor in soup.find_all("a", href=True):
-            href = anchor.get("href", "").strip()
-            if not href or href.startswith("#") or href.startswith("mailto:"):
-                continue
-            absolute = urljoin(base_url, href)
-            if self._domain(absolute) != base_domain:
-                continue
-            text = anchor.get_text(" ", strip=True)
-            if text:
-                links.append((absolute, text))
-        return links
+    def active_sources(self) -> list[StateSource]:
+        return [s for s in self.load_sources() if not self._should_skip(s)]
 
     def discover(self) -> Iterator[Candidate]:
-        sources = self.load_sources()
-        for source in sources:
-            state = source.get("state", "")
-            source_id = source.get("source_id") or source.get("id") or ""
-            if self.state_filter and state.upper() != self.state_filter:
-                continue
-            if self.source_id_filter and source_id != self.source_id_filter:
-                continue
-            if source.get("review_needed") and not self.include_review_needed:
-                logger.debug("Skipping source pending review: %s", source.get("name"))
-                continue
-            index_url = source.get("url", "")
-            if not index_url:
-                continue
-
-            html, content_hash = self._fetch(index_url)
-            if not html:
-                continue
-
-            prev_hash = self._page_hashes.get(index_url)
-            self._page_hashes[index_url] = content_hash
-            if prev_hash and prev_hash == content_hash:
-                logger.debug("Index unchanged, checking links only: %s", index_url)
-
-            for link_url, link_text in self._extract_links(index_url, html):
-                combined = f"{link_text}\n{index_url}"
-                if not keyword_prescreen(combined):
-                    continue
-                yield Candidate(
-                    source="state_site",
-                    state=state,
-                    url=link_url,
-                    title=link_text,
-                    snippet=link_text,
-                    content_hash=content_hash,
-                    discovered_at=utc_now_iso(),
+        active = self.active_sources()
+        if not active:
+            logger.info("No active state sources to crawl (%s)", self.sources_path)
+            return
+        progress = get_progress()
+        if progress:
+            progress.begin_state_crawl(len(active))
+        render_js_count = sum(1 for s in active if s.render_js)
+        if render_js_count:
+            self._needs_browser = True
+            if not self.browser.start():
+                reason = self.browser._unavailable_reason or "Playwright unavailable"
+                logger.warning(
+                    "Skipping %d render_js state sources (%s)",
+                    render_js_count,
+                    reason,
                 )
+                active = [s for s in active if not s.render_js]
+                if not self.browser.available:
+                    self._needs_browser = False
+        try:
+            for idx, source in enumerate(active, start=1):
+                if progress:
+                    progress.state_source(idx, len(active), source.name)
+                logger.info(
+                    "Crawling state source %s (%s/%s%s)",
+                    source.name,
+                    source.method,
+                    source.content_type,
+                    ", browser" if source.render_js else "",
+                )
+                fetcher = {
+                    "index": self.index_fetcher,
+                    "search": self.search_fetcher,
+                    "rss": self.rss_fetcher,
+                    "api": self.api_fetcher,
+                }.get(source.method)
+                if not fetcher:
+                    logger.warning("Unknown fetch method %s for %s", source.method, source.name)
+                    continue
+                for candidate in fetcher.discover(source):
+                    candidate.source = "state_site"
+                    candidate.state = source.state
+                    yield candidate
+        finally:
+            if self._needs_browser:
+                self.browser.stop()
 
     def fetch_page_text(self, url: str) -> tuple[str, str]:
         """Fetch a candidate page for relevance excerpt."""
-        html, content_hash = self._fetch(url)
-        if not html:
+        from discovery.fetchers import (
+            BROWSER_UA,
+            extract_document_text,
+            fetch_justice_gov_content,
+            is_browser_gated_url,
+        )
+
+        ua = self.user_agent or BROWSER_UA
+        if is_browser_gated_url(url):
+            self._needs_browser = True
+            body, content_hash, content_type = fetch_justice_gov_content(
+                self.http,
+                url,
+                browser=self.browser,
+                user_agent=ua,
+            )
+        else:
+            body, content_hash, content_type = self.http.fetch_content(
+                url,
+                ignore_robots=True,
+                user_agent=ua,
+            )
+        if not body:
             return "", ""
-        soup = BeautifulSoup(html, "html.parser")
-        for tag in soup(["script", "style", "nav", "footer", "header"]):
-            tag.decompose()
-        text = soup.get_text("\n", strip=True)
+        text = extract_document_text(body, url, content_type)
         return text[:8000], content_hash
