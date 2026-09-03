@@ -1,0 +1,268 @@
+{
+  "AL": {
+    "name": "Alabama Attorney General",
+    "host": "alabamaag.gov",
+    "listing_url": "https://www.alabamaag.gov/news"
+  },
+  "AK": {
+    "name": "Alaska Department of Law",
+    "host": "law.alaska.gov",
+    "listing_url": "https://law.alaska.gov/press/news.html"
+  },
+  "AZ": {
+    "name": "Arizona Attorney General",
+    "host": "azag.gov",
+    "listing_url": "https://www.azag.gov/press-releases"
+  },
+  "AR": {
+    "name": "Arkansas Attorney General",
+    "host": "arkansasag.gov",
+    "listing_url": "https://arkansasag.gov/news-releases/"
+  },
+  "CA": {
+    "name": "California Attorney General",
+    "host": "oag.ca.gov",
+    "listing_url": "https://oag.ca.gov/news"
+  },
+  "CO": {
+    "name": "Colorado Attorney General",
+    "host": "coag.gov",
+    "listing_url": "https://coag.gov/press-releases/"
+  },
+  "CT": {
+    "name": "Connecticut Attorney General",
+    "host": "portal.ct.gov",
+    "path_prefix": "/ag",
+    "listing_url": "https://portal.ct.gov/ag/press-releases"
+  },
+  "DE": {
+    "name": "Delaware Attorney General",
+    "host": "attorneygeneral.delaware.gov",
+    "listing_url": "https://attorneygeneral.delaware.gov/media/"
+  },
+  "DC": {
+    "name": "District of Columbia Attorney General",
+    "host": "oag.dc.gov",
+    "listing_url": "https://oag.dc.gov/release"
+  },
+  "FL": {
+    "name": "Florida Attorney General",
+    "host": "myfloridalegal.com",
+    "listing_url": "https://www.myfloridalegal.com/newsrelease"
+  },
+  "GA": {
+    "name": "Georgia Attorney General",
+    "host": "law.georgia.gov",
+    "listing_url": "https://law.georgia.gov/press-releases"
+  },
+  "HI": {
+    "name": "Hawaii Attorney General",
+    "host": "ag.hawaii.gov",
+    "listing_url": "https://ag.hawaii.gov/news-releases/"
+  },
+  "ID": {
+    "name": "Idaho Attorney General",
+    "host": "ag.idaho.gov",
+    "listing_url": "https://www.ag.idaho.gov/news/"
+  },
+  "IL": {
+    "name": "Illinois Attorney General",
+    "host": "illinoisattorneygeneral.gov",
+    "listing_url": "https://www.illinoisattorneygeneral.gov/News-Room/"
+  },
+  "IN": {
+    "name": "Indiana Attorney General",
+    "host": "in.gov",
+    "path_prefix": "/attorneygeneral",
+    "listing_url": "https://www.in.gov/attorneygeneral/newsroom/"
+  },
+  "IA": {
+    "name": "Iowa Attorney General",
+    "host": "iowaattorneygeneral.gov",
+    "listing_url": "https://www.iowaattorneygeneral.gov/newsroom"
+  },
+  "KS": {
+    "name": "Kansas Attorney General",
+    "host": "ag.ks.gov",
+    "listing_url": "https://www.ag.ks.gov/media-center/news-releases",
+    "notes": "ag.ks.gov returned HTTP 403 during bootstrap; listing URL is correct"
+  },
+  "KY": {
+    "name": "Kentucky Attorney General",
+    "host": "ag.ky.gov",
+    "listing_url": "https://www.ag.ky.gov/News-Releases/"
+  },
+  "LA": {
+    "name": "Louisiana Attorney General",
+    "host": "ag.louisiana.gov",
+    "listing_url": "https://ag.louisiana.gov/Article/News"
+  },
+  "ME": {
+    "name": "Maine Attorney General",
+    "host": "maine.gov",
+    "path_prefix": "/ag",
+    "listing_url": "https://www.maine.gov/ag/news/"
+  },
+  "MD": {
+    "name": "Maryland Attorney General",
+    "host": "marylandattorneygeneral.gov",
+    "listing_url": "https://www.marylandattorneygeneral.gov/press/Pages/default.aspx"
+  },
+  "MA": {
+    "name": "Massachusetts Attorney General",
+    "host": "mass.gov",
+    "path_prefix": "/orgs/office-of-attorney-general",
+    "listing_url": "https://www.mass.gov/orgs/office-of-attorney-general-andrea-joy-campbell/news",
+    "notes": "mass.gov often returns HTTP 403 to automated clients; verify from prod before enabling"
+  },
+  "MI": {
+    "name": "Michigan Attorney General",
+    "host": "michigan.gov",
+    "path_prefix": "/ag",
+    "listing_url": "https://www.michigan.gov/ag/news"
+  },
+  "MN": {
+    "name": "Minnesota Attorney General",
+    "host": "ag.state.mn.us",
+    "listing_url": "https://www.ag.state.mn.us/Office/Communications.asp"
+  },
+  "MS": {
+    "name": "Mississippi Attorney General",
+    "host": "ago.state.ms.us",
+    "listing_url": "https://www.ago.state.ms.us/releases/"
+  },
+  "MO": {
+    "name": "Missouri Attorney General",
+    "host": "ago.mo.gov",
+    "listing_url": "https://ago.mo.gov/home/news/"
+  },
+  "MT": {
+    "name": "Montana Department of Justice / Attorney General",
+    "host": "dojmt.gov",
+    "listing_url": "https://dojmt.gov/news/",
+    "notes": "Montana AG is also the Department of Justice; newsroom already seeded as agency_press"
+  },
+  "NE": {
+    "name": "Nebraska Attorney General",
+    "host": "ago.nebraska.gov",
+    "listing_url": "https://ago.nebraska.gov/news"
+  },
+  "NV": {
+    "name": "Nevada Attorney General",
+    "host": "ag.nv.gov",
+    "listing_url": "https://ag.nv.gov/News/News/"
+  },
+  "NH": {
+    "name": "New Hampshire Department of Justice / Attorney General",
+    "host": "doj.nh.gov",
+    "listing_url": "https://www.doj.nh.gov/news-and-media",
+    "notes": "doj.nh.gov returned HTTP 403 during bootstrap; listing URL is correct"
+  },
+  "NJ": {
+    "name": "New Jersey Attorney General",
+    "host": "njoag.gov",
+    "listing_url": "https://www.njoag.gov/media/news-releases/"
+  },
+  "NM": {
+    "name": "New Mexico Attorney General",
+    "host": "nmag.gov",
+    "listing_url": "https://www.nmag.gov/news/"
+  },
+  "NY": {
+    "name": "New York Attorney General",
+    "host": "ag.ny.gov",
+    "listing_url": "https://ag.ny.gov/press-releases"
+  },
+  "NC": {
+    "name": "North Carolina Department of Justice / Attorney General",
+    "host": "ncdoj.gov",
+    "listing_url": "https://ncdoj.gov/news/"
+  },
+  "ND": {
+    "name": "North Dakota Attorney General",
+    "host": "attorneygeneral.nd.gov",
+    "listing_url": "https://attorneygeneral.nd.gov/news"
+  },
+  "OH": {
+    "name": "Ohio Attorney General",
+    "host": "ohioattorneygeneral.gov",
+    "listing_url": "https://www.ohioattorneygeneral.gov/Media/News-Releases"
+  },
+  "OK": {
+    "name": "Oklahoma Attorney General",
+    "host": "oag.ok.gov",
+    "listing_url": "https://www.oag.ok.gov/press-releases"
+  },
+  "OR": {
+    "name": "Oregon Department of Justice / Attorney General",
+    "host": "doj.state.or.us",
+    "listing_url": "https://www.doj.state.or.us/media-home/news-media-releases/"
+  },
+  "PA": {
+    "name": "Pennsylvania Attorney General",
+    "host": "attorneygeneral.gov",
+    "listing_url": "https://www.attorneygeneral.gov/taking-action/press-releases/"
+  },
+  "RI": {
+    "name": "Rhode Island Attorney General",
+    "host": "riag.ri.gov",
+    "listing_url": "https://riag.ri.gov/press-releases"
+  },
+  "SC": {
+    "name": "South Carolina Attorney General",
+    "host": "scag.gov",
+    "listing_url": "https://www.scag.gov/about-the-office/news/"
+  },
+  "SD": {
+    "name": "South Dakota Attorney General",
+    "host": "atg.sd.gov",
+    "listing_url": "https://atg.sd.gov/OurOffice/Media/pressreleases.aspx",
+    "notes": "Incident 2026-09-03: MMIP specialist appointment lived only on the AG press index"
+  },
+  "TN": {
+    "name": "Tennessee Attorney General",
+    "host": "tn.gov",
+    "path_prefix": "/attorneygeneral",
+    "listing_url": "https://www.tn.gov/attorneygeneral/news.html"
+  },
+  "TX": {
+    "name": "Texas Attorney General",
+    "host": "texasattorneygeneral.gov",
+    "listing_url": "https://www.texasattorneygeneral.gov/news"
+  },
+  "UT": {
+    "name": "Utah Attorney General",
+    "host": "attorneygeneral.utah.gov",
+    "listing_url": "https://attorneygeneral.utah.gov/news/"
+  },
+  "VT": {
+    "name": "Vermont Attorney General",
+    "host": "ago.vermont.gov",
+    "listing_url": "https://ago.vermont.gov/blog/category/press-releases"
+  },
+  "VA": {
+    "name": "Virginia Attorney General",
+    "host": "oag.state.va.us",
+    "listing_url": "https://www.oag.state.va.us/media-center/news-releases"
+  },
+  "WA": {
+    "name": "Washington Attorney General",
+    "host": "atg.wa.gov",
+    "listing_url": "https://www.atg.wa.gov/news"
+  },
+  "WV": {
+    "name": "West Virginia Attorney General",
+    "host": "ago.wv.gov",
+    "listing_url": "https://ago.wv.gov/pressroom"
+  },
+  "WI": {
+    "name": "Wisconsin Department of Justice / Attorney General",
+    "host": "doj.state.wi.us",
+    "listing_url": "https://www.doj.state.wi.us/news-releases"
+  },
+  "WY": {
+    "name": "Wyoming Attorney General",
+    "host": "ag.wyo.gov",
+    "listing_url": "https://ag.wyo.gov/news"
+  }
+}

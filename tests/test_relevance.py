@@ -4,7 +4,7 @@ from analysis_schema import MMIPRelevanceResult
 from analysis_validator import validate_mmip_relevance
 from discovery.models import Candidate
 from discovery.queries import keyword_prescreen
-from discovery.relevance import MMIPRelevanceGate
+from discovery.relevance import MMIPRelevanceGate, RELEVANCE_SYSTEM, RELEVANCE_USER_TEMPLATE
 
 
 MMIP_BILL_EXCERPT = """
@@ -22,6 +22,28 @@ TRIBAL_GAMING_EXCERPT = """
 AN ACT to authorize tribal gaming compacts and revenue sharing agreements
 between the state and federally recognized tribes.
 """
+
+AG_MMIP_APPOINTMENT_EXCERPT = """
+Attorney General Jackley Names Marlys Big Eagle As State's Missing and
+Murdered Indigenous Person Specialist. South Dakota Attorney General Marty
+Jackley announces that Marlys Big Eagle, an enrolled member of the Crow Creek
+Sioux Tribe, has been named as the state's Missing and Murdered Indigenous
+Person Specialist. The MMIP program is part of the South Dakota Attorney
+General's Office.
+"""
+
+
+def test_relevance_prompt_includes_ag_mmip_program_actions():
+    blob = f"{RELEVANCE_SYSTEM}\n{RELEVANCE_USER_TEMPLATE}".lower()
+    assert "attorney general" in blob
+    assert "press release" in blob
+    assert "specialist or coordinator" in blob
+    assert "personnel announcement is relevant" in blob
+    assert "consumer-protection" in blob
+
+
+def test_keyword_prescreen_ag_mmip_appointment():
+    assert keyword_prescreen(AG_MMIP_APPOINTMENT_EXCERPT)
 
 
 def test_keyword_prescreen_mmip_acronym():
@@ -155,3 +177,28 @@ def test_relevance_gate_confidence_fail():
     is_relevant, result, stage = gate.evaluate(candidate, MMIP_BILL_EXCERPT)
     assert not is_relevant
     assert stage == "confidence_fail"
+
+
+def test_relevance_gate_ag_mmip_appointment_relevant():
+    gate = MMIPRelevanceGate(
+        MockLLMProvider(
+            {
+                "is_mmip": True,
+                "confidence": 0.91,
+                "rationale": "AG appointment of a state MMIP specialist.",
+                "primary_subject": "SD AG names MMIP specialist",
+            }
+        ),
+        min_confidence=0.6,
+    )
+    candidate = Candidate(
+        source="state_site",
+        state="SD",
+        url="https://atg.sd.gov/OurOffice/Media/pressreleasesdetail.aspx?id=3147",
+        title="Attorney General Jackley Names Marlys Big Eagle As State's Missing and Murdered Indigenous Person Specialist",
+        snippet=AG_MMIP_APPOINTMENT_EXCERPT,
+    )
+    is_relevant, result, stage = gate.evaluate(candidate, AG_MMIP_APPOINTMENT_EXCERPT)
+    assert is_relevant
+    assert stage == "llm"
+    assert result.is_mmip is True

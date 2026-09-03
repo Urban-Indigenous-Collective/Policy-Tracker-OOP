@@ -65,3 +65,31 @@ def test_merged_state_sources_has_enabled_rows():
     enabled = [s for s in rows if not s.review_needed]
     assert len(rows) >= 200
     assert len(enabled) >= 150
+
+
+def test_sd_ag_source_is_enabled_in_merged_config():
+    source = StateSiteSource()
+    ag = [
+        s
+        for s in source.load_sources()
+        if s.state == "SD"
+        and not s.review_needed
+        and "atg.sd.gov" in s.primary_url()
+    ]
+    assert ag, "SD Attorney General press index must be an enabled crawl source"
+    assert "pressreleases.aspx" in ag[0].url
+
+
+def test_merged_config_covers_most_ag_offices():
+    from discovery.ag_coverage import load_ag_hosts, states_missing_ag
+
+    hosts = load_ag_hosts()
+    source = StateSiteSource()
+    by_state: dict[str, list] = {st: [] for st in hosts}
+    for row in source.load_sources():
+        by_state.setdefault(row.state, []).append(row.model_dump())
+    missing_enabled = states_missing_ag(by_state, include_review=False, hosts=hosts)
+    # KS / MA / NH listing URLs 403 from the bootstrap host; they stay review_needed.
+    assert set(missing_enabled) <= {"KS", "MA", "NH"}
+    missing_all = states_missing_ag(by_state, include_review=True, hosts=hosts)
+    assert missing_all == []

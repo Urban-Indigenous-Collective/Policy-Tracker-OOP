@@ -3,7 +3,7 @@
   "sources": [
     {
       "state": "SD",
-      "name": "SD — Governor report",
+      "name": "SD \u2014 Governor report",
       "content_type": "report",
       "method": "index",
       "url": "https://www.sd.gov/news/press-releases",
@@ -35,7 +35,7 @@
     },
     {
       "state": "SD",
-      "name": "SD — sd.gov site search (q)",
+      "name": "SD \u2014 sd.gov site search (q)",
       "content_type": "other",
       "method": "search",
       "url": "",
@@ -114,7 +114,7 @@
     },
     {
       "state": "SD",
-      "name": "SD — SOS executive orders search",
+      "name": "SD \u2014 SOS executive orders search",
       "content_type": "executive_order",
       "method": "index",
       "url": "https://sdsos.gov/general-information/executive-actions/executive-orders/search/Default.aspx",
@@ -146,7 +146,7 @@
     },
     {
       "state": "SD",
-      "name": "SD — SOS gubernatorial proclamations search",
+      "name": "SD \u2014 SOS gubernatorial proclamations search",
       "content_type": "proclamation",
       "method": "index",
       "url": "https://sdsos.gov/general-information/executive-actions/gubernatorial-proclamations/search/Default.aspx",
@@ -208,6 +208,45 @@
       "link_selector": null,
       "type": null,
       "max_pages": 5
+    },
+    {
+      "state": "SD",
+      "name": "SD \u2014 Attorney General press releases",
+      "content_type": "press_release",
+      "method": "index",
+      "url": "https://atg.sd.gov/OurOffice/Media/pressreleases.aspx",
+      "review_needed": false,
+      "discovered_by": "ag_bootstrap_2026_09",
+      "discovered_on": "2026-09-03",
+      "notes": "Incident 2026-09-03: MMIP specialist appointment lived only on the AG press index | Curated AG press index.",
+      "confidence": "high",
+      "source_id": "sd-sd-attorney-general-press-releases",
+      "search_url": "",
+      "search_param": "q",
+      "search_queries": [],
+      "http_method": "GET",
+      "ssl_verify": true,
+      "ignore_robots": false,
+      "user_agent": "",
+      "render_js": false,
+      "browser_wait_selector": "",
+      "browser_click_selector": "",
+      "browser_input_selector": "",
+      "browser_submit_selector": "",
+      "max_pages": 3,
+      "page_url_template": "",
+      "next_page_selector": "",
+      "max_document_fetches": 50,
+      "allowed_extra_domains": [],
+      "rss_url": "",
+      "api_url_template": "",
+      "api_key_env": "",
+      "year_slug_templates": [],
+      "document_url_template": "",
+      "sample_urls": [],
+      "occurrence_count": 0,
+      "link_selector": "a[href*='pressreleasesdetail']",
+      "type": null
     }
   ]
 }

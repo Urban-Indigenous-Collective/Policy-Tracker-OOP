@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fill governor / legislature / agency gaps in state MMIP source manifests.
+"""Fill governor / legislature / agency / attorney general gaps in state MMIP source manifests.
 
 Candidate URLs come from sources/manual_seeds.json plus governor path templates.
 Every candidate is HTTP-probed; only URLs that return a real page are written
@@ -28,6 +28,7 @@ import requests
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+from discovery.ag_coverage import url_matches_ag  # noqa: E402
 from discovery.source_schema import (  # noqa: E402
     StateManifest,
     StateSource,
@@ -86,6 +87,7 @@ ROLE_LABELS: dict[str, str] = {
     "executive_order": "Governor executive orders",
     "proclamation": "Governor proclamations",
     "agency_press": "agency press releases",
+    "attorney_general": "Attorney General press releases",
     "legislature_search": "Legislature bill search",
     "legislature_session": "Bills and session documents",
     "house": "House bill search",
@@ -97,6 +99,7 @@ ROLE_CONTENT_TYPE: dict[str, str] = {
     "executive_order": "executive_order",
     "proclamation": "proclamation",
     "agency_press": "press_release",
+    "attorney_general": "press_release",
     "legislature_search": "legislation",
     "legislature_session": "legislation",
     "house": "legislation",
@@ -333,6 +336,8 @@ def existing_roles(manifest: StateManifest) -> set[str]:
             roles.add("proclamation")
         if "governor" in blob and source.content_type in ("press_release", "report"):
             roles.add("governor_news")
+        if url_matches_ag(source.state, source.primary_url()):
+            roles.add("attorney_general")
         if source.content_type == "legislation" and source.method in ("search", "api"):
             roles.add("legislature_search")
     return roles

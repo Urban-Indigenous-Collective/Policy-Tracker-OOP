@@ -11,8 +11,10 @@ from discovery.queries import keyword_prescreen
 logger = logging.getLogger(__name__)
 
 RELEVANCE_SYSTEM = (
-    "You are a legislative screening assistant for Urban Indigenous Collective (UIC). "
+    "You are a screening assistant for Urban Indigenous Collective (UIC). "
     "Determine whether a document specifically addresses Missing and Murdered Indigenous Peoples (MMIP). "
+    "Documents may be legislation, executive orders, proclamations, or official "
+    "government press releases and program announcements. "
     "Return only valid JSON."
 )
 
@@ -31,12 +33,18 @@ Document excerpt:
 {excerpt}
 
 MMIP relevance criteria:
-- RELEVANT: legislation or executive orders specifically addressing missing or murdered Indigenous people,
-  Native American/Alaska Native/Native Hawaiian missing persons, tribal MMIP task forces, MMIW/MMIP data
-  collection, Savanna's Act, Not Invisible Act, or similar Indigenous-specific missing/murdered persons policy.
-- NOT RELEVANT: general missing-persons legislation, AMBER Alert bills, human trafficking bills with no
-  Indigenous nexus, tribal gaming/compacts, general criminal justice bills, or legislation about missing
-  persons that does not specifically address Indigenous communities.
+- RELEVANT: official actions that specifically address missing or murdered Indigenous people,
+  Native American/Alaska Native/Native Hawaiian missing persons, tribal MMIP task forces,
+  MMIW/MMIP data collection, Savanna's Act, Not Invisible Act, or similar Indigenous-specific
+  missing/murdered persons policy. Include legislation, executive orders, proclamations, AND
+  attorney general / state DOJ / agency press releases that announce MMIP program actions —
+  for example appointing or naming an MMIP specialist or coordinator, standing up an MMIP
+  office or task force, MMIP conferences or victim-services programs, or staffing/funding
+  those efforts. A personnel announcement is relevant when the role itself is MMIP-specific.
+- NOT RELEVANT: general missing-persons legislation, AMBER Alert bills, human trafficking
+  bills with no Indigenous nexus, tribal gaming/compacts, general criminal justice bills,
+  attorney general consumer-protection or opioid press with no MMIP subject, or any document
+  about missing persons that does not specifically address Indigenous communities.
 
 Decide if this document is MMIP-relevant for UIC's policy tracker."""
 

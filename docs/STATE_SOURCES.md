@@ -73,6 +73,20 @@ Multiple approved sources per state:
 
 See [`sources/manifests/NC.json`](../sources/manifests/NC.json) after bootstrap.
 
+## Attorney General press rooms
+
+State AG offices publish MMIP staffing, task-force, and victim-services actions that never appear on governor or legislature indexes. Facebook is not a crawl target; the official listing is the AG press index (example: South Dakota `atg.sd.gov` press releases).
+
+Hosts and listing URLs live in [`sources/ag_hosts.json`](../sources/ag_hosts.json). Bootstrap:
+
+```bash
+python scripts/bootstrap_ag_sources.py --all --dry-run
+python scripts/bootstrap_ag_sources.py --all --apply
+python scripts/merge_state_manifests.py
+```
+
+Coverage audit treats AG as its own dimension (`python scripts/audit_source_coverage.py`). The MMIP relevance gate treats AG/agency press that announce MMIP staffing, offices, task forces, or victim-services programs as in-scope — not only bills and executive orders.
+
 ## New York (nysenate.gov blocked)
 
 `www.nysenate.gov` returns **HTTP 403** to automated clients (even with a browser user-agent). Use instead:
@@ -137,6 +151,7 @@ python scripts/test_vt_sources.py
 | Path | Purpose |
 |------|---------|
 | `sources/manifests/{ST}.json` | Per-state bootstrap output |
+| `sources/ag_hosts.json` | State Attorney General hosts and press listing URLs |
 | `sources/state_sources.json` | Merged config used by nightly crawler |
 | `sources/bootstrap_report.md` | Bootstrap summary |
 | `discovery/fetchers.py` | Index, search, RSS fetchers |

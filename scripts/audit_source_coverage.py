@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Audit state MMIP source coverage: governor, legislature, and chamber gaps.
+"""Audit state MMIP source coverage: governor, AG, legislature, and chamber gaps.
 
 Checks sources/manifests/*.json (and optionally state_sources.json) for:
   - Governor: news/press, executive orders, proclamations, DOA/agency releases
+  - Attorney General: AG / state DOJ press rooms (MMIP staffing and AG policy)
   - Legislature: bill search, session listings, chamber-specific sources
   - Bicameral: House + Senate (Nebraska unicameral exception)
 
@@ -23,6 +24,9 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+
+from discovery.ag_coverage import load_ag_hosts, url_matches_ag  # noqa: E402
 
 MANIFESTS_DIR = ROOT / "sources" / "manifests"
 STATE_SOURCES_PATH = ROOT / "sources" / "state_sources.json"
@@ -50,6 +54,7 @@ ALL_STATES = sorted(
 )
 
 UNICAMERAL = {"NE"}
+AG_HOSTS = load_ag_hosts()
 
 GOVERNOR_HOST_RE = re.compile(
     r"(^|\.)((governor|gov)\.[a-z0-9.-]+|governor\.[a-z]{2}\.gov)",
@@ -105,6 +110,7 @@ class SourceTags:
     house: bool = False
     senate: bool = False
     both_chambers: bool = False
+    attorney_general: bool = False
     low_confidence: bool = False
 
     def as_dict(self) -> dict[str, bool]:
@@ -117,6 +123,7 @@ class StateCoverage:
     source_count: int = 0
     enabled_count: int = 0
     governor: str = "MISSING"  # FULL | PARTIAL | MISSING
+    attorney_general: str = "MISSING"
     legislature: str = "MISSING"
     chambers: str = "MISSING"  # FULL | PARTIAL | MISSING | N/A (NE)
     governor_detail: list[str] = field(default_factory=list)
@@ -171,6 +178,8 @@ def tag_source(source: dict) -> SourceTags:
         tags.proclamation = True
     if DOA_RE.search(blob) or DOA_RE.search(host):
         tags.doa = True
+    if url_matches_ag(str(source.get("state") or ""), url, AG_HOSTS):
+        tags.attorney_general = True
     if method == "search" and GENERIC_STATE_SEARCH_RE.match(url):
         tags.generic_search = True
         if not is_gov_host:
@@ -267,6 +276,16 @@ def classify_governor(tags: SourceTags) -> tuple[str, list[str], list[str], list
     return "PARTIAL", detail, gaps, false_positives
 
 
+def classify_attorney_general(tags: SourceTags) -> tuple[str, list[str], list[str]]:
+    if tags.attorney_general:
+        return "FULL", ["attorney general press/news index"], []
+    return (
+        "MISSING",
+        [],
+        ["Add attorney general press index (see sources/ag_hosts.json)"],
+    )
+
+
 def classify_legislature(tags: SourceTags) -> tuple[str, list[str], list[str]]:
     detail: list[str] = []
     gaps: list[str] = []
@@ -346,16 +365,18 @@ def audit_state(state: str, sources: list[dict]) -> StateCoverage:
     )
 
     gov_status, gov_detail, gov_gaps, fps = classify_governor(tags)
+    ag_status, _, ag_gaps = classify_attorney_general(tags)
     leg_status, leg_detail, leg_gaps = classify_legislature(tags)
     chamber_status, chamber_detail, chamber_gaps = classify_chambers(state, tags)
 
     cov.governor = gov_status
+    cov.attorney_general = ag_status
     cov.legislature = leg_status
     cov.chambers = chamber_status
     cov.governor_detail = gov_detail
     cov.legislature_detail = leg_detail
     cov.chamber_detail = chamber_detail
-    cov.gaps = gov_gaps + leg_gaps + chamber_gaps
+    cov.gaps = gov_gaps + ag_gaps + leg_gaps + chamber_gaps
     cov.false_positives = fps
 
     # Main v3 seeds on legislature domains are false positives too
@@ -385,6 +406,8 @@ def print_report(results: list[StateCoverage], label: str) -> None:
     full_gov = sum(1 for r in results if r.governor == "FULL")
     partial_gov = sum(1 for r in results if r.governor == "PARTIAL")
     missing_gov = sum(1 for r in results if r.governor == "MISSING")
+    full_ag = sum(1 for r in results if r.attorney_general == "FULL")
+    missing_ag = sum(1 for r in results if r.attorney_general == "MISSING")
     full_leg = sum(1 for r in results if r.legislature == "FULL")
     partial_leg = sum(1 for r in results if r.legislature == "PARTIAL")
     missing_leg = sum(1 for r in results if r.legislature == "MISSING")
@@ -407,6 +430,7 @@ def print_report(results: list[StateCoverage], label: str) -> None:
     print(f"| Dimension | FULL | PARTIAL | MISSING | N/A |")
     print(f"|-----------|------|---------|---------|-----|")
     print(f"| Governor | {full_gov} | {partial_gov} | {missing_gov} | — |")
+    print(f"| Attorney General | {full_ag} | 0 | {missing_ag} | — |")
     print(f"| Legislature | {full_leg} | {partial_leg} | {missing_leg} | — |")
     print(f"| Chambers | {full_ch} | {partial_ch} | {missing_ch} | {na_ch} |")
     print(f"\nStates with FULL governor + FULL legislature + chambers OK: **{both_full}/51**\n")
@@ -426,6 +450,7 @@ def print_report(results: list[StateCoverage], label: str) -> None:
         print()
 
     _section("Governor MISSING or PARTIAL", lambda r: r.governor in ("MISSING", "PARTIAL"))
+    _section("Attorney General MISSING", lambda r: r.attorney_general == "MISSING")
     _section("Legislature MISSING or PARTIAL", lambda r: r.legislature in ("MISSING", "PARTIAL"))
     _section(
         "Chamber gaps (excluding NE unicameral)",
@@ -440,6 +465,8 @@ def print_report(results: list[StateCoverage], label: str) -> None:
             score += 10
         elif r.governor == "PARTIAL" and r.false_positives:
             score += 7
+        if r.attorney_general == "MISSING":
+            score += 8
         if r.legislature == "MISSING":
             score += 10
         elif r.legislature == "PARTIAL":
@@ -452,7 +479,7 @@ def print_report(results: list[StateCoverage], label: str) -> None:
             priority.append((score, r))
 
     for score, r in sorted(priority, key=lambda x: (-x[0], x[1].state))[:20]:
-        print(f"- **{r.state}** (priority {score}): gov={r.governor}, leg={r.legislature}, chambers={r.chambers}")
+        print(f"- **{r.state}** (priority {score}): gov={r.governor}, ag={r.attorney_general}, leg={r.legislature}, chambers={r.chambers}")
         if r.gaps:
             print(f"  - {r.gaps[0]}")
     print()
