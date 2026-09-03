@@ -2,7 +2,7 @@ import logging
 import os
 from typing import Any, Optional
 
-from pyairtable import Table
+from pyairtable import Api, Table, retry_strategy
 
 from airtable_fields import (
     BILL_FIELD_NAMES,
@@ -23,6 +23,37 @@ def _escape_formula_value(value: str) -> str:
     return str(value).replace("'", "\\'")
 
 
+def airtable_retry_strategy():
+    """Backoff that respects Airtable's 5 req/s cap instead of hammering 429s.
+
+    pyairtable's default is 5 retries at backoff_factor=0.1 (~3s total), which
+    turns one 429 into a burst and then raises MaxRetryError.
+    """
+    return retry_strategy(
+        status_forcelist=(429, 500, 502, 503, 504),
+        backoff_factor=float(os.getenv("AIRTABLE_RETRY_BACKOFF", "2")),
+        total=int(os.getenv("AIRTABLE_RETRY_TOTAL", "6")),
+        allowed_methods=None,
+    )
+
+
+def is_airtable_rate_limit_error(exc: BaseException | None) -> bool:
+    """True when Airtable/urllib3 exhausted retries on HTTP 429."""
+    seen: set[int] = set()
+    current: BaseException | None = exc
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        text = f"{type(current).__name__} {current}".lower()
+        if "429" in text or "too many 429" in text:
+            return True
+        reason = getattr(current, "reason", None)
+        if isinstance(reason, BaseException):
+            current = reason
+            continue
+        current = current.__cause__ or current.__context__
+    return False
+
+
 class AirtableClient:
     """Read/write client for Main v3 (live) and Pending review tables."""
 
@@ -35,8 +66,15 @@ class AirtableClient:
         if not api_key or not base_id:
             raise ValueError("AIRTABLE_API_KEY and AIRTABLE_BASE_ID must be set")
 
-        self.live_table = Table(api_key, base_id, live_table_name)
-        self.pending_table = Table(api_key, base_id, pending_table_name)
+        # One Api/session for both tables so retries share backoff instead of
+        # two independent clients doubling 429 traffic.
+        self.api = Api(
+            api_key,
+            timeout=(10, 60),
+            retry_strategy=airtable_retry_strategy(),
+        )
+        self.live_table = self.api.table(base_id, live_table_name)
+        self.pending_table = self.api.table(base_id, pending_table_name)
         self.live_table_name = live_table_name
         self.pending_table_name = pending_table_name
 

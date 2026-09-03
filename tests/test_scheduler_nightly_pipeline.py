@@ -185,3 +185,12 @@ def test_run_validation_refresh_job_delegates_to_script():
         ):
             scheduler.run_validation_refresh_job()
     mock_run.assert_called_once_with(apply=True, apply_eval_expl_fixes=False)
+
+
+def test_approval_sync_job_does_not_slack_airtable_429():
+    rate_limit = RuntimeError("too many 429 error responses")
+    with patch.object(scheduler, "ApprovalSync") as mock_sync_cls:
+        mock_sync_cls.return_value.run.side_effect = rate_limit
+        with patch.object(scheduler, "SlackNotifier") as mock_slack_cls:
+            scheduler.run_approval_sync_job()
+    mock_slack_cls.return_value.notify_error.assert_not_called()

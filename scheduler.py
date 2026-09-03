@@ -151,6 +151,11 @@ def run_approval_sync_job():
         stats = sync.run()
         logger.info("Approval sync finished: %s", stats)
     except Exception as exc:
+        from airtable_client import is_airtable_rate_limit_error
+
+        if is_airtable_rate_limit_error(exc):
+            logger.warning("Approval sync hit Airtable rate limit; next interval will retry: %s", exc)
+            return
         logger.exception("Approval sync job failed: %s", exc)
         SlackNotifier().notify_error(f"Approval sync failed: {exc}")
 

@@ -130,3 +130,40 @@ def test_approval_sync_live_to_pending(sync):
     assert pending["fields"]["Review Status"] == REVIEW_STATUS_PENDING
     assert pending["fields"]["Bill Overview (Link)"] == "https://example.com/bill/2"
     assert "Bill Overview" not in pending["fields"]
+
+
+def test_approval_sync_rate_limit_skips_without_slack(sync):
+    from unittest.mock import MagicMock
+
+    approval_sync, client = sync
+    client.list_pending_approved = MagicMock(
+        side_effect=RuntimeError(
+            "HTTPSConnectionPool(host='api.airtable.com', port=443): "
+            "Max retries exceeded with url: /v0/app/Pending?filterByFormula=... "
+            "(Caused by ResponseError('too many 429 error responses'))"
+        )
+    )
+    stats = approval_sync.run()
+    assert stats["rate_limited"] == 1
+    assert stats["approved"] == 0
+    approval_sync.slack.notify_error.assert_not_called()
+
+
+def test_approval_sync_rate_limit_mid_move_stops(sync):
+    from unittest.mock import MagicMock
+
+    approval_sync, client = sync
+    client.pending_table.create(
+        {
+            "Title": "MMIP Task Force Act",
+            "State": "NM",
+            "Bill Overview": "https://example.com/bill/3",
+            "Review Status": "Approved",
+        }
+    )
+    approval_sync.airtable.create_live_record = MagicMock(
+        side_effect=RuntimeError("too many 429 error responses")
+    )
+    stats = approval_sync.run()
+    assert stats["rate_limited"] == 1
+    approval_sync.slack.notify_error.assert_not_called()

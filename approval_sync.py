@@ -2,7 +2,7 @@ import logging
 import os
 from typing import Any
 
-from airtable_client import AirtableClient
+from airtable_client import AirtableClient, is_airtable_rate_limit_error
 from airtable_fields import (
     BILL_FIELD_NAMES,
     BILL_OVERVIEW_FIELD,
@@ -188,32 +188,77 @@ class ApprovalSync:
             self.seen_store.update_status(url, "rejected", verdict=REVIEW_STATUS_REJECTED)
         logger.info("Rejected and removed from pending: %s", fields.get("Title", record_id))
 
+    def _records_or_backoff(self, loader, stats: dict[str, int]) -> list[dict] | None:
+        try:
+            return loader()
+        except Exception as exc:
+            if is_airtable_rate_limit_error(exc):
+                logger.warning(
+                    "Airtable rate-limited approval sync; skipping this interval: %s",
+                    exc,
+                )
+                stats["rate_limited"] = 1
+                return None
+            raise
+
+    def _sync_record(self, record: dict, mover, stats: dict[str, int], key: str, label: str) -> None:
+        try:
+            result = mover(record)
+            if result is not False:
+                stats[key] += 1
+        except Exception as exc:
+            if is_airtable_rate_limit_error(exc):
+                logger.warning(
+                    "Airtable rate-limited while moving %s; remaining records wait: %s",
+                    label,
+                    exc,
+                )
+                stats["rate_limited"] = 1
+                raise
+            logger.exception("Error moving %s: %s", label, exc)
+            stats["errors"] += 1
+            self.slack.notify_error(f"Approval sync failed ({label}): {exc}")
+
     def run(self) -> dict[str, int]:
-        stats = {"approved": 0, "send_back": 0, "rejected": 0, "errors": 0}
+        stats = {"approved": 0, "send_back": 0, "rejected": 0, "errors": 0, "rate_limited": 0}
 
-        for record in self.airtable.list_pending_approved():
+        approved = self._records_or_backoff(self.airtable.list_pending_approved, stats)
+        if approved is None:
+            return stats
+        for record in approved:
             try:
-                if self._move_to_live(record):
-                    stats["approved"] += 1
-            except Exception as exc:
-                logger.exception("Error moving to live: %s", exc)
-                stats["errors"] += 1
-                self.slack.notify_error(f"Approval sync failed (to live): {exc}")
+                self._sync_record(record, self._move_to_live, stats, "approved", "to live")
+            except Exception:
+                if stats.get("rate_limited"):
+                    return stats
+                raise
 
-        for record in self.airtable.list_live_send_back():
+        send_back = self._records_or_backoff(self.airtable.list_live_send_back, stats)
+        if send_back is None:
+            return stats
+        for record in send_back:
             try:
-                if self._move_to_pending(record):
-                    stats["send_back"] += 1
-            except Exception as exc:
-                logger.exception("Error moving to pending: %s", exc)
-                stats["errors"] += 1
-                self.slack.notify_error(f"Approval sync failed (to pending): {exc}")
+                self._sync_record(record, self._move_to_pending, stats, "send_back", "to pending")
+            except Exception:
+                if stats.get("rate_limited"):
+                    return stats
+                raise
 
-        for record in self.airtable.list_pending_rejected():
+        rejected = self._records_or_backoff(self.airtable.list_pending_rejected, stats)
+        if rejected is None:
+            return stats
+        for record in rejected:
             try:
                 self._handle_rejected(record)
                 stats["rejected"] += 1
             except Exception as exc:
+                if is_airtable_rate_limit_error(exc):
+                    logger.warning(
+                        "Airtable rate-limited while handling rejection; remaining wait: %s",
+                        exc,
+                    )
+                    stats["rate_limited"] = 1
+                    return stats
                 logger.exception("Error handling rejection: %s", exc)
                 stats["errors"] += 1
 
