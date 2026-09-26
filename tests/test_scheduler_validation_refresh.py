@@ -60,10 +60,12 @@ def test_run_validation_refresh_job_delegates_to_script():
 def test_main_registers_only_nightly_pipeline_cron_when_validation_disabled():
     with patch.dict(
         "os.environ",
-        {
-            "LEGISCAN_KEY": "test-key",
-            "VALIDATION_REFRESH_ENABLED": "false",
-        },
+            {
+                "LEGISCAN_KEY": "test-key",
+                "VALIDATION_REFRESH_ENABLED": "false",
+                "APPROVAL_SYNC_INTERVAL_MIN": "0",
+                "SLACK_DEFER_DISCOVERY": "false",
+            },
         clear=False,
     ):
         with patch.object(scheduler.BlockingScheduler, "start"):

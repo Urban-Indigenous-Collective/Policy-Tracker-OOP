@@ -26,7 +26,7 @@ from analysis_validator import (
     validate_bill_analysis,
     validate_pros_cons,
 )
-from airtable_client import AirtableClient
+from airtable_client import AirtableClient, is_airtable_rate_limit_error
 from airtable_fields import BILL_OVERVIEW_LINK_FIELD, BILL_TEXT_FIELD, REVIEW_STATUS_REJECTED
 from bill_processor import BillProcessor
 from content_guard import check_record_consistency
@@ -248,6 +248,7 @@ class ValidationRefreshStats:
     unchanged: int = 0
     failed: int = 0
     apply: bool = False
+    airtable_rate_limited: bool = False
 
 
 def run_validation_refresh(
@@ -274,8 +275,16 @@ def run_validation_refresh(
     if client is None:
         client = AirtableClient()
 
+    try:
+        pending_records = client.pending_table.all()
+    except Exception as exc:
+        if not is_airtable_rate_limit_error(exc):
+            raise
+        logger.warning("Validation refresh skipped (Airtable rate/billing limit): %s", exc)
+        return ValidationRefreshStats(apply=apply, airtable_rate_limited=True)
+
     targets: list[dict] = []
-    for record in client.pending_table.all():
+    for record in pending_records:
         fields = record.get("fields") or {}
         if fields.get("Review Status") == REVIEW_STATUS_REJECTED:
             continue
@@ -341,7 +350,14 @@ def run_validation_refresh(
 
         if apply:
             prepared = _prepare_updates(updates, fields)
-            client.update_record(client.pending_table, rid, prepared)
+            try:
+                client.update_record(client.pending_table, rid, prepared)
+            except Exception as exc:
+                if not is_airtable_rate_limit_error(exc):
+                    raise
+                logger.warning("Validation refresh stopped at %s (Airtable rate/billing limit): %s", rid, exc)
+                stats.airtable_rate_limited = True
+                break
 
         processor.compiled_bill = {}
         time.sleep(0.3)

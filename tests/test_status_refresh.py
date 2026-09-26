@@ -276,7 +276,7 @@ def test_status_refresh_fetches_bill_when_change_hash_differs():
     stats = pipeline.run()
 
     assert stats.getbills_fetched == 1
-    api.get_bill_details.assert_called_once_with("12345")
+    api.get_bill_details.assert_called_once_with("12345", change_hash="new_hash")
 
 
 def test_status_refresh_pipeline_updates_airtable(monkeypatch):
@@ -614,3 +614,47 @@ def test_status_refresh_skips_non_legiscan():
     assert stats.skipped_non_legiscan == 1
     assert stats.checked == 0
     airtable.update_record.assert_not_called()
+
+
+def test_status_refresh_stops_on_airtable_rate_limit(monkeypatch, tmp_path):
+    monkeypatch.setenv("DISCOVERY_DB_PATH", str(tmp_path / "discovery.db"))
+    monkeypatch.setattr("discovery.status_refresh.should_defer_slack", lambda: True)
+    proc = LegiScanProcessor(indigenous_db=None, api_client=FakeApi())
+    api = MagicMock()
+    api.get_bill_details.return_value = _sample_bill_details(status_code=2)
+
+    def record(rid):
+        return {
+            "id": rid,
+            "fields": {
+                "Name": rid,
+                "State": "NM",
+                "Bill Overview (Link)": "https://legiscan.com/NM/bill/SB123/2026",
+                "Status": "Pending",
+                "Progression": "Introduced",
+            },
+        }
+
+    airtable = MagicMock()
+    airtable.list_pending_for_refresh.return_value = [record("rec1"), record("rec2")]
+    airtable.update_record.side_effect = RuntimeError("too many 429 error responses")
+
+    seen = MagicMock()
+    seen.get.return_value = {"external_id": "12345", "status": "pending"}
+
+    pipeline = StatusRefreshPipeline(
+        api_client=api,
+        legiscan_processor=proc,
+        airtable=airtable,
+        seen_store=seen,
+        slack=MagicMock(),
+        dry_run=False,
+    )
+    with patch("discovery.status_refresh.merge_status_refresh_report") as merge_mock:
+        stats = pipeline.run()
+
+    assert stats.airtable_rate_limited
+    assert stats.errors == 0
+    assert airtable.update_record.call_count == 1
+    airtable.all_live_records.assert_not_called()
+    assert merge_mock.call_args[0][1]["airtable_rate_limited"] is True

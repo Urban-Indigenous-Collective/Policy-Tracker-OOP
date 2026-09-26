@@ -20,7 +20,7 @@ def default_cache_db_path() -> Path:
 
 
 class LegiScanCache:
-    """TTL cache for getSessionList / getMasterList / getMasterListRaw responses."""
+    """TTL cache for list endpoints and hash-keyed getBill responses."""
 
     TTL_SECONDS = {
         "getSessionList": 7 * 24 * 3600,
@@ -29,6 +29,10 @@ class LegiScanCache:
     }
 
     def __init__(self, db_path: str | Path | None = None):
+        self.ttl_seconds = {
+            **self.TTL_SECONDS,
+            "getBill": int(float(os.getenv("LEGISCAN_GETBILL_CACHE_TTL_HOURS", "18")) * 3600),
+        }
         self.db_path = Path(db_path or default_cache_db_path())
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_db()
@@ -53,7 +57,7 @@ class LegiScanCache:
             )
 
     def get(self, op: str, param_key: str) -> Optional[dict[str, Any]]:
-        ttl = self.TTL_SECONDS.get(op)
+        ttl = self.ttl_seconds.get(op)
         if ttl is None:
             return None
         with self._connect() as conn:
@@ -75,7 +79,7 @@ class LegiScanCache:
             return None
 
     def set(self, op: str, param_key: str, payload: dict[str, Any]) -> None:
-        if op not in self.TTL_SECONDS:
+        if op not in self.ttl_seconds:
             return
         with self._connect() as conn:
             conn.execute(

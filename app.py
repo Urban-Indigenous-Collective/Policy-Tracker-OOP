@@ -38,6 +38,22 @@ def health_check():
     # Optionally, perform additional readiness checks here.
     return jsonify({"status": "ok"}), 200
 
+
+@app.route("/webhooks/airtable", methods=["POST"])
+def airtable_webhook():
+    """Airtable change ping. HMAC-verified; runs approval sync in a background thread."""
+    from discovery.airtable_webhook import process_webhook_request
+
+    body = request.get_data(cache=False)
+    payload = request.get_json(silent=True) or {}
+    status, _ = process_webhook_request(
+        body,
+        request.headers.get("X-Airtable-Content-MAC"),
+        payload,
+        background=True,
+    )
+    return ("", status)
+
 def _run_processing(urls_string):
     global process_status, process_result
     try:

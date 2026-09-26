@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from approval_sync import ApprovalSync
-from airtable_client import AirtableClient
+from airtable_client import AirtableClient, is_airtable_rate_limit_error
 from airtable_coercion import coerce_bill_fields
 from airtable_fields import BILL_OVERVIEW_LINK_FIELD, REVIEW_STATUS_REJECTED
 from api_client import APIClient
@@ -89,6 +89,8 @@ class StatusRefreshStats:
     identity_mismatch: int = 0
     legiscan_limited: bool = False
     legiscan_limit_reason: str = ""
+    airtable_rate_limited: bool = False
+    airtable_limit_reason: str = ""
     status_items: list[dict[str, Any]] = field(default_factory=list)
     identity_mismatch_items: list[dict[str, Any]] = field(default_factory=list)
 
@@ -468,7 +470,7 @@ class StatusRefreshPipeline:
                     return
 
             stats.getbills_fetched += 1
-            bill_details = self.api_client.get_bill_details(bill_id)
+            bill_details = self.api_client.get_bill_details(bill_id, change_hash=master_hash)
             if not bill_details or not isinstance(bill_details, dict) or "bill" not in bill_details:
                 stats.getbill_failed += 1
                 if getattr(self.api_client, "quota_exhausted", False) or self.api_client.response_indicates_overlimit(
@@ -561,6 +563,11 @@ class StatusRefreshPipeline:
                 stats.legiscan_limit_reason = str(exc)
                 logger.warning("Status refresh stopped (LegiScan quota): %s", exc)
                 return
+            if is_airtable_rate_limit_error(exc):
+                stats.airtable_rate_limited = True
+                stats.airtable_limit_reason = str(exc)
+                logger.warning("Status refresh stopped (Airtable rate/billing limit): %s", exc)
+                return
             stats.errors += 1
             logger.exception("Status refresh failed for %s: %s", url, exc)
 
@@ -572,21 +579,27 @@ class StatusRefreshPipeline:
         try:
             pending_records = self.airtable.list_pending_for_refresh()
             for record in pending_records:
-                if stats.legiscan_limited:
+                if stats.legiscan_limited or stats.airtable_rate_limited:
                     break
                 review = (record.get("fields") or {}).get("Review Status")
                 if review == REVIEW_STATUS_REJECTED:
                     continue
                 self._refresh_record(record, "Pending", self.airtable.pending_table, stats)
 
-            if not stats.legiscan_limited:
+            if not (stats.legiscan_limited or stats.airtable_rate_limited):
                 for record in self.airtable.all_live_records():
+                    if stats.legiscan_limited or stats.airtable_rate_limited:
+                        break
                     self._refresh_record(record, "Live", self.airtable.live_table, stats)
         except Exception as exc:
             if is_legiscan_limit_error(exc):
                 stats.legiscan_limited = True
                 stats.legiscan_limit_reason = str(exc)
                 logger.warning("Status refresh aborted (LegiScan quota): %s", exc)
+            elif is_airtable_rate_limit_error(exc):
+                stats.airtable_rate_limited = True
+                stats.airtable_limit_reason = str(exc)
+                logger.warning("Status refresh aborted (Airtable rate/billing limit): %s", exc)
             else:
                 raise
 
@@ -629,6 +642,7 @@ class StatusRefreshPipeline:
             "identity_mismatch": stats.identity_mismatch,
             "legiscan_limited": stats.legiscan_limited,
             "legiscan_limit_reason": stats.legiscan_limit_reason,
+            "airtable_rate_limited": stats.airtable_rate_limited,
             "errors": stats.errors,
         }
         if should_defer_slack():

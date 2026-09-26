@@ -58,6 +58,6 @@ Add to **Main v3**:
 ## Review workflow
 
 1. Nightly discovery writes new records to **Pending** with `Review Status = Pending Review`.
-2. Reviewer sets `Review Status = Approved` → approval sync copies to **Main v3** and deletes from Pending.
+2. Reviewer sets `Review Status = Approved` → Airtable pings the app; approval sync copies to **Main v3** and deletes from Pending (nightly catch-up if a ping was missed).
 3. Reviewer sets `Review Status = Rejected` → approval sync deletes from Pending and marks rejected in local SQLite.
 4. On **Main v3**, set `Review Status = Send Back to Pending` → approval sync moves record back to Pending.

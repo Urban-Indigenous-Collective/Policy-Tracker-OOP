@@ -33,12 +33,8 @@ class AirtableDuplicateIndex:
         )
 
     def _index_table(self, table) -> None:
-        try:
-            records = table.all()
-        except Exception as exc:
-            logger.warning("Failed to load duplicate index from table: %s", exc)
-            return
-        for record in records:
+        # Propagate failures: a partially loaded index would let duplicates through.
+        for record in table.all():
             fields = record.get("fields") or {}
             for field in URL_FIELDS:
                 url = fields.get(field)

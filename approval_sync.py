@@ -1,6 +1,9 @@
 import logging
 import os
+from pathlib import Path
 from typing import Any
+
+from filelock import FileLock
 
 from airtable_client import AirtableClient, is_airtable_rate_limit_error
 from airtable_fields import (
@@ -47,6 +50,11 @@ class ApprovalSync:
             os.getenv("DISCOVERY_DB_PATH", "data/discovery.db")
         )
         self.slack = slack or SlackNotifier()
+        self.verify_writes = os.getenv("APPROVAL_SYNC_VERIFY_WRITES", "true").lower() in (
+            "1",
+            "true",
+            "yes",
+        )
 
     def _fields_for_live(self, pending_fields: dict[str, Any]) -> dict[str, Any]:
         live_fields = {k: pending_fields.get(k, "") for k in BILL_FIELD_NAMES}
@@ -123,11 +131,12 @@ class ApprovalSync:
         if not created_id:
             raise RuntimeError(f"Failed to create live record for {url}")
 
-        verify = self.airtable.find_by_url(
-            self.airtable.live_table, url, field=BILL_OVERVIEW_LINK_FIELD
-        ) or self.airtable.find_by_url(self.airtable.live_table, url, field=BILL_OVERVIEW_FIELD)
-        if not verify:
-            raise RuntimeError(f"Live record verification failed for {url}")
+        if self.verify_writes:
+            verify = self.airtable.find_by_url(
+                self.airtable.live_table, url, field=BILL_OVERVIEW_LINK_FIELD
+            ) or self.airtable.find_by_url(self.airtable.live_table, url, field=BILL_OVERVIEW_FIELD)
+            if not verify:
+                raise RuntimeError(f"Live record verification failed for {url}")
 
         self.seen_store.log_move("pending_to_live", url, live_fields)
         self.airtable.delete_record(self.airtable.pending_table, record_id)
@@ -161,11 +170,12 @@ class ApprovalSync:
         if not created_id:
             raise RuntimeError(f"Failed to create pending record for {url}")
 
-        verify = self.airtable.find_by_url(
-            self.airtable.pending_table, url, field=BILL_OVERVIEW_LINK_FIELD
-        )
-        if not verify:
-            raise RuntimeError(f"Pending record verification failed for {url}")
+        if self.verify_writes:
+            verify = self.airtable.find_by_url(
+                self.airtable.pending_table, url, field=BILL_OVERVIEW_LINK_FIELD
+            )
+            if not verify:
+                raise RuntimeError(f"Pending record verification failed for {url}")
 
         self.seen_store.log_move("live_to_pending", url, pending_fields)
         self.airtable.delete_record(self.airtable.live_table, record_id)
@@ -220,6 +230,12 @@ class ApprovalSync:
             self.slack.notify_error(f"Approval sync failed ({label}): {exc}")
 
     def run(self) -> dict[str, int]:
+        lock_path = Path(self.seen_store.db_path).parent / "approval_sync.lock"
+        lock = FileLock(str(lock_path))
+        with lock:
+            return self._run_unlocked()
+
+    def _run_unlocked(self) -> dict[str, int]:
         stats = {"approved": 0, "send_back": 0, "rejected": 0, "errors": 0, "rate_limited": 0}
 
         approved = self._records_or_backoff(self.airtable.list_pending_approved, stats)

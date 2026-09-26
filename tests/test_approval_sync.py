@@ -167,3 +167,41 @@ def test_approval_sync_rate_limit_mid_move_stops(sync):
     stats = approval_sync.run()
     assert stats["rate_limited"] == 1
     approval_sync.slack.notify_error.assert_not_called()
+
+
+@pytest.mark.parametrize("verify_env,expected_lookups", [("true", 4), ("false", 2)])
+def test_approval_sync_verify_flag_controls_post_create_lookups(
+    tmp_path, monkeypatch, verify_env, expected_lookups
+):
+    from discovery.seen_store import SeenStore
+
+    monkeypatch.setenv("APPROVAL_SYNC_VERIFY_WRITES", verify_env)
+    client = FakeAirtableClient()
+    lookups = []
+    original_find = client.find_by_url
+
+    def counting_find(table, url, field="Bill Overview"):
+        lookups.append(field)
+        # Pre-create checks miss; post-create verify must also miss the link field to force both calls.
+        if field == "Bill Overview" and table is client.live_table:
+            return original_find(table, url, field)
+        return None
+
+    client.find_by_url = counting_find
+    client.pending_table.create(
+        {
+            "Title": "MMIP Task Force Act",
+            "State": "NM",
+            "Bill Overview": "https://example.com/bill/9",
+            "Review Status": "Approved",
+        }
+    )
+    approval_sync = ApprovalSync(
+        airtable=client, seen_store=SeenStore(tmp_path / "sync.db"), slack=MagicMock()
+    )
+
+    stats = approval_sync.run()
+
+    assert stats["approved"] == 1
+    assert len(client.live_table.records) == 1
+    assert len(lookups) == expected_lookups

@@ -11,6 +11,7 @@ services:
       - "${POLICY_HOST_PORT:-8002}:8000"
     volumes:
       - llm_cache:/app/cache
+      - discovery_data:/app/data
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health-check')"]
       interval: 30s

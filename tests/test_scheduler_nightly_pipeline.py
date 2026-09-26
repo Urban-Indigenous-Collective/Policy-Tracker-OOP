@@ -22,7 +22,9 @@ def pipeline_env():
         },
         clear=False,
     ):
-        yield
+        with patch.object(scheduler, "run_approval_sync_job"):
+            with patch.object(scheduler, "run_airtable_webhook_refresh_job"):
+                yield
 
 
 def test_run_nightly_pipeline_runs_steps_in_order(pipeline_env):
@@ -74,7 +76,9 @@ def test_run_nightly_pipeline_skips_disabled_steps():
                     "run_validation_refresh_job",
                     side_effect=lambda: call_order.append("validation_refresh"),
                 ):
-                    scheduler.run_nightly_pipeline()
+                    with patch.object(scheduler, "run_approval_sync_job"):
+                        with patch.object(scheduler, "run_airtable_webhook_refresh_job"):
+                            scheduler.run_nightly_pipeline()
 
     assert call_order == []
 
@@ -87,6 +91,8 @@ def test_run_nightly_pipeline_aborts_after_discovery_failure(pipeline_env):
 
     mock_status.assert_not_called()
     mock_validation.assert_not_called()
+    scheduler.run_approval_sync_job.assert_called_once()
+    scheduler.run_airtable_webhook_refresh_job.assert_called_once()
 
 
 def test_run_nightly_pipeline_continues_after_status_refresh_failure(pipeline_env):
@@ -109,6 +115,7 @@ def test_main_registers_single_nightly_pipeline_cron():
             "SLACK_DEFER_DISCOVERY": "true",
             "SLACK_SUMMARY_CRON": "30 7 * * *",
             "VALIDATION_REFRESH_ENABLED": "true",
+            "APPROVAL_SYNC_INTERVAL_MIN": "0",
         },
         clear=False,
     ):
@@ -124,6 +131,25 @@ def test_main_registers_single_nightly_pipeline_cron():
     assert "status_refresh" not in cron_job_ids
 
     interval_job_ids = [call.kwargs["id"] for call in mock_add_interval.call_args_list]
+    assert interval_job_ids == []
+
+
+def test_main_registers_approval_sync_interval_when_configured():
+    with patch.dict(
+        "os.environ",
+        {
+            "LEGISCAN_KEY": "test-key",
+            "SLACK_DEFER_DISCOVERY": "false",
+            "APPROVAL_SYNC_INTERVAL_MIN": "10",
+        },
+        clear=False,
+    ):
+        with patch.object(scheduler.BlockingScheduler, "start"):
+            with patch.object(scheduler, "_add_cron_job"):
+                with patch.object(scheduler.BlockingScheduler, "add_job") as mock_add_interval:
+                    scheduler.main()
+
+    interval_job_ids = [call.kwargs["id"] for call in mock_add_interval.call_args_list]
     assert interval_job_ids == ["approval_sync"]
 
 
@@ -134,6 +160,7 @@ def test_main_falls_back_to_discovery_cron():
             "LEGISCAN_KEY": "test-key",
             "DISCOVERY_CRON": "15 1 * * *",
             "SLACK_DEFER_DISCOVERY": "false",
+            "APPROVAL_SYNC_INTERVAL_MIN": "0",
         },
         clear=False,
     ):
@@ -193,4 +220,12 @@ def test_approval_sync_job_does_not_slack_airtable_429():
         mock_sync_cls.return_value.run.side_effect = rate_limit
         with patch.object(scheduler, "SlackNotifier") as mock_slack_cls:
             scheduler.run_approval_sync_job()
+    mock_slack_cls.return_value.notify_error.assert_not_called()
+
+
+def test_status_refresh_job_does_not_slack_airtable_429():
+    mock_build = MagicMock(side_effect=RuntimeError("PUBLIC_API_BILLING_LIMIT_EXCEEDED"))
+    with patch("discovery.status_refresh.build_pipeline", mock_build):
+        with patch.object(scheduler, "SlackNotifier") as mock_slack_cls:
+            scheduler.run_status_refresh_job()
     mock_slack_cls.return_value.notify_error.assert_not_called()

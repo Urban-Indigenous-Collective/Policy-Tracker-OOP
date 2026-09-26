@@ -4,6 +4,7 @@ from typing import Any, Optional
 
 from pyairtable import Api, Table, retry_strategy
 
+import airtable_pace
 from airtable_fields import (
     BILL_FIELD_NAMES,
     BILL_OVERVIEW_FIELD,
@@ -44,7 +45,12 @@ def is_airtable_rate_limit_error(exc: BaseException | None) -> bool:
     while current is not None and id(current) not in seen:
         seen.add(id(current))
         text = f"{type(current).__name__} {current}".lower()
-        if "429" in text or "too many 429" in text:
+        if (
+            "429" in text
+            or "too many 429" in text
+            or "public_api_billing_limit_exceeded" in text
+            or "billing plan limit" in text
+        ):
             return True
         reason = getattr(current, "reason", None)
         if isinstance(reason, BaseException):
@@ -52,6 +58,15 @@ def is_airtable_rate_limit_error(exc: BaseException | None) -> bool:
             continue
         current = current.__cause__ or current.__context__
     return False
+
+
+class PacedApi(Api):
+    """Api whose every HTTP call (tables, pagination, webhooks, meta) waits on the shared pace."""
+
+    def request(self, method: str, url: str, *args, **kwargs) -> Any:
+        if airtable_pace.pace_enabled():
+            airtable_pace.wait_turn()
+        return super().request(method, url, *args, **kwargs)
 
 
 class AirtableClient:
@@ -68,7 +83,7 @@ class AirtableClient:
 
         # One Api/session for both tables so retries share backoff instead of
         # two independent clients doubling 429 traffic.
-        self.api = Api(
+        self.api = PacedApi(
             api_key,
             timeout=(10, 60),
             retry_strategy=airtable_retry_strategy(),
@@ -183,3 +198,36 @@ class AirtableClient:
 
     def all_live_records(self) -> list[dict]:
         return self.live_table.all()
+
+    def rest(self, method: str, path: str, json_body: dict | None = None) -> Any:
+        """Call a non-table Airtable URL (webhooks, metadata) with the shared session."""
+        url = f"https://api.airtable.com/v0/{path.lstrip('/')}"
+        kwargs: dict[str, Any] = {}
+        if json_body is not None:
+            kwargs["json"] = json_body
+        return self.api.request(method.upper(), url, **kwargs)
+
+    def get_base_schema(self) -> dict:
+        base_id = os.getenv("AIRTABLE_BASE_ID", "")
+        return self.rest("GET", f"meta/bases/{base_id}/tables")
+
+    def list_webhooks(self) -> list[dict]:
+        base_id = os.getenv("AIRTABLE_BASE_ID", "")
+        data = self.rest("GET", f"bases/{base_id}/webhooks")
+        return list(data.get("webhooks") or [])
+
+    def create_webhook(self, notification_url: str, specification: dict) -> dict:
+        base_id = os.getenv("AIRTABLE_BASE_ID", "")
+        return self.rest(
+            "POST",
+            f"bases/{base_id}/webhooks",
+            {"notificationUrl": notification_url, "specification": specification},
+        )
+
+    def refresh_webhook(self, webhook_id: str) -> dict:
+        base_id = os.getenv("AIRTABLE_BASE_ID", "")
+        return self.rest("POST", f"bases/{base_id}/webhooks/{webhook_id}/refresh")
+
+    def delete_webhook(self, webhook_id: str) -> None:
+        base_id = os.getenv("AIRTABLE_BASE_ID", "")
+        self.rest("DELETE", f"bases/{base_id}/webhooks/{webhook_id}")

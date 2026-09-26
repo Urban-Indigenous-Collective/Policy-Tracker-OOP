@@ -56,6 +56,32 @@ def test_get_bill_not_sqlite_cached(cache):
     assert client.stats.memory_cache_hit == 1
 
 
+def test_get_bill_sqlite_cached_by_change_hash(cache):
+    payload = {"status": "OK", "bill": {"bill_id": 1}}
+
+    with patch("api_client.requests.get", return_value=FakeResponse(200, payload)) as mock_get:
+        APIClient("test-key", cache=cache).get_bill_details(1, change_hash="h1")
+        second_job = APIClient("test-key", cache=cache)
+        assert second_job.get_bill_details(1, change_hash="h1") == payload
+        assert mock_get.call_count == 1
+        assert second_job.stats.network == 0
+        assert second_job.stats.sqlite_cache_hit == 1
+
+        APIClient("test-key", cache=cache).get_bill_details(1, change_hash="h2")
+        assert mock_get.call_count == 2
+
+
+def test_get_bill_error_not_sqlite_cached(cache):
+    error = {"status": "ERROR", "alert": "Unknown bill id"}
+    ok = {"status": "OK", "bill": {"bill_id": 1}}
+
+    with patch("api_client.requests.get", return_value=FakeResponse(200, error)):
+        assert APIClient("test-key", cache=cache).get_bill_details(1, change_hash="h1") is None
+    with patch("api_client.requests.get", return_value=FakeResponse(200, ok)) as mock_get:
+        assert APIClient("test-key", cache=cache).get_bill_details(1, change_hash="h1") == ok
+    assert mock_get.call_count == 1
+
+
 def test_overlimit_raises_without_retry(cache):
     client = APIClient("test-key", cache=cache)
     payload = {"status": "ERROR", "alert": "monthly query limit exceeded"}

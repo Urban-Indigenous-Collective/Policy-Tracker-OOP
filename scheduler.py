@@ -53,6 +53,8 @@ def run_discovery_job():
             stats.errors,
             stats.legiscan_limited,
         )
+        if stats.airtable_rate_limited:
+            logger.warning("Discovery stopped early on Airtable rate/billing limit: %s", stats.airtable_limit_reason)
     except Exception as exc:
         from discovery.legiscan_quota import is_legiscan_limit_error
 
@@ -92,7 +94,14 @@ def run_status_refresh_job():
             stats.identity_mismatch,
             stats.errors,
         )
+        if getattr(stats, "airtable_rate_limited", False):
+            logger.warning("Status refresh stopped early on Airtable rate/billing limit; next run resumes")
     except Exception as exc:
+        from airtable_client import is_airtable_rate_limit_error
+
+        if is_airtable_rate_limit_error(exc):
+            logger.warning("Status refresh hit Airtable rate/billing limit: %s", exc)
+            return
         logger.exception("Status refresh job failed: %s", exc)
         slack.notify_error(f"Status refresh failed: {exc}")
         raise
@@ -138,7 +147,14 @@ def run_validation_refresh_job():
             stats.unchanged,
             stats.failed,
         )
+        if getattr(stats, "airtable_rate_limited", False):
+            logger.warning("Validation refresh stopped early on Airtable rate/billing limit")
     except Exception as exc:
+        from airtable_client import is_airtable_rate_limit_error
+
+        if is_airtable_rate_limit_error(exc):
+            logger.warning("Validation refresh hit Airtable rate/billing limit: %s", exc)
+            return
         logger.exception("Validation refresh job failed: %s", exc)
         slack.notify_error(f"Validation refresh failed: {exc}")
         raise
@@ -196,6 +212,23 @@ def run_indigenous_roster_refresh_job():
         slack.notify_error(f"Indigenous roster refresh failed: {exc}")
 
 
+def run_airtable_webhook_refresh_job():
+    logger.info("Refreshing Airtable review-status webhooks")
+    try:
+        from discovery.airtable_webhook import refresh_registered_webhooks
+
+        stats = refresh_registered_webhooks()
+        logger.info("Airtable webhook refresh finished: %s", stats)
+    except Exception as exc:
+        from airtable_client import is_airtable_rate_limit_error
+
+        if is_airtable_rate_limit_error(exc):
+            logger.warning("Airtable webhook refresh hit rate/billing limit: %s", exc)
+            return
+        logger.exception("Airtable webhook refresh failed: %s", exc)
+        SlackNotifier().notify_error(f"Airtable webhook refresh failed: {exc}")
+
+
 def run_nightly_pipeline():
     """Run discovery, status refresh, and validation refresh sequentially.
 
@@ -207,63 +240,72 @@ def run_nightly_pipeline():
     logger.info("Starting nightly pipeline")
     step = 0
     total_steps = 3
+    try:
+        if _env_flag("DISCOVERY_ENABLED", "true"):
+            step += 1
+            logger.info("Nightly pipeline step %d/%d: discovery — starting", step, total_steps)
+            try:
+                run_discovery_job()
+            except Exception:
+                logger.error("Nightly pipeline aborted after discovery failure")
+                return
+            logger.info("Nightly pipeline step %d/%d: discovery — complete", step, total_steps)
+        else:
+            logger.info("Nightly pipeline step 1/%d: discovery — skipped (DISCOVERY_ENABLED=false)", total_steps)
 
-    if _env_flag("DISCOVERY_ENABLED", "true"):
-        step += 1
-        logger.info("Nightly pipeline step %d/%d: discovery — starting", step, total_steps)
-        try:
-            run_discovery_job()
-        except Exception:
-            logger.error("Nightly pipeline aborted after discovery failure")
-            return
-        logger.info("Nightly pipeline step %d/%d: discovery — complete", step, total_steps)
-    else:
-        logger.info("Nightly pipeline step 1/%d: discovery — skipped (DISCOVERY_ENABLED=false)", total_steps)
-
-    if _env_flag("STATUS_REFRESH_ENABLED", "true"):
-        step += 1
-        logger.info("Nightly pipeline step %d/%d: status refresh — starting", step, total_steps)
-        try:
-            run_status_refresh_job()
-        except Exception:
-            logger.exception(
-                "Nightly pipeline: status refresh failed; continuing to next step"
-            )
+        if _env_flag("STATUS_REFRESH_ENABLED", "true"):
+            step += 1
+            logger.info("Nightly pipeline step %d/%d: status refresh — starting", step, total_steps)
+            try:
+                run_status_refresh_job()
+            except Exception:
+                logger.exception(
+                    "Nightly pipeline: status refresh failed; continuing to next step"
+                )
+            else:
+                logger.info(
+                    "Nightly pipeline step %d/%d: status refresh — complete",
+                    step,
+                    total_steps,
+                )
         else:
             logger.info(
-                "Nightly pipeline step %d/%d: status refresh — complete",
+                "Nightly pipeline: status refresh — skipped (STATUS_REFRESH_ENABLED=false)"
+            )
+
+        if _env_flag("VALIDATION_REFRESH_ENABLED", "false"):
+            step += 1
+            logger.info(
+                "Nightly pipeline step %d/%d: validation refresh — starting",
                 step,
                 total_steps,
             )
-    else:
-        logger.info(
-            "Nightly pipeline: status refresh — skipped (STATUS_REFRESH_ENABLED=false)"
-        )
-
-    if _env_flag("VALIDATION_REFRESH_ENABLED", "false"):
-        step += 1
-        logger.info(
-            "Nightly pipeline step %d/%d: validation refresh — starting",
-            step,
-            total_steps,
-        )
-        try:
-            run_validation_refresh_job()
-        except Exception:
-            logger.warning("Nightly pipeline: validation refresh failed")
+            try:
+                run_validation_refresh_job()
+            except Exception:
+                logger.warning("Nightly pipeline: validation refresh failed")
+            else:
+                logger.info(
+                    "Nightly pipeline step %d/%d: validation refresh — complete",
+                    step,
+                    total_steps,
+                )
         else:
             logger.info(
-                "Nightly pipeline step %d/%d: validation refresh — complete",
-                step,
-                total_steps,
+                "Nightly pipeline: validation refresh — skipped "
+                "(set VALIDATION_REFRESH_ENABLED=true to enable)"
             )
-    else:
-        logger.info(
-            "Nightly pipeline: validation refresh — skipped "
-            "(set VALIDATION_REFRESH_ENABLED=true to enable)"
-        )
-
-    logger.info("Nightly pipeline finished")
+    finally:
+        logger.info("Nightly pipeline: approval sync catch-up + webhook refresh")
+        try:
+            run_approval_sync_job()
+        except Exception:
+            logger.exception("Nightly pipeline: approval sync catch-up failed")
+        try:
+            run_airtable_webhook_refresh_job()
+        except Exception:
+            logger.exception("Nightly pipeline: Airtable webhook refresh failed")
+        logger.info("Nightly pipeline finished")
 
 
 def _add_cron_job(scheduler, job_id, func, cron_expr, tz):
@@ -296,7 +338,7 @@ def main():
     )
     slack_summary_cron = os.getenv("SLACK_SUMMARY_CRON", "30 7 * * *")
     tz = os.getenv("DISCOVERY_TZ", "America/New_York")
-    sync_interval = int(os.getenv("APPROVAL_SYNC_INTERVAL_MIN", "10"))
+    sync_interval = int(os.getenv("APPROVAL_SYNC_INTERVAL_MIN", "0"))
 
     discovery_enabled = _env_flag("DISCOVERY_ENABLED", "true")
     status_refresh_enabled = _env_flag("STATUS_REFRESH_ENABLED", "true")
@@ -316,14 +358,15 @@ def main():
             tz,
         )
 
-    scheduler.add_job(
-        run_approval_sync_job,
-        IntervalTrigger(minutes=sync_interval),
-        id="approval_sync",
-        max_instances=1,
-        coalesce=True,
-        replace_existing=True,
-    )
+    if sync_interval > 0:
+        scheduler.add_job(
+            run_approval_sync_job,
+            IntervalTrigger(minutes=sync_interval),
+            id="approval_sync",
+            max_instances=1,
+            coalesce=True,
+            replace_existing=True,
+        )
 
     if _env_flag("INDIGENOUS_DB_REFRESH_ENABLED", "false"):
         indigenous_cron = os.getenv("INDIGENOUS_DB_REFRESH_CRON", "0 1 * * 0")
@@ -344,12 +387,12 @@ def main():
     signal.signal(signal.SIGINT, shutdown)
 
     logger.info(
-        "Scheduler started: nightly_pipeline cron=%s tz=%s approval_sync=%dm "
+        "Scheduler started: nightly_pipeline cron=%s tz=%s approval_sync=%s "
         "slack_summary=%s steps: discovery=%s status_refresh=%s validation_refresh=%s "
         "indigenous_roster_refresh=%s",
         pipeline_cron,
         tz,
-        sync_interval,
+        f"{sync_interval}m interval" if sync_interval > 0 else "webhook + nightly catch-up",
         f"enabled cron={slack_summary_cron}" if slack_summary_enabled else "disabled",
         "enabled" if discovery_enabled else "disabled",
         "enabled" if status_refresh_enabled else "disabled",

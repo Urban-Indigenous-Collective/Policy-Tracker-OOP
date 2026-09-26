@@ -235,10 +235,21 @@ class APIClient:
     def get_bill_text_doc(self, doc_id):
         return self.get_bill_text(doc_id)
 
-    def get_bill_details(self, bill_id):
+    def get_bill_details(self, bill_id, change_hash: str = ""):
+        """Fetch getBill; with a change_hash the response is persisted, since that hash pins its content."""
         if not bill_id:
             return "Invalid Bill ID"
-        return self._make_request("getBill", {"id": bill_id})
+        if not change_hash:
+            return self._make_request("getBill", {"id": bill_id})
+        key = f"{bill_id}|{change_hash}"
+        cached = self._sqlite_cache.get("getBill", key)
+        if cached is not None:
+            self.stats.record("getBill", "sqlite")
+            return cached
+        data = self._make_request("getBill", {"id": bill_id})
+        if isinstance(data, dict):
+            self._sqlite_cache.set("getBill", key, data)
+        return data
 
     def get_search_raw(self, query, state="ALL", year=2, page=1, session_id=None):
         params = {"query": query, "page": page}

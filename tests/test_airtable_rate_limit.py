@@ -17,6 +17,13 @@ def test_is_airtable_rate_limit_error_walks_cause():
     assert is_airtable_rate_limit_error(outer)
 
 
+def test_is_airtable_rate_limit_error_detects_monthly_billing_cap():
+    exc = RuntimeError(
+        "PUBLIC_API_BILLING_LIMIT_EXCEEDED: API billing plan limit exceeded"
+    )
+    assert is_airtable_rate_limit_error(exc)
+
+
 def test_is_airtable_rate_limit_error_ignores_other_failures():
     assert not is_airtable_rate_limit_error(RuntimeError("Live record verification failed"))
     assert not is_airtable_rate_limit_error(None)

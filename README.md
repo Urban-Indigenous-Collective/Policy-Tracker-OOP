@@ -67,7 +67,7 @@ bash deploy/cutover-qwen36-llama.sh  # unload Qwen2.5, start llama-server, rewri
 
 Automated pipeline searches LegiScan and configured government sites, runs analysis, writes to Airtable **Pending**, and alerts Slack.
 
-State and federal source manifests live in `sources/` (see [docs/STATE_SOURCES.md](docs/STATE_SOURCES.md) and [docs/FEDERAL_SOURCES.md](docs/FEDERAL_SOURCES.md)).
+State and federal source manifests live in `sources/` (see [docs/STATE_SOURCES.md](docs/STATE_SOURCES.md) and [docs/FEDERAL_SOURCES.md](docs/FEDERAL_SOURCES.md)). Airtable and LegiScan limits, pacing, and caching are described in [docs/RATE_LIMITS.md](docs/RATE_LIMITS.md).
 
 ### Setup
 
@@ -97,7 +97,15 @@ python approval_sync.py                      # sync approved/send-back records
 
 ### Scheduler (production)
 
-The `scheduler` Docker service runs a nightly pipeline (default 2 AM ET) and approval sync every 10 minutes. The pipeline runs enabled steps sequentially: discovery → status refresh → validation refresh.
+The `scheduler` Docker service runs a nightly pipeline (default 2 AM ET). Approval sync is driven by **Airtable webhooks** (Review Status changes ping Flask) plus a nightly catch-up. The 10-minute poll is off unless `APPROVAL_SYNC_INTERVAL_MIN` is set above 0.
+
+After deploy, register hooks once (needs Airtable API quota):
+
+```bash
+docker compose exec scheduler python scripts/register_airtable_webhooks.py
+```
+
+The pipeline runs enabled steps sequentially: discovery → status refresh → validation refresh, then approval catch-up and webhook refresh.
 
 ```bash
 docker compose --profile tunnel up -d   # includes web + tunnel + scheduler
@@ -110,7 +118,7 @@ docker compose --profile tunnel up -d   # includes web + tunnel + scheduler
 | `STATUS_REFRESH_ENABLED` | `true` | Run LegiScan status refresh as pipeline step 2 |
 | `VALIDATION_REFRESH_ENABLED` | `false` | Run pending validation refresh as pipeline step 3 |
 | `DISCOVERY_TZ` | `America/New_York` | Timezone for cron |
-| `APPROVAL_SYNC_INTERVAL_MIN` | `10` | How often to sync Airtable status changes |
+| `APPROVAL_SYNC_INTERVAL_MIN` | `0` | Optional poller; `0` means webhook + nightly catch-up only |
 | `DISCOVERY_MAX_ANALYSES_PER_RUN` | `25` | Cap LLM analyses per run (safety valve) |
 | `DISCOVERY_RELEVANCE_MIN_CONFIDENCE` | `0.6` | MMIP relevance gate threshold |
 | `SLACK_QUIET_RUNS` | `true` | Suppress Slack when no new policies found |

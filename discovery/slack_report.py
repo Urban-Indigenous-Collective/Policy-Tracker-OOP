@@ -61,6 +61,8 @@ def save_deferred_report(stats, run_at: str | None = None) -> None:
         "identity_mismatch_items": existing.get("identity_mismatch_items") or [],
         "status_refresh": existing.get("status_refresh") or {},
         "legiscan_quota": legiscan_quota,
+        "airtable_rate_limited": bool(getattr(stats, "airtable_rate_limited", False)),
+        "airtable_limit_reason": getattr(stats, "airtable_limit_reason", ""),
     }
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     logger.info("Deferred Slack report saved to %s", path)

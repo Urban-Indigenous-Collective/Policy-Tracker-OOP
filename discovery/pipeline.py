@@ -3,7 +3,8 @@ import os
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
-from airtable_client import AirtableClient
+from airtable_client import AirtableClient, is_airtable_rate_limit_error
+from discovery.dedup import AirtableDuplicateIndex
 from discovery.federal_crawler import FederalSiteSource
 from discovery.legiscan_search import LegiScanSearchSource
 from discovery.legiscan_quota import is_legiscan_limit_error, legiscan_quota_payload
@@ -31,6 +32,8 @@ class DiscoveryRunStats:
     sources_crawled: dict[str, Any] = field(default_factory=dict)
     legiscan_limited: bool = False
     legiscan_limit_reason: str = ""
+    airtable_rate_limited: bool = False
+    airtable_limit_reason: str = ""
     run_started_at: str = ""
     run_finished_at: str = ""
 
@@ -48,6 +51,7 @@ class DiscoveryPipeline:
         legiscan_source: LegiScanSearchSource | None = None,
         state_source: StateSiteSource | None = None,
         federal_source: FederalSiteSource | None = None,
+        duplicate_index: AirtableDuplicateIndex | None = None,
         dry_run: bool = False,
     ):
         self.main_app = main_app
@@ -60,6 +64,7 @@ class DiscoveryPipeline:
         self.legiscan_source = legiscan_source or LegiScanSearchSource(main_app.api_client)
         self.state_source = state_source or StateSiteSource()
         self.federal_source = federal_source or FederalSiteSource()
+        self.duplicate_index = duplicate_index or AirtableDuplicateIndex(self.airtable)
         self.dry_run = dry_run
         self.max_analyses = int(os.getenv("DISCOVERY_MAX_ANALYSES_PER_RUN", "25"))
         self.discovery_enabled = os.getenv("DISCOVERY_ENABLED", "true").lower() in (
@@ -149,7 +154,7 @@ class DiscoveryPipeline:
             stats.skipped += 1
             return
 
-        if self.airtable.url_exists_anywhere(url):
+        if self.duplicate_index.is_duplicate(url, state=candidate.state):
             logger.info("Already in Airtable: %s", url)
             self.seen_store.upsert(
                 url,
@@ -253,6 +258,15 @@ class DiscoveryPipeline:
                 relevance_rationale=relevance_result.rationale if relevance_result else "",
                 discovered_on=utc_now_iso()[:10],
             )
+            self.duplicate_index.register(
+                url,
+                state=bill_data.get("State", candidate.state),
+                bill_number=bill_data.get("Bill Number", ""),
+                extra_urls=[
+                    bill_data.get(field) or ""
+                    for field in ("Bill Overview", "Bill Overview (Link)", "Bill Text")
+                ],
+            )
 
             self.seen_store.upsert(
                 url,
@@ -279,6 +293,12 @@ class DiscoveryPipeline:
             )
             logger.info("Created pending record for %s (id=%s)", url, record.get("id"))
         except Exception as exc:
+            if is_airtable_rate_limit_error(exc):
+                # Leave seen_store untouched so the candidate is retried next run.
+                logger.warning("Airtable rate-limited creating Pending record for %s: %s", url, exc)
+                stats.airtable_rate_limited = True
+                stats.airtable_limit_reason = str(exc)
+                return
             logger.exception("Error processing candidate %s: %s", url, exc)
             self.seen_store.upsert(
                 url,
@@ -306,7 +326,18 @@ class DiscoveryPipeline:
         stats.legiscan_limit_reason = self._legiscan_limit_reason
         logger.info("Collected %d discovery candidates", len(candidates))
 
+        try:
+            self.duplicate_index.refresh()
+        except Exception as exc:
+            if not is_airtable_rate_limit_error(exc):
+                raise
+            logger.warning("Airtable rate-limited loading duplicate index; skipping candidates: %s", exc)
+            stats.airtable_rate_limited = True
+            stats.airtable_limit_reason = str(exc)
+
         for candidate in candidates:
+            if stats.airtable_rate_limited:
+                break
             self._process_candidate(candidate, stats)
 
         stats.run_finished_at = utc_now_iso()
