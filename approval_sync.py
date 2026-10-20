@@ -7,17 +7,15 @@ from filelock import FileLock
 
 from airtable_client import AirtableClient, is_airtable_rate_limit_error
 from airtable_fields import (
-    BILL_FIELD_NAMES,
     BILL_OVERVIEW_FIELD,
     BILL_OVERVIEW_LINK_FIELD,
     LIVE_REVIEW_STATUS_FIELD,
-    PENDING_EXTRA_FIELDS,
     REVIEW_STATUS_LIVE,
     REVIEW_STATUS_PENDING,
     REVIEW_STATUS_REJECTED,
 )
 from airtable_schema import (
-    BILL_FIELD_NAMES as PENDING_BILL_FIELD_NAMES,
+    BILL_FIELD_NAMES as LIVE_BILL_FIELD_NAMES,
     DISCOVERY_METADATA_FIELD_NAMES,
     LEGACY_FIELD_RENAMES,
     PENDING_ONLY_FIELD_NAMES,
@@ -28,12 +26,29 @@ from slack_client import SlackNotifier
 
 logger = logging.getLogger(__name__)
 
+# Pending discovery output still uses Title / Bill Overview / Sponsors; Main v3 uses Name etc.
+_LIVE_WRITABLE_FIELDS = frozenset(LIVE_BILL_FIELD_NAMES + DISCOVERY_METADATA_FIELD_NAMES)
 _PENDING_WRITABLE_FIELDS = frozenset(
-    PENDING_BILL_FIELD_NAMES
+    LIVE_BILL_FIELD_NAMES
     + PENDING_ONLY_FIELD_NAMES
     + DISCOVERY_METADATA_FIELD_NAMES
 )
 _SKIP_LIVE_FIELDS = frozenset({"Created By", LIVE_REVIEW_STATUS_FIELD})
+_PENDING_ONLY_ON_LIVE = frozenset({"Source", "Discovered On"})
+
+
+def _apply_legacy_renames(fields: dict[str, Any]) -> dict[str, Any]:
+    """Map Pending legacy names onto Main v3 / schema-canonical names."""
+    working = dict(fields)
+    for legacy, canonical in LEGACY_FIELD_RENAMES.items():
+        if legacy in working and (canonical not in working or working.get(canonical) in (None, "")):
+            working[canonical] = working[legacy]
+        working.pop(legacy, None)
+    overview = working.get(BILL_OVERVIEW_LINK_FIELD) or working.get(BILL_OVERVIEW_FIELD)
+    if overview:
+        working[BILL_OVERVIEW_LINK_FIELD] = overview
+    working.pop(BILL_OVERVIEW_FIELD, None)
+    return working
 
 
 class ApprovalSync:
@@ -57,11 +72,14 @@ class ApprovalSync:
         )
 
     def _fields_for_live(self, pending_fields: dict[str, Any]) -> dict[str, Any]:
-        live_fields = {k: pending_fields.get(k, "") for k in BILL_FIELD_NAMES}
+        """Map Pending columns onto Main v3 names (Title→Name, etc.)."""
+        working = _apply_legacy_renames(pending_fields)
+        live_fields = {
+            key: working[key]
+            for key in _LIVE_WRITABLE_FIELDS
+            if key in working and working[key] not in (None, "")
+        }
         live_fields[LIVE_REVIEW_STATUS_FIELD] = REVIEW_STATUS_LIVE
-        overview = pending_fields.get(BILL_OVERVIEW_FIELD) or pending_fields.get("Bill Overview (Link)")
-        if overview:
-            live_fields[BILL_OVERVIEW_LINK_FIELD] = overview
         return live_fields
 
     def _fields_for_pending(self, live_fields: dict[str, Any]) -> dict[str, Any]:
@@ -71,15 +89,7 @@ class ApprovalSync:
             for key, value in live_fields.items()
             if key not in _SKIP_LIVE_FIELDS
         }
-        for legacy, canonical in LEGACY_FIELD_RENAMES.items():
-            if legacy in working and canonical not in working:
-                working[canonical] = working[legacy]
-            working.pop(legacy, None)
-
-        overview = working.get(BILL_OVERVIEW_LINK_FIELD) or working.get(BILL_OVERVIEW_FIELD)
-        if overview:
-            working[BILL_OVERVIEW_LINK_FIELD] = overview
-        working.pop(BILL_OVERVIEW_FIELD, None)
+        working = _apply_legacy_renames(working)
 
         pending_fields = {
             key: working[key]
@@ -143,7 +153,7 @@ class ApprovalSync:
         self.seen_store.update_status(url, "approved")
 
         self.slack.notify_approval(
-            fields.get("Title", "Untitled"),
+            fields.get("Title") or fields.get("Name") or "Untitled",
             fields.get("State", ""),
             "to_live",
         )

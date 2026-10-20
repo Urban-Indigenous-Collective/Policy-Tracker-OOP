@@ -109,7 +109,10 @@ def test_approval_sync_pending_to_live(sync):
     assert len(client.live_table.records) == 1
     live = list(client.live_table.records.values())[0]
     assert live["fields"]["Review Status"] == REVIEW_STATUS_LIVE
+    assert live["fields"]["Name"] == "MMIP Task Force Act"
+    assert "Title" not in live["fields"]
     assert live["fields"]["Bill Overview (Link)"] == "https://example.com/bill/1"
+    assert "Bill Overview" not in live["fields"]
 
 
 def test_approval_sync_live_to_pending(sync):

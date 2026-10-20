@@ -185,7 +185,14 @@ class AirtableClient:
         return self.create_record(self.pending_table, fields)
 
     def create_live_record(self, fields: dict[str, Any]) -> dict:
-        live_fields = {k: fields.get(k, "") for k in BILL_FIELD_NAMES if k in fields or fields.get(k)}
+        """Create a Main v3 row. Caller must already map Pending→Live names (Title→Name)."""
+        # Do not re-filter through Pending BILL_FIELD_NAMES — that reintroduces Title and 422s.
+        live_fields = {
+            key: value
+            for key, value in fields.items()
+            if key not in ("Source", "Discovered On", "Title", "Bill Overview", "Sponsors", "Gender Inclusive Explanation")
+            and value not in (None,)
+        }
         live_fields[LIVE_REVIEW_STATUS_FIELD] = REVIEW_STATUS_LIVE
         return self.create_record(self.live_table, live_fields)
 
