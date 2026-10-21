@@ -1,0 +1,16 @@
+.git
+.github
+.venv
+__pycache__
+*.pyc
+.env
+.env.*
+!.env.example
+.DS_Store
+.cursor
+frontend/node_modules
+frontend/.next
+frontend/.turbo
+frontend/out
+bill_details.xlsx
+cloudflared/credentials.json

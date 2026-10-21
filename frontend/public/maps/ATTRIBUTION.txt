@@ -1,0 +1,4 @@
+USA map SVG uses US-XX region ids compatible with MapSVG-style maps.
+Source: https://mapsvg.com/maps/usa (free use, no attribution required per MapSVG license terms).
+
+If you replace this file with the official MapSVG download, keep the US-XX id convention for UsaMap.tsx.
