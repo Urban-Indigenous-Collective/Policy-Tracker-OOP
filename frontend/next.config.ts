@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
-const flaskDevUrl = process.env.FLASK_DEV_URL ?? "http://127.0.0.1:8000";
+/** Matches ``python app.py`` (port 5000). Docker: FLASK_DEV_URL=http://127.0.0.1:8002 */
+const flaskDevUrl = process.env.FLASK_DEV_URL ?? "http://127.0.0.1:5000";
 
 const nextConfig: NextConfig = {
   cacheComponents: true,

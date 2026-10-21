@@ -90,12 +90,17 @@ Flask ← Airtable Main v3, existing jobs unchanged
 
 ### Phase 2 — Flask public read API
 
-- [ ] `GET /api/v1/states` (aggregates for map)
-- [ ] `GET /api/v1/states/{code}/bills`
-- [ ] `GET /api/v1/bills/{id}` or slug resolver
-- [ ] Same Main v3 gate as above; JSON shapes documented
+- [x] `GET /api/v1/states` (aggregates for map)
+- [x] `GET /api/v1/states/{code}/bills`
+- [x] `GET /api/v1/bills/{id}` (Airtable record id; slug on DTO for Phase 3 URLs)
+- [x] Same Main v3 Live gate; JSON documented in [docs/API_V1.md](API_V1.md)
+- [x] Snapshot cache (`PUBLIC_API_CACHE_TTL_SECONDS`, stale-on-error)
 
 **Exit criteria:** Next can fetch real policy data in dev; tests or smoke script for endpoints.
+
+**Completed 2026-10-21:** `public_api/` blueprint, pytest + `scripts/smoke_public_api.py`, dev `ApiHealthSmoke` hits `/api/v1/health` and `/api/v1/states`.
+
+**Phase 2 handoff:** Plan Phase 3 (TanStack Query, state/bill routes, wire map to API).
 
 ### Phase 3 — Core routes (Figma P0–P2)
 

@@ -28,6 +28,30 @@ First startup scrapes Wikipedia to build the Indigenous politicians database (30
 
 Run tests: `pytest tests/`
 
+### Next.js map UI + public API (Phase 0–2)
+
+```bash
+# Terminal 1 — Flask (default port 5000; serves /api/v1/*)
+source .venv/bin/activate
+python app.py
+
+# Terminal 2 — Next (from repo root)
+cd frontend && npm install && cd ..
+npm run dev
+# → http://localhost:3000  (proxies /api/* and /health-check to Flask on :5000)
+
+# Smoke public API (needs AIRTABLE_* in .env)
+python3 scripts/smoke_public_api.py
+# Default SMOKE_API_BASE=http://127.0.0.1:5000
+
+# Docker Flask instead of python app.py (host port 8002, not 8000):
+# docker compose up --build web
+# SMOKE_API_BASE=http://127.0.0.1:8002 python3 scripts/smoke_public_api.py
+# FLASK_DEV_URL=http://127.0.0.1:8002 npm run dev
+```
+
+On macOS, **port 8000 is often used by another process** — do not assume Policy Tracker is there unless you bound it explicitly. See [docs/API_V1.md](docs/API_V1.md) and [frontend/README.md](frontend/README.md).
+
 ## Cutover timeline
 
 Dates below come from git history (and, for Qwen3.6, from scripts in `deploy/` that are not yet a completed git-dated cutover).

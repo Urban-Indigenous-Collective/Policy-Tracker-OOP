@@ -7,15 +7,18 @@ Master implementation plan: [../docs/MMIP_FRONTEND_IMPLEMENTATION.md](../docs/MM
 ## Prerequisites
 
 - Node.js 22+ (see `.nvmrc`)
-- Flask backend running locally on port 8000 for API proxy smoke tests
+- Policy Tracker Flask running locally (**port 5000** via `python app.py`, or **8002** via `docker compose up web`)
 
 ## Development
 
+From repo root (convenience `package.json`):
+
 ```bash
-cd frontend
-npm install
-npm run dev
+cd frontend && npm install
+cd .. && npm run dev
 ```
+
+Or from `frontend/` only: `npm run dev`.
 
 Open [http://localhost:3000](http://localhost:3000). The placeholder page calls `/health-check`, which Next rewrites to Flask.
 
@@ -23,7 +26,7 @@ Open [http://localhost:3000](http://localhost:3000). The placeholder page calls 
 
 | Variable | Purpose |
 |----------|---------|
-| `FLASK_DEV_URL` | Rewrite target for `/api/*` and `/health-check` (default `http://127.0.0.1:8000`) |
+| `FLASK_DEV_URL` | Rewrite target for `/api/*` and `/health-check` (default `http://127.0.0.1:5000` = `python app.py`) |
 | `NEXT_PUBLIC_SITE_URL` | Public site URL for metadata (Phase 4+) |
 | `NEXT_PUBLIC_API_BASE` | Browser API prefix; empty = same-origin `/api` behind nginx in prod |
 
@@ -56,6 +59,21 @@ Default deploy (no profile) is unchanged: tunnel → Flask only until Phase 5 cu
 # If Flask is from compose on 8002:
 FLASK_DEV_URL=http://127.0.0.1:8002 npm run dev
 ```
+
+## Public API smoke (Phase 2+)
+
+With Flask running and Airtable env configured:
+
+```bash
+# Terminal 1: Flask (port 5000)
+source .venv/bin/activate && python app.py
+
+# Terminal 2:
+python3 scripts/smoke_public_api.py
+# Docker web instead: SMOKE_API_BASE=http://127.0.0.1:8002 python3 scripts/smoke_public_api.py
+```
+
+See [../docs/API_V1.md](../docs/API_V1.md). Dev footer banner also calls `/api/v1/health` and `/api/v1/states` via Next rewrites.
 
 ## Scripts
 

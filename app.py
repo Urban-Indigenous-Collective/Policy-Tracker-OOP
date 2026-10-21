@@ -21,6 +21,9 @@ process_lock = threading.Lock()
 # Assuming MainApplication initializes API clients with hardcoded keys
 load_dotenv()
 
+from public_api import register_public_api
+
+register_public_api(app)
 
 legiscan_key = os.getenv("LEGISCAN_KEY")
 main_app = MainApplication(legiscan_key)

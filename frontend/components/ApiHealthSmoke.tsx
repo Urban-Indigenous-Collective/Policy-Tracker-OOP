@@ -1,10 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { fetchPublicApiHealth, fetchPublicStates } from "@/lib/api/client";
 
 type HealthState =
   | { status: "loading" }
-  | { status: "ok"; payload: string }
+  | {
+      status: "ok";
+      healthPayload: string;
+      liveCount: number | null;
+      mapStates: number | null;
+    }
   | { status: "error"; message: string };
 
 export function ApiHealthSmoke() {
@@ -13,22 +19,53 @@ export function ApiHealthSmoke() {
   useEffect(() => {
     let cancelled = false;
 
-    fetch("/health-check")
-      .then(async (res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
+    async function run() {
+      try {
+        const [healthRes, apiHealthRes, statesRes] = await Promise.allSettled([
+          fetch("/health-check").then(async (res) => {
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return res.text();
+          }),
+          fetchPublicApiHealth(),
+          fetchPublicStates(),
+        ]);
+
+        if (cancelled) return;
+
+        if (healthRes.status === "rejected") {
+          throw healthRes.reason;
         }
-        const body = await res.text();
-        if (!cancelled) {
-          setHealth({ status: "ok", payload: body });
+
+        let liveCount: number | null = null;
+        if (apiHealthRes.status === "fulfilled") {
+          liveCount = apiHealthRes.value.liveCount;
         }
-      })
-      .catch((err: unknown) => {
+
+        let mapStates: number | null = null;
+        if (statesRes.status === "fulfilled") {
+          mapStates = Object.keys(statesRes.value.states).length;
+          if (liveCount == null) {
+            liveCount = statesRes.value.summary.passed
+              + statesRes.value.summary.pending
+              + statesRes.value.summary.rejected;
+          }
+        }
+
+        setHealth({
+          status: "ok",
+          healthPayload: healthRes.value,
+          liveCount,
+          mapStates,
+        });
+      } catch (err: unknown) {
         if (!cancelled) {
           const message = err instanceof Error ? err.message : "Request failed";
           setHealth({ status: "error", message });
         }
-      });
+      }
+    }
+
+    void run();
 
     return () => {
       cancelled = true;
@@ -60,8 +97,21 @@ export function ApiHealthSmoke() {
       className="mt-section rounded-lg border border-accent/40 bg-accent/10 px-4 py-3 text-body-md text-accent"
       role="status"
     >
-      Flask API OK (proxied <code className="font-mono">/health-check</code>):{" "}
-      <span className="font-mono">{health.payload}</span>
+      Flask OK (<code className="font-mono">/health-check</code>):{" "}
+      <span className="font-mono">{health.healthPayload}</span>
+      {health.liveCount != null ? (
+        <>
+          {" "}
+          · Public API: <span className="font-mono">{health.liveCount}</span> Live
+          bills
+        </>
+      ) : null}
+      {health.mapStates != null ? (
+        <>
+          {" "}
+          · <span className="font-mono">{health.mapStates}</span> map states
+        </>
+      ) : null}
     </p>
   );
 }
