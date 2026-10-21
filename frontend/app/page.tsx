@@ -14,11 +14,11 @@ const FILTER_LABELS = [
 
 export default function Home() {
   return (
-    <div className="pb-8">
+    <div className="pb-section-sm">
       <MapIntro />
       <MapSummaryStats />
 
-      <section className="mt-8 lg:mt-10" aria-label="Policy map">
+      <section className="mt-section lg:mt-section-lg" aria-label="Policy map">
         <MapAndLegend
           onStateSelect={(code) => {
             if (process.env.NODE_ENV === "development") {
@@ -29,16 +29,23 @@ export default function Home() {
       </section>
 
       <section
-        className="mt-20 min-w-0 w-full overflow-x-clip border-t border-white/10 pt-12 pl-0 lg:pl-[57px]"
+        className="mt-filter-section-top min-w-0 w-full overflow-x-clip border-t border-surface-border pt-filter-section-pt pl-0 lg:pl-filter-inset"
         aria-label="Policy type filters"
       >
-        <div
-          className="grid w-full min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,17.5rem),1fr))] items-center gap-x-6 gap-y-5 sm:gap-x-8 2xl:flex 2xl:flex-nowrap 2xl:gap-x-10 2xl:gap-y-0"
-          role="group"
-        >
-          {FILTER_LABELS.map((label) => (
-            <FilterChip key={label} label={label} />
-          ))}
+        {/*
+          Filter row is width-driven (not a fixed “height”).
+          Figma: four chips in one row on the 1512px artboard — use nowrap from xl (~1280+).
+          Below xl: flex-wrap + centered group; chips wrap only when the row runs out of width.
+        */}
+        <div className="flex w-full justify-center xl:justify-start">
+          <div
+            className="flex w-fit max-w-full min-w-0 flex-wrap items-center justify-center gap-x-section gap-y-5 xl:w-full xl:flex-nowrap xl:justify-start xl:gap-x-nav-gap xl:gap-y-0"
+            role="group"
+          >
+            {FILTER_LABELS.map((label) => (
+              <FilterChip key={label} label={label} />
+            ))}
+          </div>
         </div>
       </section>
     </div>

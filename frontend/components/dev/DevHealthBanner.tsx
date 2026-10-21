@@ -6,8 +6,8 @@ export function DevHealthBanner() {
   }
 
   return (
-    <div className="border-t border-white/10 px-4 py-3">
-      <div className="mx-auto max-w-[1512px]">
+    <div className="border-t border-surface-border px-4 py-3">
+      <div className="mx-auto max-w-artboard">
         <ApiHealthSmoke />
       </div>
     </div>

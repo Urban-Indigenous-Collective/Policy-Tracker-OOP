@@ -80,10 +80,13 @@ Flask ← Airtable Main v3, existing jobs unchanged
 - [x] Figma Finalized pages → tokens, typography, layout shell
 - [x] Header/footer/nav, responsive breakpoints
 - [x] USA map SVG integrated (accessible interaction layer stub)
+- [x] **Full Tailwind token layer** — `@theme` colors/spacing/type + `uic-*` patterns; JS mirror for SVG ([frontend/docs/design-tokens.md](../frontend/docs/design-tokens.md))
 
-**Exit criteria:** Static shell matches primary Figma frame structure (no real data yet).
+**Exit criteria:** Static shell matches primary Figma frame structure (no real data yet); **components use design tokens only** (no ad hoc hex / Figma px in TSX).
 
-**Completed 2026-10-21:** Map home (`160:2142`) — Montserrat/Roboto Mono tokens, `SiteNavigation`, `MapIntro`, `UsaMap` (US-XX SVG, a11y stub), `MapLegend`, filter row; dev-only Flask health banner. See [frontend/docs/figma-nodes.md](../frontend/docs/figma-nodes.md).
+**Completed 2026-10-21:** Map home (`160:2142`) — `lib/design/tokens.css` + `tokens.ts`, `SiteNavigation`, `MapIntro`, `UsaMap`, `MapLegend`, filter row; dev-only Flask health banner. Figma node map: [frontend/docs/figma-nodes.md](../frontend/docs/figma-nodes.md).
+
+**Before Phase 2:** Token foundation is required — new API-driven UI must not introduce parallel color/spacing constants.
 
 ### Phase 2 — Flask public read API
 

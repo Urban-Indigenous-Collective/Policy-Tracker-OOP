@@ -1,4 +1,4 @@
-/** Centers the 1512px Figma artboard on wide viewports. */
+/** Centers the Figma artboard max width on wide viewports. */
 export function ShellWidth({
   children,
   className = "",
@@ -7,7 +7,7 @@ export function ShellWidth({
   className?: string;
 }) {
   return (
-    <div className={`mx-auto w-full max-w-[1512px] ${className}`.trim()}>
+    <div className={`mx-auto w-full max-w-artboard ${className}`.trim()}>
       {children}
     </div>
   );

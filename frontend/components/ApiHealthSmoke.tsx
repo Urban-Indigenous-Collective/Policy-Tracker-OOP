@@ -37,7 +37,7 @@ export function ApiHealthSmoke() {
 
   if (health.status === "loading") {
     return (
-      <p className="mt-8 text-sm text-zinc-500" aria-live="polite">
+      <p className="mt-section text-body-md text-muted" aria-live="polite">
         Checking Flask API via dev proxy…
       </p>
     );
@@ -46,7 +46,7 @@ export function ApiHealthSmoke() {
   if (health.status === "error") {
     return (
       <p
-        className="mt-8 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+        className="mt-section rounded-lg border border-status-pending/40 bg-status-pending/10 px-4 py-3 text-body-md text-status-pending"
         role="status"
       >
         Flask API not reachable ({health.message}). Start Flask on port 8000 or
@@ -57,7 +57,7 @@ export function ApiHealthSmoke() {
 
   return (
     <p
-      className="mt-8 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"
+      className="mt-section rounded-lg border border-accent/40 bg-accent/10 px-4 py-3 text-body-md text-accent"
       role="status"
     >
       Flask API OK (proxied <code className="font-mono">/health-check</code>):{" "}

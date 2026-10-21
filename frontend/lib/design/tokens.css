@@ -1,0 +1,140 @@
+/**
+ * UIC MMIP Policy Tracker — design tokens (Tailwind v4 @theme).
+ * Figma reference: frame 160:2142 (1512×1361).
+ *
+ * Programmatic mirror for SVG/JS: lib/design/tokens.ts (keep in sync).
+ */
+
+:root {
+  --max-width-title: 24.625rem;
+  --spacing-hero-col: 6.4375rem;
+  --grid-title-col: min(var(--max-width-title), 100%);
+  --text-hero-fluid: clamp(1.75rem, 4.2vw + 1rem, 2.25rem);
+}
+
+@theme inline {
+  /* ——— Color: brand ——— */
+  --color-background: #000000;
+  --color-foreground: #ffffff;
+  --color-accent: #3fbfa7;
+  --color-accent-bright: #5ecdb9;
+  --color-muted: #a3a3a3;
+  --color-surface-border: rgb(255 255 255 / 0.1);
+  --color-surface-hover: rgb(255 255 255 / 0.1);
+  --color-foreground-muted: rgb(255 255 255 / 0.9);
+
+  /* ——— Color: map / policy status (legend) ——— */
+  --color-status-passed: #3fbfa7;
+  --color-status-passed-additional: #5ecdb9;
+  --color-status-pending: #e8c547;
+  --color-status-failed-additional: #c9a832;
+  --color-status-failed: #8a8a8a;
+  --color-map-stroke: #1a1a1a;
+
+  /* ——— Typography ——— */
+  --font-sans: var(--font-montserrat), system-ui, sans-serif;
+  --font-mono: var(--font-roboto-mono), ui-monospace, monospace;
+
+  --text-label-xs: 0.75rem;
+  --text-body-sm: 0.8125rem;
+  --text-body-md: 0.875rem;
+  --text-body: 1rem;
+  --text-hero: 2.25rem;
+
+  /* Figma nav/filter/donate: 12px type, 3px letter-spacing */
+  --tracking-label: 3px;
+  --tracking-tight-ui: -0.025em;
+
+  --leading-hero: 1.15;
+  /* Figma intro copy: 13px / 24px line-height */
+  --leading-body-sm: 1.5rem;
+
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* ——— Layout: page bands ——— */
+  --spacing-page-x: 1.25rem;
+  --spacing-page-x-md: 2rem;
+  --spacing-nav-inset: 4.75rem;
+  --spacing-content-inset: 7.6875rem;
+  --spacing-content-gutter-right: 4.75rem;
+  --spacing-title-inset: 2.9375rem;
+  --spacing-filter-inset: 3.5625rem;
+  --spacing-header-top: 2.5rem;
+  --spacing-header-top-lg: 2.5625rem;
+
+  /* ——— Layout: hero & sections ——— */
+  --spacing-hero-stack: 2.25rem;
+  --spacing-hero-stack-sm: 2.5rem;
+  --spacing-hero-col: 6.4375rem;
+  --spacing-section-sm: 1.5rem;
+  --spacing-section: 2rem;
+  --spacing-section-lg: 2.5rem;
+  --spacing-filter-section-top: 5rem;
+  --spacing-filter-section-pt: 3rem;
+  --spacing-main-pb: 4rem;
+
+  /* ——— Layout: nav & chrome ——— */
+  --spacing-nav-gap: 2.5rem;
+  --spacing-nav-brand-gap: 1rem;
+  --spacing-nav-mobile-gap: 1.5rem;
+  --spacing-donate-x: 2.5rem;
+  --spacing-donate-y: 0.875rem;
+
+  /* ——— Sizes: artboard & columns ——— */
+  --max-width-artboard: 94.5rem;
+  --max-width-title: 24.625rem;
+  --max-width-intro: 37.9375rem;
+  --max-width-map: 70.8125rem;
+  --max-width-legend: 21.9375rem;
+  --width-legend: 21.9375rem;
+  --max-width-nav-brand: 32.5rem;
+  --width-filter-col-min: 17.5rem;
+  --width-logo: 3.875rem;
+  --height-logo: 4.75rem;
+  --height-nav-row: 4.75rem;
+  --height-top-border: 3px;
+  --size-switch-w: 2.875rem;
+  --size-switch-h: 1.3125rem;
+  --spacing-filter-switch-gap: 1.125rem;
+  --size-legend-icon: 1.5625rem;
+
+  /* ——— Map interaction ——— */
+  --opacity-map-selected: 0.42;
+  --opacity-inactive: 0.4;
+  --opacity-donate-hover: 0.9;
+  --width-map-stroke: 0.5px;
+
+  --min-height-map: 17.5rem;
+  --min-height-map-sm: 25rem;
+}
+
+@layer components {
+  .uic-label {
+    font-size: var(--text-label-xs);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--tracking-label);
+  }
+
+  .uic-nav-link {
+    font-family: var(--font-sans);
+    font-size: var(--text-label-xs);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--tracking-label);
+    line-height: normal;
+    color: var(--color-foreground);
+    text-decoration: none;
+  }
+
+  .uic-nav-link:hover {
+    color: var(--color-accent);
+  }
+
+  .uic-body-sm {
+    font-family: var(--font-sans);
+    font-size: var(--text-body-sm);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--leading-body-sm);
+  }
+
+}

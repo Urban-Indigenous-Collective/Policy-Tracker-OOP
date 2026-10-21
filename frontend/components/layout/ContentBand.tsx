@@ -1,6 +1,6 @@
 /**
- * Narrower main band — Figma content inset 123px (desktop), extra right
- * room for the map legend (~256px to artboard edge).
+ * Main content band — Figma content inset (desktop), extra right gutter for
+ * map legend on wide layouts.
  */
 export function ContentBand({
   children,
@@ -11,7 +11,7 @@ export function ContentBand({
 }) {
   return (
     <div
-      className={`w-full px-5 sm:px-8 lg:px-[123px] lg:pr-[76px] ${className}`.trim()}
+      className={`w-full px-page-x sm:px-page-x-md lg:px-content-inset lg:pr-content-gutter-right ${className}`.trim()}
     >
       {children}
     </div>

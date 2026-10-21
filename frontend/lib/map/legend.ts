@@ -1,3 +1,5 @@
+import { policyStatusColor } from "@/lib/design/tokens";
+
 export type LegendCategory =
   | "passed"
   | "passedAdditional"
@@ -37,11 +39,11 @@ export const LEGEND_ITEMS: {
   },
 ];
 
-/** Placeholder map fills until Phase 2 API drives colors. */
+/** Map fills until Phase 2 API drives colors per state. */
 export const LEGEND_FILL: Record<LegendCategory, string> = {
-  passed: "#3fbfa7",
-  passedAdditional: "#5ecdb9",
-  pending: "#e8c547",
-  failedAdditional: "#c9a832",
-  failed: "#8a8a8a",
+  passed: policyStatusColor.passed,
+  passedAdditional: policyStatusColor.passedAdditional,
+  pending: policyStatusColor.pending,
+  failedAdditional: policyStatusColor.failedAdditional,
+  failed: policyStatusColor.failed,
 };

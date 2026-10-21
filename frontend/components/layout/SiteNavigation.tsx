@@ -4,15 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useId, useState } from "react";
 import { NavBand } from "@/components/layout/NavBand";
+import { DonateLink } from "@/components/ui/DonateLink";
 
 const NAV_LINKS = [
   { href: "#", label: "TRENDS" },
   { href: "/", label: "POLICY MAP" },
   { href: "#", label: "POLICY LIST" },
 ] as const;
-
-const linkClassName =
-  "text-xs font-bold tracking-[0.2em] text-white hover:text-accent";
 
 function MenuIcon({ open }: { open: boolean }) {
   if (open) {
@@ -23,7 +21,7 @@ function MenuIcon({ open }: { open: boolean }) {
         viewBox="0 0 24 24"
         fill="none"
         aria-hidden
-        className="text-white"
+        className="text-foreground"
       >
         <path
           d="M6 6l12 12M18 6L6 18"
@@ -41,7 +39,7 @@ function MenuIcon({ open }: { open: boolean }) {
       viewBox="0 0 24 24"
       fill="none"
       aria-hidden
-      className="text-white"
+      className="text-foreground"
     >
       <path
         d="M4 7h16M4 12h16M4 17h16"
@@ -77,12 +75,12 @@ export function SiteNavigation() {
   }, [menuOpen, closeMenu]);
 
   return (
-    <header className="pt-6 lg:pt-[41px]">
+    <header className="pt-header-top lg:pt-header-top-lg">
       <NavBand>
-        <div className="flex min-h-[76px] flex-col lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex w-full items-center justify-between gap-4 lg:w-auto lg:max-w-[520px] lg:justify-start">
-            <div className="flex min-w-0 items-center gap-4">
-              <div className="relative h-[76px] w-[62px] shrink-0">
+        <div className="flex min-h-nav-row flex-col lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex w-full items-center justify-between gap-nav-brand-gap lg:w-auto lg:max-w-nav-brand lg:justify-start">
+            <div className="flex min-w-0 items-center gap-nav-brand-gap">
+              <div className="relative h-logo w-logo shrink-0">
                 <Image
                   src="/brand/uic-logo.png"
                   alt=""
@@ -92,14 +90,14 @@ export function SiteNavigation() {
                   priority
                 />
               </div>
-              <p className="font-mono text-base font-bold leading-tight tracking-tight text-white">
+              <p className="font-mono text-body font-bold leading-tight tracking-tight-ui text-foreground">
                 URBAN INDIGENOUS COLLECTIVE
               </p>
             </div>
 
             <button
               type="button"
-              className="flex shrink-0 items-center justify-center rounded-md p-2 text-white hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent lg:hidden"
+              className="flex shrink-0 items-center justify-center rounded-md p-2 text-foreground hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-accent lg:hidden"
               aria-expanded={menuOpen}
               aria-controls={mobileNavId}
               aria-label={menuOpen ? "Close menu" : "Open menu"}
@@ -110,45 +108,34 @@ export function SiteNavigation() {
           </div>
 
           <nav
-            className="hidden items-center gap-x-10 lg:flex lg:justify-end"
+            className="hidden items-center gap-x-nav-gap lg:flex lg:justify-end"
             aria-label="Primary"
           >
             {NAV_LINKS.map((item) => (
-              <Link key={item.label} href={item.href} className={linkClassName}>
+              <Link key={item.label} href={item.href} className="uic-nav-link">
                 {item.label}
               </Link>
             ))}
-            <Link
-              href="https://urbanindigenouscollective.org/donate"
-              className="rounded-full bg-accent px-10 py-3.5 text-xs font-bold tracking-[0.2em] text-white hover:opacity-90"
-            >
-              DONATE
-            </Link>
+            <DonateLink />
           </nav>
 
           {menuOpen ? (
             <nav
               id={mobileNavId}
-              className="flex flex-col gap-6 border-t border-white/10 py-6 lg:hidden"
+              className="flex flex-col gap-nav-mobile-gap border-t border-surface-border py-nav-mobile-gap lg:hidden"
               aria-label="Primary"
             >
               {NAV_LINKS.map((item) => (
                 <Link
                   key={item.label}
                   href={item.href}
-                  className={linkClassName}
+                  className="uic-nav-link"
                   onClick={closeMenu}
                 >
                   {item.label}
                 </Link>
               ))}
-              <Link
-                href="https://urbanindigenouscollective.org/donate"
-                className="inline-flex w-fit rounded-full bg-accent px-10 py-3.5 text-xs font-bold tracking-[0.2em] text-white hover:opacity-90"
-                onClick={closeMenu}
-              >
-                DONATE
-              </Link>
+              <DonateLink className="w-fit" onClick={closeMenu} />
             </nav>
           ) : null}
         </div>

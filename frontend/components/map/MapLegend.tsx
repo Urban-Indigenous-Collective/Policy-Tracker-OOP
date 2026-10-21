@@ -20,10 +20,10 @@ export function MapLegend({ className = "" }: MapLegendProps) {
               alt=""
               width={25}
               height={25}
-              className="mt-0.5 shrink-0"
+              className="mt-0.5 size-legend-icon shrink-0"
               aria-hidden
             />
-            <span className="text-sm font-bold leading-snug text-white">
+            <span className="text-body-md font-bold leading-snug text-foreground">
               {item.label}
             </span>
           </li>

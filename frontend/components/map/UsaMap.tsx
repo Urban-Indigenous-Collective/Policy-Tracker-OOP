@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { mapInteraction } from "@/lib/design/tokens";
 import { LEGEND_FILL, type LegendCategory } from "@/lib/map/legend";
 import { STATE_NAMES, svgIdToStateCode } from "@/lib/map/state-codes";
 import { MOCK_STATE_CATEGORIES } from "@/lib/mock/map-stats";
@@ -8,11 +9,6 @@ import { MOCK_STATE_CATEGORIES } from "@/lib/mock/map-stats";
 type UsaMapProps = {
   onStateSelect?: (stateCode: string) => void;
 };
-
-const DEFAULT_STROKE = "#1a1a1a";
-const DEFAULT_STROKE_WIDTH = "0.5";
-/** Selected state is subdued; others stay at full strength (inverse of prior behavior). */
-const SELECTED_OPACITY = "0.42";
 
 function fillForState(code: string): string {
   const category: LegendCategory =
@@ -28,8 +24,8 @@ function applyRegionPaint(
   const paint = (el: Element) => {
     if (el instanceof SVGGraphicsElement) {
       el.setAttribute("fill", fill);
-      el.setAttribute("stroke", DEFAULT_STROKE);
-      el.setAttribute("stroke-width", DEFAULT_STROKE_WIDTH);
+      el.setAttribute("stroke", mapInteraction.stroke);
+      el.setAttribute("stroke-width", mapInteraction.strokeWidth);
       el.setAttribute("opacity", opacity);
     }
   };
@@ -141,7 +137,9 @@ export function UsaMap({ onStateSelect }: UsaMapProps) {
 
       const fill = fillForState(code);
       const opacity =
-        selected && code === selected ? SELECTED_OPACITY : "1";
+        selected && code === selected
+          ? mapInteraction.selectedOpacity
+          : "1";
       applyRegionPaint(node, fill, opacity);
     });
   }, [selected]);
@@ -156,7 +154,7 @@ export function UsaMap({ onStateSelect }: UsaMapProps) {
 
   return (
     <div className="relative w-full">
-      <div ref={containerRef} className="min-h-[280px] w-full sm:min-h-[400px]" />
+      <div ref={containerRef} className="min-h-map w-full sm:min-h-map-sm" />
       {selected ? (
         <p className="mt-3 font-mono text-sm text-accent" aria-live="polite">
           Selected: {STATE_NAMES[selected] ?? selected} ({selected}) — click
