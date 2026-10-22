@@ -38,6 +38,7 @@ def record_to_bill_dto(record: dict[str, Any], *, include_analysis: bool = False
         "status": str(fields.get("Status") or "").strip(),
         "progression": str(fields.get("Progression") or "").strip(),
         "billNumber": str(_field(fields, "Bill Number") or "").strip(),
+        "chamber": str(_field(fields, "Chamber") or "").strip(),
         "session": str(_field(fields, "Session") or "").strip(),
         "lastUpdate": str(_field(fields, "Last Update") or "").strip(),
         "summary": str(_field(fields, "Summary") or "").strip(),

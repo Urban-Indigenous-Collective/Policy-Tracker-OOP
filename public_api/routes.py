@@ -23,7 +23,11 @@ def health():
             {
                 "ok": True,
                 "liveCount": snap.live_count,
+                "mainV3Count": snap.main_v3_count,
                 "cacheAgeSeconds": round(snap.cache_age_seconds, 1),
+                "policyDataAsOf": snap.policy_data_as_of.isoformat()
+                if snap.policy_data_as_of
+                else None,
                 "generatedAt": snap.generated_at.isoformat(),
             }
         )
@@ -42,6 +46,11 @@ def list_states():
         {
             "summary": snap.summary,
             "states": snap.states,
+            "liveCount": snap.live_count,
+            "mainV3Count": snap.main_v3_count,
+            "policyDataAsOf": snap.policy_data_as_of.isoformat()
+            if snap.policy_data_as_of
+            else None,
             "generatedAt": snap.generated_at.isoformat(),
             "cacheAgeSeconds": round(snap.cache_age_seconds, 1),
         }

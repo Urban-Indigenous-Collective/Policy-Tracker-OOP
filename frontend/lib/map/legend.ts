@@ -39,11 +39,11 @@ export const LEGEND_ITEMS: {
   },
 ];
 
-/** Map fills until Phase 2 API drives colors per state. */
+/** Solid legend swatches (`legend-*.svg`); map uses `mapFillForCategory` for paints. */
 export const LEGEND_FILL: Record<LegendCategory, string> = {
   passed: policyStatusColor.passed,
   passedAdditional: policyStatusColor.passedAdditional,
-  pending: policyStatusColor.pending,
+  pending: policyStatusColor.pendingBase,
   failedAdditional: policyStatusColor.failedAdditional,
   failed: policyStatusColor.failed,
 };

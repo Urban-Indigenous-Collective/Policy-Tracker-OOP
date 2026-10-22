@@ -21,7 +21,8 @@ brew install poppler   # required for pdf2image OCR
 ollama pull qwen2.5vl:32b
 
 python app.py
-# Open http://127.0.0.1:5000/analyzer
+# Flask :5000 → JSON at / (api + links); legacy bill analyzer at /analyzer
+# MMIP public map → npm run dev → http://localhost:3000
 ```
 
 First startup scrapes Wikipedia to build the Indigenous politicians database (30–60s).

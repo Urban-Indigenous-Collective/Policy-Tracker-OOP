@@ -3,7 +3,13 @@ const INTRO_PARAGRAPHS = [
   `The map is a starting point. For bill text, summaries, and UIC's analysis of each policy's strengths and gaps, see the Policy Table below. If a term is unfamiliar, our Glossary of Key Terms explains the language of this work through an Indigenous lens.`,
 ];
 
-export function MapIntro() {
+type MapIntroProps = {
+  /** Footnote under intro copy — empty-state message or “Policies current as of …”. */
+  statusLine?: string | null;
+  statusBusy?: boolean;
+};
+
+export function MapIntro({ statusLine = null, statusBusy = false }: MapIntroProps) {
   return (
     <section className="mt-section-sm lg:mt-section-lg">
       <div className="grid gap-hero-stack sm:gap-hero-stack-sm lg:grid-cols-[var(--grid-title-col)_minmax(0,1fr)] lg:items-start lg:gap-hero-col">
@@ -19,9 +25,16 @@ export function MapIntro() {
           {INTRO_PARAGRAPHS.map((paragraph) => (
             <p key={paragraph.slice(0, 32)}>{paragraph}</p>
           ))}
-          <p className="font-semibold text-foreground-muted">
-            Policies current as of September 18, 2026
-          </p>
+          {statusBusy ? (
+            <p
+              className="font-semibold text-foreground-muted"
+              aria-busy="true"
+            >
+              Loading policy status…
+            </p>
+          ) : statusLine ? (
+            <p className="font-semibold text-foreground-muted">{statusLine}</p>
+          ) : null}
         </div>
       </div>
     </section>

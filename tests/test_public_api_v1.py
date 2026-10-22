@@ -17,11 +17,23 @@ def _record(rid: str, **fields):
 
 def test_gate_requires_live_by_default(monkeypatch):
     monkeypatch.setenv("PUBLIC_API_REQUIRE_LIVE", "1")
+    monkeypatch.delenv("PUBLIC_API_STRICT_REVIEW_STATUS", raising=False)
     live = _record("rec1", **{LIVE_REVIEW_STATUS_FIELD: REVIEW_STATUS_LIVE, "State": "WA"})
     pending = _record("rec2", **{LIVE_REVIEW_STATUS_FIELD: "Send Back to Pending"})
+    legacy = _record("rec3", State="OR", Status="Passed")
     assert is_public_live_record(live)
     assert not is_public_live_record(pending)
-    assert len(filter_public_live_records([live, pending])) == 1
+    assert is_public_live_record(legacy)
+    assert len(filter_public_live_records([live, pending, legacy])) == 2
+
+
+def test_gate_strict_review_status_blocks_empty_main_v3(monkeypatch):
+    monkeypatch.setenv("PUBLIC_API_REQUIRE_LIVE", "1")
+    monkeypatch.setenv("PUBLIC_API_STRICT_REVIEW_STATUS", "1")
+    legacy = _record("rec3", State="OR", Status="Passed")
+    live = _record("rec1", **{LIVE_REVIEW_STATUS_FIELD: REVIEW_STATUS_LIVE})
+    assert is_public_live_record(live)
+    assert not is_public_live_record(legacy)
 
 
 def test_serialize_bill_dto():
@@ -83,7 +95,7 @@ def test_build_states_payload_excludes_national():
             State="WA",
             Status="Passed",
             Name="WA Bill",
-            **{LIVE_REVIEW_STATUS_FIELD: REVIEW_STATUS_LIVE},
+            **{"Bill Number": "SB 1", LIVE_REVIEW_STATUS_FIELD: REVIEW_STATUS_LIVE},
         ),
     ]
     summary, states = build_states_payload(records)

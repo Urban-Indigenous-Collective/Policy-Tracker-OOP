@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Montserrat, Roboto_Mono } from "next/font/google";
 import "./globals.css";
 import { SiteShell } from "@/components/layout/SiteShell";
+import { QueryProvider } from "@/components/providers/QueryProvider";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -32,7 +33,9 @@ export default function RootLayout({
       className={`${montserrat.variable} ${robotoMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
-        <SiteShell>{children}</SiteShell>
+        <QueryProvider>
+          <SiteShell>{children}</SiteShell>
+        </QueryProvider>
       </body>
     </html>
   );

@@ -6,6 +6,8 @@ Flask serves JSON under `/api/v1/*`. Next.js dev rewrites `/api/*` to Flask (`FL
 
 - Source: Airtable **Main v3** (`AIRTABLE_TABLE`, default `Main v3`).
 - Public rows: `Review Status = "Live"` when `PUBLIC_API_REQUIRE_LIVE=1` (default).
+- Main v3 rows with **empty** `Review Status` are public by default (pre-backfill data). Set `PUBLIC_API_STRICT_REVIEW_STATUS=1` to require explicit `Live` only.
+- `GET /api/v1/health` includes `mainV3Count` (all Main v3 rows) and `liveCount` (after gate).
 - Pending table and non-Live rows are never exposed.
 
 ## Caching (Airtable throttle)
@@ -22,6 +24,10 @@ All v1 handlers read an **in-memory snapshot** refreshed at most once per `PUBLI
 
 Applied to Live bills grouped by normalized state code (2-letter US/territory). **National** bills count in summary and `/states/National/bills` but do **not** appear in `states` (no SVG region).
 
+Map-key uses **every Live Main v3 row** grouped by `State` (legislation, executive orders, DOJ/USAO initiatives, empty `Bill Number`, etc.). Same gate as hero `summary`.
+
+Per-bill input is Main v3 **`Status`** only (`Passed` / `Pending` / `Failed`). `Progression` is metadata for display, not map-key.
+
 | API `category` | Rule |
 |----------------|------|
 | `passed` | ≥1 `Status=Passed`, no `Pending` |
@@ -30,7 +36,7 @@ Applied to Live bills grouped by normalized state code (2-letter US/territory). 
 | `failed` | No Passed, no Pending, ≥1 Failed |
 | `failedAdditional` | No Passed, ≥1 Pending, every non-Pending bill is Failed |
 
-Unlisted states: frontend default gray fill.
+Unlisted states (no row in `states`): idle fill `#212121`. Listed fills match `frontend/public/ui/legend-*.svg` via `mapFillForCategory()` (`frontend/lib/map/map-category-fill.ts`, `frontend/lib/design/tokens.ts`): passed `#3fbfa7`, passedAdditional `#7bedd8`, pending cyan `#7bedd8` + stripe `#f8cf4d` (SVG pattern), failedAdditional `#fadd82`, failed `#f8cf4d`.
 
 ## Endpoints
 
@@ -49,6 +55,7 @@ Map home payload.
       "billCount": 4
     }
   },
+  "policyDataAsOf": "2026-10-21T06:00:00+00:00",
   "generatedAt": "2026-10-21T19:00:00+00:00",
   "cacheAgeSeconds": 12.4
 }

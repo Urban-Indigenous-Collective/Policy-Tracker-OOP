@@ -23,12 +23,14 @@
   --color-surface-hover: rgb(255 255 255 / 0.1);
   --color-foreground-muted: rgb(255 255 255 / 0.9);
 
-  /* ——— Color: map / policy status (legend) ——— */
+  /* ——— Color: map / policy status (legend-*.svg) ——— */
   --color-status-passed: #3fbfa7;
-  --color-status-passed-additional: #5ecdb9;
-  --color-status-pending: #e8c547;
-  --color-status-failed-additional: #c9a832;
-  --color-status-failed: #8a8a8a;
+  --color-status-passed-additional: #7bedd8;
+  --color-status-pending: #f8cf4d;
+  --color-status-pending-base: #7bedd8;
+  --color-status-failed-additional: #fadd82;
+  --color-status-failed: #f8cf4d;
+  --color-map-unlisted: #212121;
   --color-map-stroke: #1a1a1a;
 
   /* ——— Typography ——— */

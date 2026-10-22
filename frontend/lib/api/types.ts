@@ -23,6 +23,10 @@ export type StateMapEntry = {
 export type PublicStatesResponse = {
   summary: MapSummary;
   states: Record<string, StateMapEntry>;
+  liveCount?: number;
+  mainV3Count?: number;
+  /** Last successful nightly status refresh (ISO), when available. */
+  policyDataAsOf?: string | null;
   generatedAt: string;
   cacheAgeSeconds: number;
 };
@@ -35,6 +39,7 @@ export type PublicBill = {
   status: string;
   progression: string;
   billNumber: string;
+  chamber?: string;
   session: string;
   lastUpdate: string;
   summary: string;
@@ -55,6 +60,13 @@ export type PublicStateBillsResponse = {
 export type PublicApiHealthResponse = {
   ok: boolean;
   liveCount: number;
+  mainV3Count?: number;
   cacheAgeSeconds: number;
   generatedAt: string;
+};
+
+export type PublicBillDetailResponse = {
+  bill: PublicBill;
+  generatedAt: string;
+  cacheAgeSeconds: number;
 };

@@ -26,7 +26,7 @@ def _norm_status(raw: str) -> str:
 
 
 def state_legend_category(bills: list[dict[str, Any]]) -> LegendCategory | None:
-    """Apply UIC map-key rules to bill DTOs for one state."""
+    """Apply UIC map-key rules to bill DTOs for one state (Main v3 ``Status`` only)."""
     if not bills:
         return None
 

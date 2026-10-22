@@ -1,4 +1,4 @@
-type StatusBadgeProps = {
+export type StatusBadgeProps = {
   children: React.ReactNode;
   variant?: "passed" | "failed" | "pending" | "neutral";
 };

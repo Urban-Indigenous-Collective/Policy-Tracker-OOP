@@ -104,12 +104,14 @@ Flask ← Airtable Main v3, existing jobs unchanged
 
 ### Phase 3 — Core routes (Figma P0–P2)
 
-- [ ] `/` map + TanStack Query
-- [ ] `/states/[code]` slide-out / bill list
-- [ ] `/states/[code]/bills/[slug]` analysis page
-- [ ] SSR/ISR + metadata on state and bill routes
+- [x] `/` map + TanStack Query
+- [x] `/states/[code]` slide-out / bill list
+- [x] `/states/[code]/bills/[slug]` analysis page
+- [x] SSR/ISR + metadata on state and bill routes
 
 **Exit criteria:** End-to-end click map → state → bill with live Airtable data.
+
+**Completed 2026-10-21:** `MapExperience` + live map fills/summary; `StatePanel` drawer on `/states/[code]`; bill analysis RSC page; TanStack Query (`staleTime` 300s); server fetch via `INTERNAL_API_BASE` / `fetch(..., { next: { revalidate: 300 } })`.
 
 ### Phase 4 — SEO hardening
 

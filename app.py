@@ -30,7 +30,21 @@ main_app = MainApplication(legiscan_key)
 
 @app.route("/")
 def home():
-    return redirect('/analyzer')
+    """Public MMIP map is Next.js (:3000 / nginx). Flask root is API + legacy tools."""
+    site = (os.getenv("NEXT_PUBLIC_SITE_URL") or os.getenv("PUBLIC_SITE_URL") or "").strip()
+    if site:
+        return redirect(site.rstrip("/"))
+    if os.getenv("FLASK_ROOT_LEGACY_REDIRECT", "").lower() in ("1", "true", "yes"):
+        return redirect("/analyzer")
+    return jsonify(
+        {
+            "service": "policy-tracker",
+            "message": "MMIP public map UI is served by Next.js, not Flask /.",
+            "publicUiDev": "http://localhost:3000",
+            "api": "/api/v1/health",
+            "legacyAnalyzer": "/analyzer",
+        }
+    ), 200
 
 @app.route('/analyzer')
 def analyzer():
