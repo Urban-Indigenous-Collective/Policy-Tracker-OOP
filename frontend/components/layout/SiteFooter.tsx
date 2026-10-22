@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { TopBorder } from "@/components/layout/TopBorder";
+
 const UIC_ORIGIN = "https://urbanindigenouscollective.org";
 
 const FOOTER_LINKS = {
@@ -35,6 +37,7 @@ const SOCIAL_LINKS = [
 export function SiteFooter() {
   return (
     <footer className="mt-auto bg-footer-surface">
+      <TopBorder />
       <div className="mx-auto w-full max-w-artboard px-page-x pb-footer-pb pt-footer-pt sm:px-page-x-md lg:px-content-inset lg:pr-content-gutter-right">
         <div className="flex flex-col gap-footer-mission-stack">
           <div className="flex flex-col gap-footer-mission-stack lg:flex-row lg:items-start lg:justify-between lg:gap-footer-top">

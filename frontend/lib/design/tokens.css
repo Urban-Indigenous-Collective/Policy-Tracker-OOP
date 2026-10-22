@@ -21,7 +21,7 @@
   --color-muted: #a3a3a3;
   --color-surface-border: rgb(255 255 255 / 0.1);
   /* Figma footer `176:5663` — MacBook Pro 14" - 28 */
-  --color-footer-surface: #101010;
+  --color-footer-surface: #000000;
   --color-footer-divider: rgb(255 255 255 / 0.5);
   --color-footer-pill-border: rgb(255 255 255 / 0.5);
   --color-surface-hover: rgb(255 255 255 / 0.1);
