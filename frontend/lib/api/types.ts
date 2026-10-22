@@ -64,6 +64,12 @@ export type PublicBill = {
   optionalLink?: string;
   billTextUrl?: string;
   categories: string[];
+  /** Main v3 eval selects. Drawer filters treat `"Yes"` and `"Somewhat"` as a match. */
+  mechanismsForEvaluation?: string;
+  genderInclusiveLanguage?: string;
+  preventionEfforts?: string;
+  survivorRelativeInput?: string;
+  centeringIndigenousVoices?: string;
   uicPros?: string;
   uicCons?: string;
   reviewStatus?: string;

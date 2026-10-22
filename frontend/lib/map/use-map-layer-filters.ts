@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
+import { NATIONAL_STATE_CODE } from "@/lib/api/state-code";
 import {
   DEFAULT_MAP_LAYER_MODE,
   type MapLayerMode,
@@ -26,9 +27,21 @@ export function filterLabelForKey(key: MapLayerFilterKey): string {
   return FILTER_LABELS[key];
 }
 
+function layerForOpenDrawer(stateCode: string | null): MapLayerSelection | null {
+  if (stateCode === NATIONAL_STATE_CODE) return "nationalLegislation";
+  return null;
+}
+
 /** One active policy layer at a time; click active again to turn all off. */
-export function useMapLayerFilters() {
-  const [mode, setMode] = useState<MapLayerSelection>(DEFAULT_MAP_LAYER_MODE);
+export function useMapLayerFilters(selectedState: string | null) {
+  const [mode, setMode] = useState<MapLayerSelection>(() =>
+    layerForOpenDrawer(selectedState) ?? DEFAULT_MAP_LAYER_MODE,
+  );
+
+  useEffect(() => {
+    const routeLayer = layerForOpenDrawer(selectedState);
+    if (routeLayer) setMode(routeLayer);
+  }, [selectedState]);
 
   const toggle = useCallback((key: MapLayerFilterKey) => {
     setMode((prev) => (prev === key ? null : key));

@@ -30,7 +30,7 @@ Single source of truth for the reusable design system:
 | `--spacing-drawer-x` | 63px horizontal inset |
 | Typography | `uic-drawer-state-title` (34px / bold mono), `uic-drawer-policies-count`, `uic-drawer-bill-id`, `uic-drawer-bill-body-regular` (18px / 28px leading) |
 | Bill row | grid 158px + 40px gap + title col; row width `--width-drawer-content` (397px) |
-| Chrome | `/ui/dismiss.svg`; status pill `--width/height-drawer-status-pill` |
+| Chrome | `/ui/dismiss.svg`; status pill `--width/height-drawer-status-pill`; filter menu stays inside the content gutters |
 | Site top bar | `--height-top-border` (3px teal accent) — `TopBorder` |
 | Drawer top stripe | `--height-drawer-top-border` (~22px), `uic-drawer-top-border` / `DrawerTopBorder` |
 | Drawer search | `--color-drawer-search` → `bg-drawer-search`, `--spacing-drawer-search-mt` (54px), `uic-drawer-search-input` |

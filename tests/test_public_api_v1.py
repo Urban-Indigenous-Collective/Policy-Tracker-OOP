@@ -44,6 +44,8 @@ def test_serialize_bill_dto():
         "Bill Number": "HB 100",
         "Session": "2024",
         "Bill Overview (Link)": "https://example.com/bill",
+        "Mechanisms for Evaluation?": "Yes",
+        "Centering of Indigenous Voices?": "Somewhat",
         LIVE_REVIEW_STATUS_FIELD: REVIEW_STATUS_LIVE,
     }
     rec = _record("recABCDEFGH", **fields)
@@ -52,6 +54,9 @@ def test_serialize_bill_dto():
     assert dto["state"] == "WA"
     assert dto["slug"] == bill_slug("recABCDEFGH", rec["fields"])
     assert "hb-100-2024" in dto["slug"]
+    assert dto["mechanismsForEvaluation"] == "Yes"
+    assert dto["centeringIndigenousVoices"] == "Somewhat"
+    assert dto["preventionEfforts"] == ""
 
 
 def test_summary_stats():

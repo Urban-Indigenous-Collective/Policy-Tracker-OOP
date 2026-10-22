@@ -49,7 +49,7 @@ function MapExperienceInner({
   const statsLoading = isLoading && !resolvedStates;
 
   const { mode: mapLayerMode, toggle: toggleMapLayer, isActive } =
-    useMapLayerFilters();
+    useMapLayerFilters(selectedState);
 
   const needsNationalFallback =
     !resolvedStates?.mapLayers &&

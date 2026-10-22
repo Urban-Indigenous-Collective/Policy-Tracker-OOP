@@ -1,12 +1,27 @@
+type JsonLdNode = Record<string, unknown>;
+
 type JsonLdProps = {
-  data: Record<string, unknown> | Record<string, unknown>[];
+  data: JsonLdNode | JsonLdNode[];
 };
+
+/** One document with `@context`. A raw array has no `@context` and breaks consumers that read it. */
+function asJsonLdDocument(data: JsonLdNode | JsonLdNode[]): JsonLdNode {
+  if (!Array.isArray(data)) return data;
+  const graph = data.map((node) => {
+    const { "@context": _context, ...rest } = node;
+    return rest;
+  });
+  return {
+    "@context": "https://schema.org",
+    "@graph": graph,
+  };
+}
 
 export function JsonLd({ data }: JsonLdProps) {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(asJsonLdDocument(data)) }}
     />
   );
 }

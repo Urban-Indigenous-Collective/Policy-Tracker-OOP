@@ -3,9 +3,14 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 
 import { DrawerTopBorder } from "@/components/state/DrawerTopBorder";
+import {
+  StateDrawerFilterButton,
+  StateDrawerFilterMenu,
+} from "@/components/state/StateDrawerFilter";
 import { StateDrawerSearch } from "@/components/state/StateDrawerSearch";
 import { StateBillList } from "@/components/state/StateBillList";
 import { emptyStatePoliciesMessage } from "@/lib/state/empty-state-policies-message";
+import type { DrawerEvalFilterKey } from "@/lib/state/drawer-eval-filters";
 import { filterDrawerBills } from "@/lib/state/filter-drawer-bills";
 import {
   filterBillsForMapLayer,
@@ -49,17 +54,25 @@ export function StatePanel({
   const searchId = useId();
   const panelRef = useRef<HTMLElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [evalFilters, setEvalFilters] = useState<DrawerEvalFilterKey[]>([]);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const filterTrayId = useId();
   const { data, isLoading, isError, error } = useStateBills(stateCode, {
     initialData: initialBills,
   });
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key !== "Escape") return;
+      if (filtersOpen) {
+        setFiltersOpen(false);
+        return;
+      }
+      onClose();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
+  }, [onClose, filtersOpen]);
 
   useEffect(() => {
     panelRef.current?.focus();
@@ -67,6 +80,8 @@ export function StatePanel({
 
   useEffect(() => {
     setSearchQuery("");
+    setEvalFilters([]);
+    setFiltersOpen(false);
   }, [stateCode, mapLayerMode]);
 
   const name =
@@ -78,11 +93,13 @@ export function StatePanel({
     [data?.bills, mapLayerMode],
   );
   const filteredBills = useMemo(
-    () => filterDrawerBills(allBills, searchQuery),
-    [allBills, searchQuery],
+    () => filterDrawerBills(allBills, searchQuery, evalFilters),
+    [allBills, searchQuery, evalFilters],
   );
   const policyCount = allBills.length;
   const hasPolicies = policyCount > 0;
+  const filtersActive = evalFilters.length > 0 || searchQuery.trim().length > 0;
+  const shownCount = filtersActive ? filteredBills.length : policyCount;
   const titleColorClass = hasPolicies
     ? stateCategoryTitleClass(stateCategory)
     : "text-foreground";
@@ -137,14 +154,24 @@ export function StatePanel({
 
           <div className="relative mt-drawer-meta-mt min-h-drawer-filter-pill">
             <p className="uic-drawer-policies-count" aria-live="polite">
-              {isLoading && !data ? "…" : policyCount} POLICIES
+              {isLoading && !data ? "…" : shownCount} POLICIES
             </p>
             {hasPolicies ? (
-              <span
-                className="uic-drawer-filter-pill absolute top-0 left-drawer-filter-from-content h-drawer-filter-pill w-drawer-filter-pill rounded-drawer-filter border border-foreground font-sans text-drawer-filter font-semibold text-foreground uppercase"
-              >
-                Filter
-              </span>
+              <StateDrawerFilterButton
+                open={filtersOpen}
+                active={evalFilters.length > 0}
+                controlsId={filterTrayId}
+                onToggle={() => setFiltersOpen((open) => !open)}
+              />
+            ) : null}
+            {hasPolicies ? (
+              <StateDrawerFilterMenu
+                id={filterTrayId}
+                open={filtersOpen}
+                selected={evalFilters}
+                onChange={setEvalFilters}
+                onClose={() => setFiltersOpen(false)}
+              />
             ) : null}
           </div>
 
@@ -179,7 +206,9 @@ export function StatePanel({
                 emptyMessage={
                   searchQuery.trim()
                     ? "No policies match your search."
-                    : undefined
+                    : evalFilters.length
+                      ? "No policies match the selected filters."
+                      : undefined
                 }
               />
             ) : null}

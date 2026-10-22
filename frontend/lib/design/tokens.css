@@ -150,6 +150,13 @@
   --height-drawer-status-pill: 1.5625rem;
   --width-drawer-filter-pill: 5.9375rem;
   --height-drawer-filter-pill: 1.4375rem;
+  --spacing-drawer-filter-pill-x: 0.5rem;
+  --spacing-drawer-filter-option-x: 0.75rem;
+  --tracking-drawer-filter-option: 0.5px;
+  --spacing-drawer-filter-option-y: 0.625rem;
+  --spacing-drawer-filter-menu: 1.5rem;
+  --spacing-drawer-filter-options-x: 1rem;
+  --spacing-drawer-filter-stack: 0.5rem;
   --size-drawer-dismiss: 1.75rem;
   --text-drawer-state-title: 2.125rem;
   --leading-drawer-state-title: 2.375rem;
@@ -269,8 +276,16 @@
     text-align: center;
     line-height: 1;
     letter-spacing: var(--tracking-drawer-filter);
-    padding-inline: 0.5rem;
-    padding-left: calc(0.5rem + var(--tracking-drawer-filter) * 0.5);
+    padding-inline: var(--spacing-drawer-filter-pill-x);
+    padding-left: calc(
+      var(--spacing-drawer-filter-pill-x) + var(--tracking-drawer-filter) * 0.5
+    );
+  }
+
+  /* Question pills: tracking only. Padding is the px/py utilities so it is not lost under the fixed Filter height. */
+  .uic-drawer-filter-option {
+    letter-spacing: var(--tracking-drawer-filter-option);
+    white-space: nowrap;
   }
 
   .uic-drawer-bill-body-regular {

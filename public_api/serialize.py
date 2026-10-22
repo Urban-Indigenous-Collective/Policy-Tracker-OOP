@@ -11,6 +11,11 @@ from public_api.states import normalize_public_state
 _SLUG_SAFE = re.compile(r"[^a-z0-9]+")
 
 
+def _eval_answer(fields: dict[str, Any], name: str) -> str:
+    """Main v3 single-select (Yes / No / Somewhat / TBD or TCRP Specific)."""
+    return str(_field(fields, name) or "").strip()
+
+
 def _field(fields: dict[str, Any], *names: str) -> Any:
     for name in names:
         if name in fields and fields[name] not in (None, ""):
@@ -48,6 +53,11 @@ def record_to_bill_dto(record: dict[str, Any], *, include_analysis: bool = False
         "optionalLink": str(_field(fields, "Optional Link") or "").strip(),
         "billTextUrl": str(_field(fields, "Bill Text") or "").strip(),
         "categories": _field(fields, "Categories") or [],
+        "mechanismsForEvaluation": _eval_answer(fields, "Mechanisms for Evaluation?"),
+        "genderInclusiveLanguage": _eval_answer(fields, "Gender Inclusive Language?"),
+        "preventionEfforts": _eval_answer(fields, "Prevention Efforts?"),
+        "survivorRelativeInput": _eval_answer(fields, "Level of Survivor / Relative Input?"),
+        "centeringIndigenousVoices": _eval_answer(fields, "Centering of Indigenous Voices?"),
     }
     if isinstance(dto["categories"], str):
         dto["categories"] = [dto["categories"]]
