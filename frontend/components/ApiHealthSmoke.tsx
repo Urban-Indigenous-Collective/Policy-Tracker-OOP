@@ -13,7 +13,13 @@ type HealthState =
     }
   | { status: "error"; message: string };
 
-export function ApiHealthSmoke() {
+type ApiHealthSmokeProps = {
+  /** Footer-adjacent dev banner: no section top margin. */
+  placement?: "inline" | "banner";
+};
+
+export function ApiHealthSmoke({ placement = "inline" }: ApiHealthSmokeProps) {
+  const marginClass = placement === "banner" ? "mt-0" : "mt-section";
   const [health, setHealth] = useState<HealthState>({ status: "loading" });
 
   useEffect(() => {
@@ -74,7 +80,7 @@ export function ApiHealthSmoke() {
 
   if (health.status === "loading") {
     return (
-      <p className="mt-section text-body-md text-muted" aria-live="polite">
+      <p className={`${marginClass} text-body-md text-muted`} aria-live="polite">
         Checking Flask API via dev proxy…
       </p>
     );
@@ -83,7 +89,7 @@ export function ApiHealthSmoke() {
   if (health.status === "error") {
     return (
       <p
-        className="mt-section rounded-lg border border-status-pending/40 bg-status-pending/10 px-4 py-3 text-body-md text-status-pending"
+        className={`${marginClass} rounded-lg border border-status-pending/40 bg-status-pending/10 px-4 py-3 text-body-md text-status-pending`}
         role="status"
       >
         Flask API not reachable ({health.message}). Start Flask on port 8000 or
@@ -94,7 +100,7 @@ export function ApiHealthSmoke() {
 
   return (
     <p
-      className="mt-section rounded-lg border border-accent/40 bg-accent/10 px-4 py-3 text-body-md text-accent"
+      className={`${marginClass} rounded-lg border border-accent/40 bg-accent/10 px-4 py-3 text-body-md text-accent`}
       role="status"
     >
       Flask OK (<code className="font-mono">/health-check</code>):{" "}

@@ -4,20 +4,20 @@ export type StatusBadgeProps = {
 };
 
 const variantClass: Record<NonNullable<StatusBadgeProps["variant"]>, string> = {
-  passed: "border-accent/60 bg-accent/10 text-accent",
-  failed: "border-muted bg-white/5 text-muted",
-  pending:
-    "border-status-pending/60 bg-status-pending/10 text-status-pending",
-  neutral: "border-white/20 bg-white/5 text-foreground",
+  passed: "border-status-passed text-status-passed",
+  failed: "border-status-failed text-status-failed",
+  pending: "border-status-pending text-status-pending",
+  neutral: "border-muted text-muted",
 };
 
+/** Outline status pill. Colors come from `text-status-*` / `border-status-*`. */
 export function StatusBadge({
   children,
   variant = "neutral",
 }: StatusBadgeProps) {
   return (
     <span
-      className={`inline-flex items-center justify-center rounded px-3 py-1 text-label-xs font-bold tracking-wide ${variantClass[variant]}`}
+      className={`uic-bill-pill rounded-bill-pill border px-bill-pill-x text-bill-pill font-semibold leading-bill-pill uppercase lg:h-bill-pill ${variantClass[variant]}`}
     >
       {children}
     </span>

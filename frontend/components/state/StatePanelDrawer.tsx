@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type TransitionEvent,
-} from "react";
-
+import { BillPanelDrawer } from "@/components/bill/BillPanelDrawer";
 import { StatePanel } from "@/components/state/StatePanel";
 import type { PublicStateBillsResponse, PublicStatesResponse } from "@/lib/api/types";
 import type { MapLayerSelection } from "@/lib/map/bill-layers";
@@ -15,83 +8,32 @@ import {
   drawerCategoryForState,
   type MapPaintFallback,
 } from "@/lib/map/resolve-map-paint-categories";
-
-const SLIDE_IN_MS = 440;
-const SLIDE_OUT_MS = 340;
+import { useDrawerSlide } from "@/lib/state/drawer-motion";
 
 type StatePanelDrawerProps = {
   stateCode: string | null;
+  billSlug?: string | null;
   statesResponse?: PublicStatesResponse | null;
   mapLayerMode: MapLayerSelection;
   mapPaintFallback?: MapPaintFallback;
   onClose: () => void;
+  onCloseBill?: () => void;
   initialBills?: PublicStateBillsResponse | null;
 };
-
-function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(false);
-
-  useLayoutEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduced(mq.matches);
-    const onChange = () => setReduced(mq.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-
-  return reduced;
-}
 
 /** Keeps the panel mounted through the slide-out, then unmounts. */
 export function StatePanelDrawer({
   stateCode,
+  billSlug = null,
   statesResponse = null,
   mapLayerMode,
   mapPaintFallback,
   onClose,
+  onCloseBill,
   initialBills = null,
 }: StatePanelDrawerProps) {
-  const reduceMotion = usePrefersReducedMotion();
-  const [activeCode, setActiveCode] = useState<string | null>(stateCode);
-  const [slideIn, setSlideIn] = useState(false);
-  const wasOpenRef = useRef(false);
-
-  useLayoutEffect(() => {
-    if (stateCode) {
-      setActiveCode(stateCode);
-      if (wasOpenRef.current) {
-        setSlideIn(true);
-      } else if (reduceMotion) {
-        setSlideIn(true);
-      } else {
-        setSlideIn(false);
-        const id = requestAnimationFrame(() => setSlideIn(true));
-        wasOpenRef.current = true;
-        return () => cancelAnimationFrame(id);
-      }
-      wasOpenRef.current = true;
-      return;
-    }
-
-    if (reduceMotion) {
-      setSlideIn(false);
-      setActiveCode(null);
-      wasOpenRef.current = false;
-      return;
-    }
-
-    setSlideIn(false);
-  }, [reduceMotion, stateCode]);
-
-  const onSlideTransitionEnd = useCallback(
-    (event: TransitionEvent<HTMLElement>) => {
-      if (reduceMotion || stateCode) return;
-      if (event.propertyName !== "transform") return;
-      setActiveCode(null);
-      wasOpenRef.current = false;
-    },
-    [reduceMotion, stateCode],
-  );
+  const { activeKey: activeCode, slideIn, onSlideTransitionEnd } =
+    useDrawerSlide(stateCode);
 
   if (!activeCode) return null;
 
@@ -103,16 +45,23 @@ export function StatePanelDrawer({
   );
 
   return (
-    <StatePanel
-      stateCode={activeCode}
-      stateCategory={stateCategory}
-      mapLayerMode={mapLayerMode}
-      onClose={onClose}
-      initialBills={activeCode === stateCode ? initialBills : null}
-      slideIn={slideIn}
-      slideInDurationMs={SLIDE_IN_MS}
-      slideOutDurationMs={SLIDE_OUT_MS}
-      onSlideTransitionEnd={onSlideTransitionEnd}
-    />
+    <>
+      <BillPanelDrawer
+        stateCode={activeCode}
+        billSlug={stateCode ? billSlug : null}
+        onClose={onCloseBill ?? onClose}
+      />
+      <StatePanel
+        stateCode={activeCode}
+        stateCategory={stateCategory}
+        mapLayerMode={mapLayerMode}
+        onClose={onClose}
+        onCloseBill={onCloseBill}
+        billPanelOpen={Boolean(stateCode && billSlug)}
+        initialBills={activeCode === stateCode ? initialBills : null}
+        slideIn={slideIn}
+        onSlideTransitionEnd={onSlideTransitionEnd}
+      />
+    </>
   );
 }

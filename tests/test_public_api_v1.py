@@ -57,6 +57,14 @@ def test_serialize_bill_dto():
     assert dto["mechanismsForEvaluation"] == "Yes"
     assert dto["centeringIndigenousVoices"] == "Somewhat"
     assert dto["preventionEfforts"] == ""
+    assert "uicPros" not in dto
+    assert "uicCons" not in dto
+    assert "reviewStatus" not in dto
+
+    full = record_to_bill_dto(rec, include_analysis=True)
+    assert full["uicPros"] == ""
+    assert full["uicCons"] == ""
+    assert full["reviewStatus"] == REVIEW_STATUS_LIVE
 
 
 def test_summary_stats():

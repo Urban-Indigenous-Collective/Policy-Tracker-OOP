@@ -9,13 +9,23 @@ import {
   stateCodeForUrl,
 } from "@/lib/api/state-code";
 
-const STATE_PATH = /^\/states\/([^/]+)\/?$/;
+const STATE_BILL_PATH = /^\/states\/([^/]+)(?:\/bills\/([^/]+))?\/?$/;
 
-function stateFromPath(pathname: string | null): string | null {
-  const match = pathname?.match(STATE_PATH);
-  if (!match) return null;
+export function selectionFromPathname(pathname: string | null): {
+  stateCode: string | null;
+  billSlug: string | null;
+} {
+  const match = pathname?.match(STATE_BILL_PATH);
+  if (!match) return { stateCode: null, billSlug: null };
   const code = normalizeStateRouteParam(match[1]);
-  return isPublicStatePanelCode(code) ? code : null;
+  if (!isPublicStatePanelCode(code)) return { stateCode: null, billSlug: null };
+  const rawSlug = match[2];
+  if (!rawSlug) return { stateCode: code, billSlug: null };
+  try {
+    return { stateCode: code, billSlug: decodeURIComponent(rawSlug) };
+  } catch {
+    return { stateCode: code, billSlug: rawSlug };
+  }
 }
 
 function stateFromRouteParams(
@@ -32,10 +42,9 @@ export function useMapSelection() {
   const pathname = usePathname();
   const params = useParams();
   const router = useRouter();
-  const selectedState = useMemo(
-    () => stateFromPath(pathname) ?? stateFromRouteParams(params),
-    [pathname, params],
-  );
+  const fromPath = useMemo(() => selectionFromPathname(pathname), [pathname]);
+  const selectedState = fromPath.stateCode ?? stateFromRouteParams(params);
+  const selectedBillSlug = fromPath.stateCode ? fromPath.billSlug : null;
 
   const selectState = useCallback(
     (code: string | null) => {
@@ -63,5 +72,17 @@ export function useMapSelection() {
     selectState(null);
   }, [selectState]);
 
-  return { selectedState, onMapStateClick, closeState, selectState };
+  const closeBill = useCallback(() => {
+    if (!selectedState) return;
+    router.replace(`/states/${stateCodeForUrl(selectedState)}`, { scroll: false });
+  }, [router, selectedState]);
+
+  return {
+    selectedState,
+    selectedBillSlug,
+    onMapStateClick,
+    closeState,
+    closeBill,
+    selectState,
+  };
 }

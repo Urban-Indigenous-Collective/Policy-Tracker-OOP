@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { BillAnalysisView } from "@/components/bill/BillAnalysisView";
+import {
+  BillDetailPrefetchSetter,
+  StatePrefetchSetter,
+} from "@/components/map/state-prefetch-context";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { findBillBySlug } from "@/lib/api/bill-utils";
 import { fetchBillById, fetchStateBills } from "@/lib/api/client";
@@ -68,23 +70,8 @@ export default async function BillAnalysisPage({ params }: PageProps) {
   let list;
   try {
     list = await fetchStateBills(code, { base: "server" });
-  } catch (err) {
-    return (
-      <div className="pb-section-sm">
-        <p className="text-sm text-red-400" role="alert">
-          Could not load policy data.{" "}
-          {err instanceof Error ? err.message : "Try again later."}
-        </p>
-        <p className="mt-4">
-          <Link
-            href={`/states/${code}`}
-            className="font-mono text-label-xs text-accent hover:underline"
-          >
-            Back to state
-          </Link>
-        </p>
-      </div>
-    );
+  } catch {
+    return <StatePrefetchSetter stateCode={code} data={null} />;
   }
 
   const match = findBillBySlug(list.bills, slug);
@@ -99,22 +86,7 @@ export default async function BillAnalysisPage({ params }: PageProps) {
     if (err instanceof Error && err.message.startsWith("HTTP 404")) {
       notFound();
     }
-    return (
-      <div className="pb-section-sm">
-        <p className="text-sm text-red-400" role="alert">
-          Could not load bill analysis.{" "}
-          {err instanceof Error ? err.message : "Try again later."}
-        </p>
-        <p className="mt-4">
-          <Link
-            href={`/states/${code}`}
-            className="font-mono text-label-xs text-accent hover:underline"
-          >
-            Back to state
-          </Link>
-        </p>
-      </div>
-    );
+    return <StatePrefetchSetter stateCode={code} data={list} />;
   }
 
   if (normalizeStateRouteParam(detail.bill.state) !== code) {
@@ -124,7 +96,8 @@ export default async function BillAnalysisPage({ params }: PageProps) {
   return (
     <>
       <JsonLd data={billAnalysisJsonLd(detail.bill, code)} />
-      <BillAnalysisView bill={detail.bill} stateCode={code} />
+      <StatePrefetchSetter stateCode={code} data={list} />
+      <BillDetailPrefetchSetter stateCode={code} slug={slug} detail={detail} />
     </>
   );
 }

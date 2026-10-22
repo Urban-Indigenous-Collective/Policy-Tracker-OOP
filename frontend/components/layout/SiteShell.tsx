@@ -3,6 +3,7 @@ import { SiteNavigation } from "@/components/layout/SiteNavigation";
 import { ShellWidth } from "@/components/layout/ShellWidth";
 import { TopBorder } from "@/components/layout/TopBorder";
 import { DevHealthBanner } from "@/components/dev/DevHealthBanner";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 
 export function SiteShell({ children }: { children: React.ReactNode }) {
   return (
@@ -17,6 +18,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
         </ShellWidth>
       </main>
       <DevHealthBanner />
+      <SiteFooter />
     </>
   );
 }

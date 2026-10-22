@@ -56,9 +56,13 @@ export function StateDrawerFilterMenu({
   useEffect(() => {
     if (!open) return;
     const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
       const menu = document.getElementById(id);
-      const root = menu?.parentElement;
-      if (root && !root.contains(event.target as Node)) onClose();
+      if (!menu) return;
+      if (menu.contains(target)) return;
+      const trigger = document.querySelector(`[aria-controls="${CSS.escape(id)}"]`);
+      if (trigger?.contains(target)) return;
+      onClose();
     };
     window.addEventListener("pointerdown", onPointerDown);
     return () => window.removeEventListener("pointerdown", onPointerDown);

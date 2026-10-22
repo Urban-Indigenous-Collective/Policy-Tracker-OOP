@@ -20,6 +20,10 @@
   --color-accent-bright: #5ecdb9;
   --color-muted: #a3a3a3;
   --color-surface-border: rgb(255 255 255 / 0.1);
+  /* Figma footer `176:5663` — MacBook Pro 14" - 28 */
+  --color-footer-surface: #101010;
+  --color-footer-divider: rgb(255 255 255 / 0.5);
+  --color-footer-pill-border: rgb(255 255 255 / 0.5);
   --color-surface-hover: rgb(255 255 255 / 0.1);
   --color-foreground-muted: rgb(255 255 255 / 0.9);
 
@@ -41,6 +45,7 @@
 
   /* ——— Typography ——— */
   --font-sans: var(--font-montserrat), system-ui, sans-serif;
+  --font-roboto: var(--font-roboto-family), system-ui, sans-serif;
   --font-mono: var(--font-roboto-mono), ui-monospace, monospace;
 
   --text-label-xs: 0.75rem;
@@ -59,6 +64,7 @@
 
   --font-weight-light: 300;
   --font-weight-regular: 400;
+  --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
 
@@ -165,8 +171,17 @@
   --tracking-drawer-policies: 0.384375rem;
   --text-drawer-bill-id: 1.125rem;
   --tracking-drawer-bill-id: 0.46125rem;
+  /* Figma policy list `202:6586` — VIEW N MORE POLICIES (7.38px; not bill-id padding hack) */
+  --tracking-policy-list-expand: 7.38px;
   --text-drawer-bill-body: 1.125rem;
   --leading-drawer-bill-body: 1.75rem;
+  /* Description under the session header. Smaller than the 18px bill id so the step is not so sharp. */
+  --text-drawer-bill-desc: 1rem;
+  --leading-drawer-bill-desc: 1.75rem;
+  --text-drawer-bill-session: 1.05rem;
+  --leading-drawer-bill-session: 1.25rem;
+  --tracking-drawer-bill-session: 0.1em;
+  --spacing-drawer-bill-session-gap: 0.75rem;
   --text-drawer-status-pill: 0.8125rem;
   --text-drawer-filter: 0.75rem;
   --tracking-drawer-filter: 0.3075rem;
@@ -176,6 +191,100 @@
   --radius-drawer-search: 3.75rem;
   --color-drawer-search: rgb(255 255 255 / 0.11);
   --leading-drawer-search: 2.375rem;
+
+  /* ——— Bill detail (Figma 161:4181, MacBook Pro 14" - 20) ——— */
+  /* Rectangle 7 is 1004px, flush against the drawer on a 1512 frame. */
+  --width-bill-panel: 62.75rem;
+  /* Drawer dismiss sits below the hazard stripe; match that offset. */
+  --spacing-bill-panel-pt: calc(
+    var(--height-drawer-top-border) + var(--spacing-drawer-header-pt)
+  );
+  /* Content column = 1004px panel minus the 111px frame inset. */
+  --max-width-bill-panel: 55.8125rem;
+  --spacing-bill-inset: 6.9375rem;
+  --spacing-bill-dismiss-end: 3.5625rem;
+  --spacing-bill-number-mt: 4.125rem;
+  --text-bill-number: 3.4375rem;
+  --leading-bill-number: 4.5625rem;
+  --tracking-bill-number: 0.3em;
+  --spacing-bill-title-mt: 0.3125rem;
+  --text-bill-title: 1.125rem;
+  --leading-bill-title: 1.9375rem;
+  --max-width-bill-title: 25.5rem;
+  --spacing-bill-pills-mt: 1.25rem;
+  --spacing-bill-pill-gap: 0.875rem;
+  --spacing-bill-pill-x: 1.5625rem;
+  --height-bill-pill: 1.5625rem;
+  --text-bill-pill: 0.8125rem;
+  --leading-bill-pill: 1.125rem;
+  --radius-bill-pill: 30px;
+  --size-bill-search: 1.125rem;
+  --spacing-bill-summary-mt: 4.4375rem;
+  --spacing-bill-summary-col: 6.875rem;
+  --text-bill-summary-label: 1.75rem;
+  --leading-bill-summary-label: 1.9375rem;
+  --text-bill-summary: 1.125rem;
+  --leading-bill-summary: 2.375rem;
+  --max-width-bill-summary: 29.5625rem;
+
+  /* ——— Policy list (Figma MacBook Pro 14" - 35) ——— */
+  --spacing-policy-list-top: 3.5rem;
+  /* Figma `202:6522`: FILTER pill bottom (223) → Alaska title top (248) = 25px; search row height `202:6591` = 38px */
+  --height-policy-list-toolbar-row: 2.375rem;
+  --tracking-policy-list-filter: 4.92px;
+  --spacing-policy-list-filter-x: 0.875rem;
+  --spacing-policy-list-filter-pl: calc(
+    var(--spacing-policy-list-filter-x) + var(--tracking-policy-list-filter) * 0.5
+  );
+  --spacing-policy-list-toolbar-to-content: 3rem;
+  /* @deprecated alias — use --spacing-policy-list-toolbar-to-content */
+  --spacing-policy-list-toolbar: var(--spacing-policy-list-toolbar-to-content);
+  /* 1512 frame: title inset 170px → bill column 881px (394 + 317). */
+  --spacing-policy-list-col-gap: 19.8125rem;
+  --max-width-policy-list: 78.75rem;
+  /* Figma `202:6522`: expand chevron bottom (842+75) → next state title (1116) = 199px */
+  --spacing-policy-list-section-gap: 12.4375rem;
+  /* @deprecated alias — use --spacing-policy-list-section-gap */
+  --spacing-policy-list-section: var(--spacing-policy-list-section-gap);
+  --spacing-policy-list-state-stats: 3.625rem;
+  /* Vertical rhythm between stats row and first bill (stacked layout). */
+  --spacing-policy-list-header-to-rows: 2.75rem;
+  --spacing-policy-list-expand-mt: 6.0625rem; /* +24px above view-more row (was 4.5625rem / ~73px) */
+  --spacing-policy-list-expand-label-gap: 3.5rem;
+  --spacing-policy-list-expand-chevron-pad: 0.625rem;
+  --size-policy-list-expand: 4.6875rem;
+
+  /* ——— Site footer (Figma 176:5663–176:5676, MacBook Pro 14" - 28) ——— */
+  --spacing-footer-pt: 6.3125rem;
+  --spacing-footer-pb: 3.5rem;
+  --spacing-footer-mission-stack: 2.5rem;
+  --spacing-footer-cta-stack: 1.875rem;
+  --spacing-footer-top: 4rem;
+  /* Figma `176:5664` y=1569 vs mission `176:5665` y=1583 */
+  --spacing-footer-logo-offset: 0.875rem;
+  --footer-logo-crop-width: 192.08%;
+  --footer-logo-crop-height: 155.82%;
+  --footer-logo-crop-left: -46.04%;
+  --footer-logo-crop-top: -26.91%;
+  --spacing-footer-divide-y: 2.75rem;
+  --spacing-footer-bottom-stack: 1.5rem;
+  --spacing-footer-pill-gap: 2.125rem;
+  --spacing-footer-social-gap: 1.625rem;
+  --max-width-footer-mission: 38.9375rem;
+  --text-footer-mission: 1.5rem;
+  --leading-footer-mission: 2.875rem;
+  --text-footer-cta: 1.125rem;
+  --leading-footer-learn: 1.3125rem;
+  --width-footer-learn: 12.375rem;
+  --height-footer-learn: 3.625rem;
+  --radius-footer-learn: 3.5rem;
+  --width-footer-link-pill: 11.4375rem;
+  --height-footer-link-pill: 2.375rem;
+  --radius-footer-link-pill: 1.9375rem;
+  --width-footer-logo-w: 12.75rem;
+  --height-footer-logo-h: 15.75rem;
+  --size-footer-social: 1.125rem;
+  --size-footer-social-touch: 2.25rem;
 }
 
 @layer components {
@@ -196,6 +305,74 @@
   }
 
   .uic-nav-link:hover {
+    color: var(--color-accent);
+  }
+
+  /* Figma `176:5665` — Roboto Mono SemiBold 24 / 46 */
+  .uic-footer-mission {
+    font-family: var(--font-mono);
+    font-size: var(--text-footer-mission);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--leading-footer-mission);
+    color: var(--color-foreground);
+  }
+
+  /* Figma `176:5664` — square asset cropped inside 204×252 frame */
+  .uic-footer-logo-img {
+    position: absolute;
+    max-width: none !important;
+    aspect-ratio: auto;
+    width: calc(var(--width-footer-logo-w) * 1.9208) !important;
+    height: calc(var(--height-footer-logo-h) * 1.5582) !important;
+    left: var(--footer-logo-crop-left);
+    top: var(--footer-logo-crop-top);
+    pointer-events: none;
+  }
+
+  /* Figma `176:5666`–`176:5667` — accent pill, Montserrat SemiBold 18 */
+  .uic-footer-learn {
+    display: inline-flex;
+    width: fit-content;
+    min-width: var(--width-footer-learn);
+    height: var(--height-footer-learn);
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-footer-learn);
+    background-color: var(--color-accent);
+    font-family: var(--font-sans);
+    font-size: var(--text-footer-cta);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--leading-footer-learn);
+    color: var(--color-foreground);
+    text-decoration: none;
+  }
+
+  .uic-footer-learn:hover {
+    opacity: var(--opacity-donate-hover);
+  }
+
+  /* Figma `176:5669`–`176:5672` — outlined pills, Montserrat SemiBold 18 */
+  .uic-footer-nav-pill {
+    display: inline-flex;
+    box-sizing: border-box;
+    width: var(--width-footer-link-pill);
+    height: var(--height-footer-link-pill);
+    align-items: center;
+    justify-content: center;
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--color-footer-pill-border);
+    border-radius: var(--radius-footer-link-pill);
+    font-family: var(--font-sans);
+    font-size: var(--text-footer-cta);
+    font-weight: var(--font-weight-semibold);
+    line-height: normal;
+    color: var(--color-foreground);
+    text-decoration: none;
+  }
+
+  .uic-footer-nav-pill:hover {
+    border-color: var(--color-accent);
     color: var(--color-accent);
   }
 
@@ -254,6 +431,18 @@
     padding-inline-end: var(--tracking-drawer-bill-id);
   }
 
+  /* Policy list expand — Montserrat SemiBold 18 / 24, 7.38px tracking (use on span; button preflight resets font/tracking) */
+  .uic-policy-list-expand-label {
+    font-family: var(--font-sans);
+    font-size: var(--text-drawer-bill-id);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--tracking-policy-list-expand);
+    line-height: 1.5rem;
+    color: var(--color-foreground);
+    text-transform: uppercase;
+    text-align: center;
+  }
+
   /* Long ids (e.g. executive orders) that exceed the id column width. */
   .uic-drawer-bill-id-constrained {
     min-width: 0;
@@ -266,6 +455,24 @@
     margin-left: calc(-1 * var(--spacing-drawer-status-pill-extend-left)) !important;
     width: calc(100% + 2 * var(--spacing-drawer-status-pill-extend-left)) !important;
     max-width: calc(100% + 2 * var(--spacing-drawer-status-pill-extend-left)) !important;
+  }
+
+  /* Policy list FILTER chip (Figma MacBook Pro 14" - 35) — wider inset than drawer */
+  .uic-policy-list-toolbar-to-content {
+    margin-top: var(--spacing-policy-list-toolbar-to-content) !important;
+  }
+
+  .uic-policy-list-filter-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1;
+    letter-spacing: var(--tracking-policy-list-filter);
+    padding-inline: var(--spacing-policy-list-filter-x);
+    padding-left: calc(
+      var(--spacing-policy-list-filter-x) + var(--tracking-policy-list-filter) * 0.5
+    );
   }
 
   /* Figma filter chip — optical center with wide letter-spacing */
@@ -288,11 +495,21 @@
     white-space: nowrap;
   }
 
+  .uic-drawer-bill-session {
+    /* Base preflight `margin: 0` is ordered after this components layer, so the token needs importance to apply. */
+    margin-bottom: var(--spacing-drawer-bill-session-gap) !important;
+    font-family: var(--font-roboto);
+    font-size: var(--text-drawer-bill-session);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--tracking-drawer-bill-session);
+    line-height: var(--leading-drawer-bill-session);
+  }
+
   .uic-drawer-bill-body-regular {
     font-family: var(--font-sans);
-    font-size: var(--text-drawer-bill-body);
+    font-size: var(--text-drawer-bill-desc);
     font-weight: var(--font-weight-regular);
-    line-height: var(--leading-drawer-bill-body);
+    line-height: var(--leading-drawer-bill-desc);
     color: var(--color-foreground);
   }
 
@@ -314,6 +531,112 @@
     display: none;
   }
 
+  /* Figma `161:4295` — Roboto Mono SemiBold 55 / 30% tracking */
+  .uic-bill-number {
+    max-width: 100%;
+    font-family: var(--font-mono);
+    font-size: var(--text-bill-number);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--tracking-bill-number);
+    line-height: var(--leading-bill-number);
+    color: var(--color-accent);
+    overflow-wrap: anywhere;
+  }
+
+  /* Figma `161:4296` — Montserrat Medium 18 / 31 */
+  .uic-bill-title {
+    max-width: min(100%, var(--max-width-bill-title));
+    font-family: var(--font-sans);
+    font-size: var(--text-bill-title);
+    font-weight: var(--font-weight-medium);
+    line-height: var(--leading-bill-title);
+    color: var(--color-foreground);
+  }
+
+  /*
+   * Shared two-column grid for Summary / Pros / Cons and metadata rows.
+   * One grid so `max-content` label column is shared — body copy aligns.
+   */
+  .uic-bill-detail-grid {
+    display: grid;
+    row-gap: var(--spacing-bill-summary-mt);
+    justify-content: start;
+  }
+
+  .uic-bill-detail-grid--meta {
+    row-gap: var(--spacing-section-sm);
+  }
+
+  .uic-bill-summary-label {
+    font-family: var(--font-sans);
+    font-size: var(--text-bill-summary-label);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--leading-bill-summary-label);
+    color: var(--color-foreground);
+  }
+
+  .uic-bill-summary-body {
+    max-width: min(100%, var(--max-width-bill-summary));
+    font-family: var(--font-sans);
+    font-size: var(--text-bill-summary);
+    font-weight: var(--font-weight-light);
+    line-height: var(--leading-bill-summary);
+    color: var(--color-foreground);
+    white-space: pre-wrap;
+  }
+
+  .uic-bill-meta-label {
+    color: var(--color-foreground);
+  }
+
+  .uic-bill-meta-body {
+    max-width: min(100%, var(--max-width-bill-summary));
+    font-family: var(--font-sans);
+    font-size: var(--text-bill-title);
+    font-weight: var(--font-weight-medium);
+    line-height: var(--leading-bill-title);
+    color: var(--color-foreground);
+  }
+
+  /* Figma `161:4300` — 25px outline pill, 13px semibold, 30px radius */
+  .uic-bill-pill {
+    display: inline-flex;
+    box-sizing: border-box;
+    max-width: 100%;
+    min-height: var(--height-bill-pill);
+    align-items: center;
+    justify-content: center;
+    padding: 0.1875rem var(--spacing-bill-pill-x);
+    border: 1px solid var(--color-accent);
+    border-radius: var(--radius-bill-pill);
+    background: transparent;
+    font-family: var(--font-sans);
+    font-size: var(--text-bill-pill);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--leading-bill-pill);
+    color: var(--color-accent);
+    text-align: center;
+  }
+
+  @media (min-width: 64rem) {
+    .uic-bill-detail-grid {
+      grid-template-columns: max-content minmax(0, var(--max-width-bill-summary));
+      column-gap: var(--spacing-bill-summary-col);
+      align-items: start;
+    }
+
+    .uic-bill-summary-label,
+    .uic-bill-meta-label {
+      padding-top: 0.25rem;
+    }
+
+    .uic-bill-pill {
+      height: var(--height-bill-pill);
+      padding-block: 0;
+      white-space: nowrap;
+    }
+  }
+
   /* USA map — darken fill on hover (`filter` does not apply to SVG `<g>` in Chromium). */
   .uic-map-state > use,
   path.uic-map-state {
@@ -324,5 +647,26 @@
   .uic-map-state:focus-visible > use,
   path.uic-map-state:focus-visible {
     filter: brightness(var(--map-hover-brightness));
+  }
+
+  /*
+   * Bill detail slides out of the state drawer (Figma 161:4294 beside 161:4267).
+   * Below lg the drawer still owns the right edge, so the bill covers the viewport.
+   * At lg+ it sits immediately left of the drawer and emerges from underneath it.
+   */
+  .uic-bill-panel {
+    position: fixed;
+    inset: 0 0 0 auto;
+    z-index: 120;
+    width: 100%;
+  }
+
+  @media (min-width: 64rem) {
+    .uic-bill-panel {
+      left: 0;
+      right: var(--width-state-drawer);
+      z-index: 100;
+      width: auto;
+    }
   }
 }

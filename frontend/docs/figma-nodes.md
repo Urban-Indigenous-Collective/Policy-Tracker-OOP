@@ -13,3 +13,4 @@ File key: `9wjMrCGEzPefYbCQcBCQim`
 | Navigation | `33:403` |
 | Filter | `38:412` |
 | Top Border | `157:633` |
+| Site footer | `176:5663` (MacBook Pro 14" - 28, frame `176:5600`) |

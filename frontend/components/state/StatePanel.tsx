@@ -22,32 +22,29 @@ import type { LegendCategory } from "@/lib/map/legend";
 import { stateCategoryTitleClass } from "@/lib/map/state-category-title-class";
 import { NATIONAL_STATE_CODE } from "@/lib/api/state-code";
 import { STATE_NAMES } from "@/lib/map/state-codes";
+import { drawerSlideStyle } from "@/lib/state/drawer-motion";
 
 type StatePanelProps = {
   stateCode: string;
   stateCategory?: LegendCategory;
   mapLayerMode: MapLayerSelection;
   onClose: () => void;
+  onCloseBill?: () => void;
+  billPanelOpen?: boolean;
   initialBills?: PublicStateBillsResponse | null;
   slideIn?: boolean;
-  slideInDurationMs?: number;
-  slideOutDurationMs?: number;
   onSlideTransitionEnd?: (event: React.TransitionEvent<HTMLElement>) => void;
 };
-
-/** In: accelerates, slight overshoot at rest. Out: ease-in — lingers then exits fast. */
-const SLIDE_IN_EASE = "cubic-bezier(0.38, 0, 0.52, 1.38)";
-const SLIDE_OUT_EASE = "cubic-bezier(0.72, 0, 0.98, 0.35)";
 
 export function StatePanel({
   stateCode,
   stateCategory,
   onClose,
+  onCloseBill,
+  billPanelOpen = false,
   mapLayerMode,
   initialBills = null,
   slideIn = true,
-  slideInDurationMs = 440,
-  slideOutDurationMs = 340,
   onSlideTransitionEnd,
 }: StatePanelProps) {
   const titleId = useId();
@@ -60,23 +57,39 @@ export function StatePanel({
   const { data, isLoading, isError, error } = useStateBills(stateCode, {
     initialData: initialBills,
   });
+  const filtersOpenRef = useRef(filtersOpen);
+  const billPanelOpenRef = useRef(billPanelOpen);
+  const dismissBillLatch = useRef(false);
+  const onCloseRef = useRef(onClose);
+  const onCloseBillRef = useRef(onCloseBill);
+  filtersOpenRef.current = filtersOpen;
+  billPanelOpenRef.current = billPanelOpen;
+  onCloseRef.current = onClose;
+  onCloseBillRef.current = onCloseBill;
+  if (!billPanelOpen) dismissBillLatch.current = false;
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
-      if (filtersOpen) {
+      if (filtersOpenRef.current) {
         setFiltersOpen(false);
         return;
       }
-      onClose();
+      if (billPanelOpenRef.current && !dismissBillLatch.current) {
+        dismissBillLatch.current = true;
+        onCloseBillRef.current?.();
+        return;
+      }
+      onCloseRef.current();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onClose, filtersOpen]);
+  }, []);
 
   useEffect(() => {
-    panelRef.current?.focus();
-  }, [stateCode]);
+    if (billPanelOpen) return;
+    panelRef.current?.focus({ preventScroll: true });
+  }, [billPanelOpen, stateCode]);
 
   useEffect(() => {
     setSearchQuery("");
@@ -114,12 +127,7 @@ export function StatePanel({
       aria-modal="false"
       aria-labelledby={titleId}
       onTransitionEnd={onSlideTransitionEnd}
-      style={{
-        transitionDuration: slideIn
-          ? `${slideInDurationMs}ms`
-          : `${slideOutDurationMs}ms`,
-        transitionTimingFunction: slideIn ? SLIDE_IN_EASE : SLIDE_OUT_EASE,
-      }}
+      style={drawerSlideStyle(slideIn)}
       className={`fixed inset-y-0 right-0 z-[110] flex w-full max-w-[100vw] flex-col overflow-x-visible border-l border-surface-border bg-background outline-none transition-transform motion-reduce:transition-none sm:max-w-none sm:w-state-drawer ${
         slideIn ? "translate-x-0" : "translate-x-full"
       }`}

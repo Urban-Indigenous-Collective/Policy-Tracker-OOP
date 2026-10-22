@@ -9,7 +9,7 @@ import { DonateLink } from "@/components/ui/DonateLink";
 const NAV_LINKS = [
   { href: "#", label: "TRENDS" },
   { href: "/", label: "POLICY MAP" },
-  { href: "#", label: "POLICY LIST" },
+  { href: "/policy-list", label: "POLICY LIST" },
 ] as const;
 
 function MenuIcon({ open }: { open: boolean }) {

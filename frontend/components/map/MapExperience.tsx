@@ -37,8 +37,14 @@ function MapExperienceInner({
   initialStates = null,
   children = null,
 }: MapExperienceProps) {
-  const { selectedState, onMapStateClick, closeState, selectState } =
-    useMapSelection();
+  const {
+    selectedState,
+    selectedBillSlug,
+    onMapStateClick,
+    closeState,
+    closeBill,
+    selectState,
+  } = useMapSelection();
   const mapHighlightedState =
     selectedState && isSvgMapStateCode(selectedState) ? selectedState : null;
   const { prefetch } = useStatePrefetch();
@@ -166,10 +172,12 @@ function MapExperienceInner({
 
       <StatePanelDrawer
         stateCode={selectedState}
+        billSlug={selectedBillSlug}
         statesResponse={resolvedStates}
         mapLayerMode={mapLayerMode}
         mapPaintFallback={mapPaintFallback}
         onClose={closeState}
+        onCloseBill={closeBill}
         initialBills={initialBills}
       />
     </div>

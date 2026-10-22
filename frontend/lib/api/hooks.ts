@@ -9,6 +9,7 @@ import {
 } from "@/lib/api/client";
 import { PUBLIC_QUERY_STALE_MS, publicApiKeys } from "@/lib/api/query-keys";
 import type {
+  PublicBillDetailResponse,
   PublicStateBillsResponse,
   PublicStatesResponse,
 } from "@/lib/api/types";
@@ -44,12 +45,17 @@ export function useStateBills(
   });
 }
 
-export function useBillDetail(recordId: string | null) {
+export function useBillDetail(
+  recordId: string | null,
+  options?: QueryInitialOptions<PublicBillDetailResponse>,
+) {
   const id = recordId?.trim() ?? "";
+  const initialData = options?.initialData ?? undefined;
   return useQuery({
     queryKey: publicApiKeys.bill(id),
     queryFn: () => fetchBillById(id),
     enabled: Boolean(id),
+    initialData: initialData ?? undefined,
     staleTime: PUBLIC_QUERY_STALE_MS,
     refetchOnWindowFocus: false,
   });

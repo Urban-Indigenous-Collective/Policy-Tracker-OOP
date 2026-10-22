@@ -19,6 +19,7 @@ export function filterDrawerBills(
       bill.billNumber,
       bill.name,
       bill.summary,
+      bill.session,
       bill.status,
       bill.progression,
     ]

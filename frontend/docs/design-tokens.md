@@ -28,12 +28,44 @@ Single source of truth for the reusable design system:
 |--------|--------|
 | `--width-state-drawer` | 523px (`w-state-drawer max-w-[100vw]`) |
 | `--spacing-drawer-x` | 63px horizontal inset |
-| Typography | `uic-drawer-state-title` (34px / bold mono), `uic-drawer-policies-count`, `uic-drawer-bill-id`, `uic-drawer-bill-body-regular` (18px / 28px leading) |
+| Typography | `uic-drawer-state-title` (34px / bold mono), `uic-drawer-policies-count`, `uic-drawer-bill-id`, `uic-drawer-bill-session` (14px, 0.1em tracking) above the description, `uic-drawer-bill-body-regular` (16px / 28px leading) |
 | Bill row | grid 158px + 40px gap + title col; row width `--width-drawer-content` (397px) |
 | Chrome | `/ui/dismiss.svg`; status pill `--width/height-drawer-status-pill`; filter menu stays inside the content gutters |
 | Site top bar | `--height-top-border` (3px teal accent) — `TopBorder` |
 | Drawer top stripe | `--height-drawer-top-border` (~22px), `uic-drawer-top-border` / `DrawerTopBorder` |
 | Drawer search | `--color-drawer-search` → `bg-drawer-search`, `--spacing-drawer-search-mt` (54px), `uic-drawer-search-input` |
+
+## Policy list (Figma MacBook Pro 14" - 35)
+
+| Token | Value |
+|--------|--------|
+| `--spacing-policy-list-top` | 56px below nav band |
+| `--tracking-policy-list-filter` | 4.92px — FILTER pill (`202:6590`) |
+| `--spacing-policy-list-filter-x` | 14px horizontal inset (`202:6589`) |
+| `--spacing-policy-list-filter-pl` | 14px + half tracking — optical center |
+| `--height-policy-list-toolbar-row` | 38px filter/search control row (`202:6591`) |
+| `--spacing-policy-list-toolbar-to-content` | 48px below toolbar row before first state title (`202:6522`: filter row y=200 → title y=248) |
+| `--max-width-policy-list` | 1260px content column (394 + 317 + 549) |
+| `--spacing-policy-list-col-gap` | 317px between state title block and bill rows |
+| `--spacing-policy-list-section-gap` | 199px below each state block (last bill or view-more → next title; Figma `202:6522`) |
+| `--spacing-policy-list-section` | deprecated alias of `--spacing-policy-list-section-gap` |
+| `--spacing-policy-list-header-to-rows` | 44px below stats before bill list (mobile stack) |
+| `--spacing-policy-list-expand-mt` / `-label-gap` | View-more label and chevron spacing (`expand-mt` 97px / 6.0625rem above centered expand row) |
+| `--tracking-policy-list-expand` | 7.38px — `uic-policy-list-expand-label` (Figma `202:6586`; centered on full section via `lg:col-span-2`) |
+| Bill rows | Full width of the right grid column (~549px at 1260px content); id/pill column reuses drawer tokens (`--width-drawer-bill-col-id`, `--spacing-drawer-bill-col-gap`); title uses remaining `1fr` — not capped at `--width-drawer-content` |
+
+## Bill detail (Figma `161:4181`, MacBook Pro 14" - 20)
+
+| Token / class | Value |
+|--------|--------|
+| Panel frame | `--width-bill-panel` (1004px on the 1512 frame). At large breakpoints it fills from the left edge to the state drawer and slides with the drawer motion. Dismiss offset is `--spacing-bill-panel-pt`. |
+| Content column | `--max-width-bill-panel` (893px) with `--spacing-bill-inset` (111px) |
+| Bill number | `uic-bill-number` — Roboto Mono SemiBold 55px, 30% tracking, accent |
+| Title | `uic-bill-title` — Montserrat Medium 18 / 31, max 408px |
+| Pills | `uic-bill-pill` — 25px outline, 13px semibold, 30px radius, 14px gap. Status uses `StatusBadge` + `text-status-*`. Qualitative pills use accent and the stored answer. |
+| Summary / Pros / Cons | `uic-bill-detail-grid` — shared two-column grid (`uic-bill-summary-label` + `uic-bill-summary-body`); 110px column gap; body max 473px |
+| Metadata rows | Same grid with `uic-bill-detail-grid--meta`; `uic-bill-meta-label` / `uic-bill-meta-body` (18 / 31) |
+| Search | `--size-bill-search` (18px) accent icon linking to the official overview |
 
 ## Phase gate
 
