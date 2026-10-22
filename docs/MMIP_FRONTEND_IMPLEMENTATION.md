@@ -115,12 +115,14 @@ Flask ← Airtable Main v3, existing jobs unchanged
 
 ### Phase 4 — SEO hardening
 
-- [ ] `sitemap.xml`, `robots.txt`
-- [ ] JSON-LD where appropriate
-- [ ] Canonical URLs; hub copy on `/` and MMIP-oriented titles
-- [ ] Performance pass on LCP for public pages
+- [x] `sitemap.xml`, `robots.txt` (`app/sitemap.ts`, `app/robots.ts`, `lib/seo/sitemap-urls.ts`)
+- [x] JSON-LD where appropriate (home `WebSite` + `Organization`; bill `Article` via `JsonLd`)
+- [x] Canonical URLs; hub copy on `/` and MMIP-oriented titles (`metadataBase`, map + state + bill metadata)
+- [ ] Performance pass on LCP for public pages (fonts `display: swap`; further image/map LCP TBD)
 
 **Exit criteria:** All indexable Main v3 Live rows appear in sitemap; bill pages have unique titles/descriptions.
+
+**In progress 2026-10-22:** Set `NEXT_PUBLIC_SITE_URL=https://policy.urbanindigenouscollective.org` in prod. National/federal bill URLs deferred until `/states/National/...` routes exist.
 
 ### Phase 5 — Production cutover
 

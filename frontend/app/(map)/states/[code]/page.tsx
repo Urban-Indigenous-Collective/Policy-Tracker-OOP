@@ -5,6 +5,7 @@ import { StatePrefetchSetter } from "@/components/map/state-prefetch-context";
 import { fetchStateBills } from "@/lib/api/client";
 import { isSvgMapStateCode, normalizeStateRouteParam } from "@/lib/api/state-code";
 import { STATE_NAMES } from "@/lib/map/state-codes";
+import { absoluteUrl } from "@/lib/seo/site-url";
 
 export const instant = false;
 
@@ -19,12 +20,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: "State not found | MMIP Policy Tracker" };
   }
   const name = STATE_NAMES[code] ?? code;
-  const base = process.env.NEXT_PUBLIC_SITE_URL?.trim();
   const path = `/states/${code}`;
+  const description = `Live MMIP-related legislation and UIC policy analysis for ${name} (${code}).`;
   return {
-    title: `${name} (${code}) | MMIP Policy Tracker`,
-    description: `Live MMIP-related legislation and policy analysis for ${name}.`,
-    alternates: base ? { canonical: `${base}${path}` } : undefined,
+    title: `${name} (${code})`,
+    description,
+    alternates: { canonical: absoluteUrl(path) },
+    openGraph: {
+      title: `${name} MMIP policies`,
+      description,
+      url: absoluteUrl(path),
+    },
   };
 }
 

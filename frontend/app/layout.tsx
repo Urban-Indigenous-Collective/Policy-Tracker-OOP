@@ -3,23 +3,35 @@ import { Montserrat, Roboto_Mono } from "next/font/google";
 import "./globals.css";
 import { SiteShell } from "@/components/layout/SiteShell";
 import { QueryProvider } from "@/components/providers/QueryProvider";
+import { getSiteUrl } from "@/lib/seo/site-url";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
   subsets: ["latin"],
   weight: ["300", "400", "600", "700"],
+  display: "swap",
 });
 
 const robotoMono = Roboto_Mono({
   variable: "--font-roboto-mono",
   subsets: ["latin"],
   weight: ["600", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "MMIP Policy Tracker | Urban Indigenous Collective",
+  metadataBase: getSiteUrl(),
+  title: {
+    default: "MMIP Policy Tracker | Urban Indigenous Collective",
+    template: "%s | MMIP Policy Tracker",
+  },
   description:
-    "Interactive map of state legislation addressing Missing and Murdered Indigenous Women, Girls, Trans, and Two-Spirit relatives (MMIWGT2S).",
+    "Interactive map of U.S. state MMIP legislation and UIC policy analysis — Missing and Murdered Indigenous Women, Girls, Trans, and Two-Spirit relatives (MMIWGT2S).",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    siteName: "MMIP Policy Tracker",
+  },
 };
 
 export default function RootLayout({

@@ -3,9 +3,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { BillAnalysisView } from "@/components/bill/BillAnalysisView";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { findBillBySlug } from "@/lib/api/bill-utils";
 import { fetchBillById, fetchStateBills } from "@/lib/api/client";
 import { isSvgMapStateCode, normalizeStateRouteParam } from "@/lib/api/state-code";
+import { billAnalysisJsonLd } from "@/lib/seo/json-ld";
+import { absoluteUrl } from "@/lib/seo/site-url";
 
 /** Server fetch for bill detail; not fully static with cacheComponents. */
 export const instant = false;
@@ -13,11 +16,6 @@ export const instant = false;
 type PageProps = {
   params: Promise<{ code: string; slug: string }>;
 };
-
-function siteUrl(): string | undefined {
-  const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  return raw || undefined;
-}
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { code: rawCode, slug } = await params;
@@ -33,15 +31,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       return { title: "Bill not found | MMIP Policy Tracker" };
     }
     const detail = await fetchBillById(match.id, { base: "server" });
-    const name = detail.bill.name || detail.bill.billNumber || "Policy";
-    const base = siteUrl();
+    const bill = detail.bill;
+    const name = bill.name || bill.billNumber || "Policy";
     const path = `/states/${code}/bills/${slug}`;
+    const description =
+      bill.summary?.slice(0, 160) ||
+      `UIC policy analysis for ${name} (${code}).`;
     return {
-      title: `${name} | MMIP Policy Tracker`,
-      description:
-        detail.bill.summary?.slice(0, 160) ||
-        `UIC policy analysis for ${name}.`,
-      alternates: base ? { canonical: `${base}${path}` } : undefined,
+      title: name,
+      description,
+      alternates: { canonical: absoluteUrl(path) },
+      openGraph: {
+        title: name,
+        description,
+        url: absoluteUrl(path),
+        type: "article",
+      },
     };
   } catch {
     return { title: "Bill | MMIP Policy Tracker" };
@@ -112,5 +117,10 @@ export default async function BillAnalysisPage({ params }: PageProps) {
     notFound();
   }
 
-  return <BillAnalysisView bill={detail.bill} stateCode={code} />;
+  return (
+    <>
+      <JsonLd data={billAnalysisJsonLd(detail.bill, code)} />
+      <BillAnalysisView bill={detail.bill} stateCode={code} />
+    </>
+  );
 }
