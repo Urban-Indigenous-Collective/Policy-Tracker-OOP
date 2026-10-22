@@ -5,7 +5,7 @@ import type { LegendCategory } from "@/lib/map/legend";
 type MapAndLegendProps = {
   stateCategories: Record<string, LegendCategory>;
   selectedState?: string | null;
-  onStateSelect?: (stateCode: string) => void;
+  onStateSelect?: (stateCode: string | null) => void;
 };
 
 /**

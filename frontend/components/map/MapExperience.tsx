@@ -100,6 +100,7 @@ function MapExperienceInner({
 
       <StatePanelDrawer
         stateCode={selectedState}
+        stateCategories={stateCategories}
         onClose={closeState}
         initialBills={initialBills}
       />

@@ -1,3 +1,4 @@
+import { isSvgMapStateCode } from "@/lib/api/state-code";
 import type {
   PublicApiHealthResponse,
   PublicBillDetailResponse,
@@ -64,12 +65,27 @@ export async function fetchStateBills(
   code: string,
   options?: { base?: "browser" | "server" },
 ): Promise<PublicStateBillsResponse> {
-  const encoded = encodeURIComponent(code);
+  const normalized = code.trim().toUpperCase();
+  const encoded = encodeURIComponent(normalized);
   const res = await fetch(apiUrl(`/api/v1/states/${encoded}/bills`, options?.base), {
     ...defaultFetchInit,
     next: options?.base === "server" ? { revalidate: 300 } : undefined,
   });
-  return parseJson(res);
+  if (
+    res.status === 404 &&
+    isSvgMapStateCode(normalized)
+  ) {
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    if (body?.error === "not_found") {
+      return {
+        state: normalized,
+        bills: [],
+        generatedAt: new Date().toISOString(),
+        cacheAgeSeconds: 0,
+      };
+    }
+  }
+  return parseJson<PublicStateBillsResponse>(res);
 }
 
 export async function fetchBillById(

@@ -1,7 +1,6 @@
 import { mapInteraction } from "@/lib/design/tokens";
-import { mapFillForState } from "@/lib/map/map-category-fill";
+import { LEGEND_FILL, type LegendCategory } from "@/lib/map/legend";
 import { STATE_NAMES } from "@/lib/map/state-codes";
-import type { LegendCategory } from "@/lib/map/legend";
 
 export const MAP_PAINT_STYLE_ID = "usa-map-paint-rules";
 
@@ -10,34 +9,26 @@ const PATH_ONLY_MAP_STATES = new Set(["AK", "HI"]);
 
 const MAP_STATE_CODES = Object.keys(STATE_NAMES).sort();
 
-function buildMapOutlineCss(): string {
-  const stroke = mapInteraction.stroke;
-  const width = mapInteraction.strokeWidth;
-  return `
-svg g[id^="US-"] > path {
-  display: none !important;
-}
-svg g[id^="US-"] > use {
-  stroke: ${stroke} !important;
-  stroke-width: ${width}px !important;
-  stroke-linejoin: round;
-}
-path#US-AK,
-path#US-HI {
-  stroke: ${stroke} !important;
-  stroke-width: ${width}px !important;
-}
-`.trim();
+/** API_V1: only states absent from `GET /api/v1/states` use neutral gray. */
+export function fillForMapState(
+  code: string,
+  stateCategories: Record<string, LegendCategory>,
+): string {
+  const category = stateCategories[code];
+  if (category && category in LEGEND_FILL) {
+    return LEGEND_FILL[category];
+  }
+  return mapInteraction.unlistedFill;
 }
 
 export function buildMapPaintCss(
   stateCategories: Record<string, LegendCategory>,
   selectedState: string | null,
 ): string {
-  const lines: string[] = [buildMapOutlineCss()];
+  const lines: string[] = [];
 
   for (const code of MAP_STATE_CODES) {
-    const fill = mapFillForState(code, stateCategories);
+    const fill = fillForMapState(code, stateCategories);
     const opacity =
       selectedState && code !== selectedState
         ? mapInteraction.inactiveOpacity
@@ -50,8 +41,7 @@ export function buildMapPaintCss(
       );
     } else {
       lines.push(
-        `#${id} { opacity: ${opacity}; }`,
-        `#${id} > use { fill: ${fill} !important; }`,
+        `#${id} > use { fill: ${fill} !important; opacity: ${opacity}; }`,
       );
     }
   }

@@ -33,6 +33,12 @@
   --color-map-unlisted: #212121;
   --color-map-stroke: #000000;
 
+  /* Figma Top Border `157:633` — seamless diagonal hazard stripe */
+  --color-top-border-stripe-black: #000000;
+  --color-top-border-stripe-gray: #d9d9d9;
+  --size-top-border-stripe-black: 11px;
+  --size-top-border-stripe-period: 26.75px;
+
   /* ——— Typography ——— */
   --font-sans: var(--font-montserrat), system-ui, sans-serif;
   --font-mono: var(--font-roboto-mono), ui-monospace, monospace;
@@ -51,6 +57,8 @@
   /* Figma intro copy: 13px / 24px line-height */
   --leading-body-sm: 1.5rem;
 
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
 
@@ -96,6 +104,7 @@
   --height-logo: 4.75rem;
   --height-nav-row: 4.75rem;
   --height-top-border: 3px;
+  --height-drawer-top-border: 1.375rem;
   --size-switch-w: 2.875rem;
   --size-switch-h: 1.3125rem;
   --spacing-filter-switch-gap: 1.125rem;
@@ -109,6 +118,46 @@
 
   --min-height-map: 17.5rem;
   --min-height-map-sm: 25rem;
+
+  /* ——— State drawer (Figma 161:3059) ——— */
+  --width-state-drawer: 31.75rem;
+  --spacing-drawer-x: 3.9375rem;
+  --spacing-drawer-header-pt: 5.1875rem;
+  --spacing-drawer-title-mt: 7.0625rem;
+  --spacing-drawer-meta-mt: 1.75rem;
+  /* Figma `239:6757` — 54px below policies row (248→302) */
+  --spacing-drawer-search-mt: 3.375rem;
+  --spacing-drawer-search-icon-inset: 1.5625rem;
+  --spacing-drawer-search-text-inset: 3.5625rem;
+  --spacing-drawer-list-mt: 3.375rem;
+  --spacing-drawer-row: 3.5rem;
+  --spacing-drawer-filter-from-content: 12.125rem;
+  --width-drawer-bill-row: 25rem;
+  --width-drawer-bill-col-id: 9.875rem;
+  --width-drawer-bill-col-title: 14.9375rem;
+  --width-drawer-status-pill: 6.5625rem;
+  --height-drawer-status-pill: 1.5625rem;
+  --width-drawer-filter-pill: 5.9375rem;
+  --height-drawer-filter-pill: 1.4375rem;
+  --size-drawer-dismiss: 1.75rem;
+  --text-drawer-state-title: 2.125rem;
+  --leading-drawer-state-title: 2.375rem;
+  --tracking-drawer-state-title: 12.3px;
+  --text-drawer-policies: 0.9375rem;
+  --tracking-drawer-policies: 0.384375rem;
+  --text-drawer-bill-id: 1.125rem;
+  --tracking-drawer-bill-id: 0.46125rem;
+  --text-drawer-bill-body: 1.125rem;
+  --leading-drawer-bill-body: 1.75rem;
+  --text-drawer-status-pill: 0.8125rem;
+  --text-drawer-filter: 0.75rem;
+  --tracking-drawer-filter: 0.3075rem;
+  --radius-drawer-filter: 19px;
+  --width-drawer-search: 23.1875rem;
+  --height-drawer-search: 2.9375rem;
+  --radius-drawer-search: 3.75rem;
+  --color-drawer-search: rgb(255 255 255 / 0.11);
+  --leading-drawer-search: 2.375rem;
 }
 
 @layer components {
@@ -139,4 +188,70 @@
     line-height: var(--leading-body-sm);
   }
 
+  .uic-drawer-top-border {
+    height: var(--height-drawer-top-border);
+    background-color: var(--color-top-border-stripe-gray);
+    background-image: repeating-linear-gradient(
+      -45deg,
+      var(--color-top-border-stripe-black) 0,
+      var(--color-top-border-stripe-black) var(--size-top-border-stripe-black),
+      var(--color-top-border-stripe-gray) var(--size-top-border-stripe-black),
+      var(--color-top-border-stripe-gray) var(--size-top-border-stripe-period)
+    );
+  }
+
+  .uic-drawer-state-title {
+    font-family: var(--font-mono);
+    font-size: var(--text-drawer-state-title);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--tracking-drawer-state-title);
+    line-height: var(--leading-drawer-state-title);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .uic-drawer-policies-count {
+    font-family: var(--font-sans);
+    font-size: var(--text-drawer-policies);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--tracking-drawer-policies);
+    line-height: 1.5rem;
+    color: var(--color-foreground);
+    text-transform: uppercase;
+  }
+
+  .uic-drawer-bill-id {
+    font-family: var(--font-sans);
+    font-size: var(--text-drawer-bill-id);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--tracking-drawer-bill-id);
+    line-height: 1.5rem;
+    color: var(--color-foreground);
+  }
+
+  .uic-drawer-bill-body-regular {
+    font-family: var(--font-sans);
+    font-size: var(--text-drawer-bill-body);
+    font-weight: var(--font-weight-regular);
+    line-height: var(--leading-drawer-bill-body);
+    color: var(--color-foreground);
+  }
+
+  /* Figma `239:6758` / `239:6759` — Montserrat Light 18 / 38, white */
+  .uic-drawer-search-input {
+    font-family: var(--font-sans);
+    font-size: var(--text-drawer-bill-body);
+    font-weight: var(--font-weight-light);
+    line-height: var(--leading-drawer-search);
+    color: var(--color-foreground);
+  }
+
+  .uic-drawer-search-input::placeholder {
+    color: var(--color-foreground);
+    opacity: 1;
+  }
+
+  .uic-drawer-search-input::-webkit-search-cancel-button {
+    display: none;
+  }
 }

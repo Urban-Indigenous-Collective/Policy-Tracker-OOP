@@ -1,3 +1,4 @@
+/** Site shell — thin teal accent (Figma `157:633` stripe is drawer-only). */
 export function TopBorder() {
   return (
     <div

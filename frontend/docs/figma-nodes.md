@@ -7,6 +7,7 @@ File key: `9wjMrCGEzPefYbCQcBCQim`
 | Finalized Pages (canvas) | `160:2141` |
 | Map home | `160:2142` |
 | State + drawer | `161:3059` |
+| State drawer + search | `239:6616` (MacBook Pro 14" - 25) |
 | Bill analysis | `161:4181` |
 | List view | `176:5600` |
 | Navigation | `33:403` |

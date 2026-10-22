@@ -36,7 +36,7 @@ Per-bill input is Main v3 **`Status`** only (`Passed` / `Pending` / `Failed`). `
 | `failed` | No Passed, no Pending, ≥1 Failed |
 | `failedAdditional` | No Passed, ≥1 Pending, every non-Pending bill is Failed |
 
-Unlisted states (no row in `states`): idle fill `#212121`. Listed fills match `frontend/public/ui/legend-*.svg` via `mapFillForCategory()` (`frontend/lib/map/map-category-fill.ts`, `frontend/lib/design/tokens.ts`): passed `#3fbfa7`, passedAdditional `#7bedd8`, pending cyan `#7bedd8` + stripe `#f8cf4d` (SVG pattern), failedAdditional `#fadd82`, failed `#f8cf4d`.
+Unlisted states (no row in `states` after the legislation filter): frontend **neutral gray** (`#8a8a8a`). Listed `failed` uses Figma dark fill (`#212121`).
 
 ## Endpoints
 
@@ -63,7 +63,7 @@ Map home payload.
 
 ### `GET /api/v1/states/{code}/bills`
 
-`code`: `WA`, `National`, etc. 404 if no public bills for that jurisdiction.
+`code`: `WA`, `National`, etc. Valid US map codes (e.g. `OH`) return `200` with `"bills": []` when there are no Live bills. `404` for unknown jurisdictions (e.g. `ZZ`) or non-map codes with no data.
 
 ```json
 {

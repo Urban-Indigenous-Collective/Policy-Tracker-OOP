@@ -48,8 +48,8 @@ export function useMapSelection() {
   );
 
   const onMapStateClick = useCallback(
-    (code: string) => {
-      if (selectedState === code) {
+    (code: string | null) => {
+      if (!code || selectedState === code) {
         selectState(null);
       } else {
         selectState(code);

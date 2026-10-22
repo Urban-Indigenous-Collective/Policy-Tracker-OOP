@@ -2,10 +2,10 @@
 
 import { useEffect } from "react";
 
-const MAP_ROOT = "[data-mmip-usa-map]";
 const PANEL_ROOT = "[data-mmip-state-panel]";
+const STATE_REGION = "[data-state-code]";
 
-/** Close drawer when the user clicks page chrome (not the SVG map or the panel). */
+/** Close drawer unless the hit is a state shape or the panel (ocean / letterbox closes). */
 export function useCloseDrawerOutsideMap(
   selectedState: string | null,
   onClose: () => void,
@@ -17,7 +17,7 @@ export function useCloseDrawerOutsideMap(
       const target = event.target;
       if (!(target instanceof Element)) return;
       if (target.closest(PANEL_ROOT)) return;
-      if (target.closest(MAP_ROOT)) return;
+      if (target.closest(STATE_REGION)) return;
       onClose();
     };
 

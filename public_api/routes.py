@@ -6,7 +6,7 @@ from flask import Blueprint, jsonify
 
 from public_api.cache import UpstreamUnavailableError, get_snapshot
 from public_api.serialize import record_to_bill_dto
-from public_api.states import normalize_public_state
+from public_api.states import is_map_state_code, normalize_public_state
 
 public_api_bp = Blueprint("public_api", __name__, url_prefix="/api/v1")
 
@@ -65,6 +65,17 @@ def state_bills(code: str):
         return _error("upstream_unavailable", str(exc), 503)
 
     normalized = normalize_public_state(code)
+    if is_map_state_code(normalized):
+        bills = snap.by_state.get(normalized) or []
+        return jsonify(
+            {
+                "state": normalized,
+                "bills": bills,
+                "generatedAt": snap.generated_at.isoformat(),
+                "cacheAgeSeconds": round(snap.cache_age_seconds, 1),
+            }
+        )
+
     bills = snap.by_state.get(normalized)
     if bills is None:
         return _error("not_found", f"No public bills for state {code!r}", 404)

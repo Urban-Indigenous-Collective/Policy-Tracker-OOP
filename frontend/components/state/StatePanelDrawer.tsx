@@ -10,12 +10,14 @@ import {
 
 import { StatePanel } from "@/components/state/StatePanel";
 import type { PublicStateBillsResponse } from "@/lib/api/types";
+import type { LegendCategory } from "@/lib/map/legend";
 
 const SLIDE_IN_MS = 440;
 const SLIDE_OUT_MS = 340;
 
 type StatePanelDrawerProps = {
   stateCode: string | null;
+  stateCategories: Record<string, LegendCategory>;
   onClose: () => void;
   initialBills?: PublicStateBillsResponse | null;
 };
@@ -37,6 +39,7 @@ function usePrefersReducedMotion(): boolean {
 /** Keeps the panel mounted through the slide-out, then unmounts. */
 export function StatePanelDrawer({
   stateCode,
+  stateCategories,
   onClose,
   initialBills = null,
 }: StatePanelDrawerProps) {
@@ -87,6 +90,7 @@ export function StatePanelDrawer({
   return (
     <StatePanel
       stateCode={activeCode}
+      stateCategory={stateCategories[activeCode]}
       onClose={onClose}
       initialBills={activeCode === stateCode ? initialBills : null}
       slideIn={slideIn}

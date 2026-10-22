@@ -66,6 +66,17 @@ def test_state_bills_not_found(client, monkeypatch):
     assert resp.status_code == 404
 
 
+def test_state_bills_empty_map_state(client, monkeypatch):
+    snap = _sample_snapshot()
+    monkeypatch.setattr("public_api.routes.get_snapshot", lambda **_: snap)
+
+    resp = client.get("/api/v1/states/OH/bills")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data["state"] == "OH"
+    assert data["bills"] == []
+
+
 def test_bill_detail(client, monkeypatch):
     snap = _sample_snapshot()
     monkeypatch.setattr("public_api.routes.get_snapshot", lambda **_: snap)

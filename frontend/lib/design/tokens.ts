@@ -44,4 +44,10 @@ export const layout = {
   heroColumnGapPx: 103,
   filterInsetFromContentPx: 57,
   legendWidthPx: 351,
+  /** Figma 161:3145 — state drawer width */
+  stateDrawerWidthPx: 508,
+  stateDrawerContentInsetPx: 63,
+  stateDrawerBillRowWidthPx: 400,
+  stateDrawerBillColIdPx: 158,
+  stateDrawerBillColTitlePx: 239,
 } as const;
