@@ -26,10 +26,10 @@ Single source of truth for the reusable design system:
 
 | Token | Value |
 |--------|--------|
-| `--width-state-drawer` | 508px (`w-state-drawer max-w-[100vw]`) |
+| `--width-state-drawer` | 523px (`w-state-drawer max-w-[100vw]`) |
 | `--spacing-drawer-x` | 63px horizontal inset |
 | Typography | `uic-drawer-state-title` (34px / bold mono), `uic-drawer-policies-count`, `uic-drawer-bill-id`, `uic-drawer-bill-body-regular` (18px / 28px leading) |
-| Bill row | `--width-drawer-bill-row` 400px; id column 158px; title 239px |
+| Bill row | grid 158px + 40px gap + title col; row width `--width-drawer-content` (397px) |
 | Chrome | `/ui/dismiss.svg`; status pill `--width/height-drawer-status-pill` |
 | Site top bar | `--height-top-border` (3px teal accent) — `TopBorder` |
 | Drawer top stripe | `--height-drawer-top-border` (~22px), `uic-drawer-top-border` / `DrawerTopBorder` |

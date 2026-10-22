@@ -13,17 +13,31 @@ const pillClass: Record<
 
 type StateDrawerStatusPillProps = {
   bill: PublicBill;
+  /** When true, pill spans the bill id stack (min `--width-drawer-status-pill`). */
+  matchStackWidth?: boolean;
+  /** Widen pill equally on both sides (stack width unchanged). */
+  extendLeft?: boolean;
 };
 
-export function StateDrawerStatusPill({ bill }: StateDrawerStatusPillProps) {
+export function StateDrawerStatusPill({
+  bill,
+  matchStackWidth = false,
+  extendLeft = false,
+}: StateDrawerStatusPillProps) {
   const label = bill.status?.trim() || bill.progression?.trim();
   if (!label) return null;
 
   const variant = billStatusVariant(bill);
 
+  const widthClass = extendLeft
+    ? "uic-drawer-status-pill-extend-left min-w-0"
+    : matchStackWidth
+      ? "w-full min-w-0 max-w-full"
+      : "inline-flex w-drawer-status-pill max-w-full";
+
   return (
     <span
-      className={`inline-flex h-drawer-status-pill w-drawer-status-pill shrink-0 items-center justify-center overflow-hidden rounded-[30px] border bg-transparent px-1 text-center text-drawer-status-pill font-sans font-semibold leading-none uppercase tracking-label ${pillClass[variant]}`}
+      className={`flex h-drawer-status-pill shrink-0 items-center justify-center overflow-hidden rounded-[30px] border bg-transparent px-1 text-center text-drawer-status-pill font-sans font-semibold leading-none uppercase tracking-label ${widthClass} ${pillClass[variant]}`}
     >
       {label}
     </span>

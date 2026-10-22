@@ -103,11 +103,11 @@ export function StatePanel({
           : `${slideOutDurationMs}ms`,
         transitionTimingFunction: slideIn ? SLIDE_IN_EASE : SLIDE_OUT_EASE,
       }}
-      className={`fixed inset-y-0 right-0 z-[110] flex w-full max-w-[100vw] flex-col border-l border-surface-border bg-background outline-none transition-transform motion-reduce:transition-none sm:max-w-none sm:w-state-drawer ${
+      className={`fixed inset-y-0 right-0 z-[110] flex w-full max-w-[100vw] flex-col overflow-x-visible border-l border-surface-border bg-background outline-none transition-transform motion-reduce:transition-none sm:max-w-none sm:w-state-drawer ${
         slideIn ? "translate-x-0" : "translate-x-full"
       }`}
     >
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      <div className="min-h-0 flex-1 overflow-x-visible overflow-y-auto overscroll-contain">
         <DrawerTopBorder />
         <div className="relative px-drawer-x pt-drawer-header-pt pb-8">
           <button
@@ -127,6 +127,7 @@ export function StatePanel({
             />
           </button>
 
+          <div className="flex w-full max-w-drawer-content flex-col">
           <h2
             id={titleId}
             className={`uic-drawer-state-title text-drawer-state-title font-mono font-bold leading-drawer-state-title mt-drawer-title-mt max-w-[calc(100%-2.75rem)] pr-10 ${titleColorClass}`}
@@ -182,6 +183,7 @@ export function StatePanel({
                 }
               />
             ) : null}
+          </div>
           </div>
         </div>
       </div>

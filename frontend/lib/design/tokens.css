@@ -121,8 +121,12 @@
   --min-height-map-sm: 25rem;
 
   /* ——— State drawer (Figma 161:3059) ——— */
-  --width-state-drawer: 31.75rem;
+  /* Inner content = bill row + horizontal inset (397 + 126 = 523px). */
+  --width-state-drawer: 32.6875rem;
   --spacing-drawer-x: 3.9375rem;
+  --width-drawer-content: calc(
+    var(--width-state-drawer) - 2 * var(--spacing-drawer-x)
+  );
   --spacing-drawer-header-pt: 5.1875rem;
   --spacing-drawer-title-mt: 7.0625rem;
   --spacing-drawer-meta-mt: 1.75rem;
@@ -133,10 +137,16 @@
   --spacing-drawer-list-mt: 3.375rem;
   --spacing-drawer-row: 3.5rem;
   --spacing-drawer-filter-from-content: 12.125rem;
-  --width-drawer-bill-row: 25rem;
   --width-drawer-bill-col-id: 9.875rem;
-  --width-drawer-bill-col-title: 14.9375rem;
+  --spacing-drawer-bill-col-gap: 2.5rem;
+  --width-drawer-bill-col-title: calc(
+    var(--width-drawer-content) - var(--width-drawer-bill-col-id) -
+      var(--spacing-drawer-bill-col-gap)
+  );
+  --width-drawer-bill-row: var(--width-drawer-content);
   --width-drawer-status-pill: 6.5625rem;
+  /* Extra half-width per side (total pill grow = 2× this value). */
+  --spacing-drawer-status-pill-extend-left: 0.625rem;
   --height-drawer-status-pill: 1.5625rem;
   --width-drawer-filter-pill: 5.9375rem;
   --height-drawer-filter-pill: 1.4375rem;
@@ -154,7 +164,7 @@
   --text-drawer-filter: 0.75rem;
   --tracking-drawer-filter: 0.3075rem;
   --radius-drawer-filter: 19px;
-  --width-drawer-search: 23.1875rem;
+  --width-drawer-search: var(--width-drawer-content);
   --height-drawer-search: 2.9375rem;
   --radius-drawer-search: 3.75rem;
   --color-drawer-search: rgb(255 255 255 / 0.11);
@@ -229,6 +239,26 @@
     letter-spacing: var(--tracking-drawer-bill-id);
     line-height: 1.5rem;
     color: var(--color-foreground);
+  }
+
+  /* Single-line ids centered over pill; trailing letter-spacing shifts glyphs left without this. */
+  .uic-drawer-bill-id-centered {
+    text-align: center;
+    padding-inline-end: var(--tracking-drawer-bill-id);
+  }
+
+  /* Long ids (e.g. executive orders) that exceed the id column width. */
+  .uic-drawer-bill-id-constrained {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .uic-drawer-status-pill-extend-left {
+    box-sizing: border-box;
+    margin-left: calc(-1 * var(--spacing-drawer-status-pill-extend-left)) !important;
+    width: calc(100% + 2 * var(--spacing-drawer-status-pill-extend-left)) !important;
+    max-width: calc(100% + 2 * var(--spacing-drawer-status-pill-extend-left)) !important;
   }
 
   /* Figma filter chip — optical center with wide letter-spacing */

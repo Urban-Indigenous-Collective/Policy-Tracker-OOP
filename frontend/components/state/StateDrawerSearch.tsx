@@ -9,7 +9,7 @@ type StateDrawerSearchProps = {
 /** Figma `239:6757`–`239:6759` — pill field, FA-style icon + “search” placeholder. */
 export function StateDrawerSearch({ value, onChange, id }: StateDrawerSearchProps) {
   return (
-    <div className="mt-drawer-search-mt w-drawer-search max-w-full">
+    <div className="mt-drawer-search-mt w-full max-w-drawer-content">
       <label htmlFor={id} className="sr-only">
         Search policies in this state
       </label>
