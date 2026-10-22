@@ -6,6 +6,13 @@ from typing import Any
 from filelock import FileLock
 
 from airtable_client import AirtableClient, is_airtable_rate_limit_error
+from airtable_coercion import (
+    coerce_categories,
+    coerce_chamber,
+    coerce_eval_value,
+    coerce_progression,
+    coerce_status,
+)
 from airtable_fields import (
     BILL_OVERVIEW_FIELD,
     BILL_OVERVIEW_LINK_FIELD,
@@ -35,6 +42,31 @@ _PENDING_WRITABLE_FIELDS = frozenset(
 )
 _SKIP_LIVE_FIELDS = frozenset({"Created By", LIVE_REVIEW_STATUS_FIELD})
 _PENDING_ONLY_ON_LIVE = frozenset({"Source", "Discovered On"})
+
+
+def _coerce_live_selects(fields: dict[str, Any]) -> dict[str, Any]:
+    """Map Pending select values onto choices that already exist on Main v3.
+
+    Pending Gender Inclusive Language? includes Somewhat. Main v3 does not, and
+    the API token cannot create select options (INVALID_MULTIPLE_CHOICE_OPTIONS).
+    """
+    out = dict(fields)
+    for key, value in list(out.items()):
+        if str(key).endswith("?"):
+            out[key] = coerce_eval_value(key, value)
+        elif key == "Status":
+            out[key] = coerce_status(value)
+        elif key == "Progression":
+            out[key] = coerce_progression(value)
+        elif key == "Chamber":
+            out[key] = coerce_chamber(value)
+        elif key == "Categories":
+            categories = coerce_categories(value)
+            if categories:
+                out[key] = categories
+            else:
+                out.pop(key, None)
+    return out
 
 
 def _apply_legacy_renames(fields: dict[str, Any]) -> dict[str, Any]:
@@ -79,6 +111,7 @@ class ApprovalSync:
             for key in _LIVE_WRITABLE_FIELDS
             if key in working and working[key] not in (None, "")
         }
+        live_fields = _coerce_live_selects(live_fields)
         live_fields[LIVE_REVIEW_STATUS_FIELD] = REVIEW_STATUS_LIVE
         return live_fields
 

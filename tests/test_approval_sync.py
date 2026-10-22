@@ -115,6 +115,26 @@ def test_approval_sync_pending_to_live(sync):
     assert "Bill Overview" not in live["fields"]
 
 
+def test_approval_sync_maps_somewhat_off_live_select(sync):
+    approval_sync, client = sync
+    client.pending_table.create(
+        {
+            "Name": "Inclusive Language Bill",
+            "State": "AZ",
+            "Bill Overview (Link)": "https://example.com/bill/somewhat",
+            "Review Status": "Approved",
+            "Gender Inclusive Language?": "Somewhat",
+            "Level of Survivor / Relative Input?": "Somewhat",
+        }
+    )
+    stats = approval_sync.run()
+    assert stats["approved"] == 1
+    assert stats["errors"] == 0
+    live = list(client.live_table.records.values())[0]["fields"]
+    assert live["Gender Inclusive Language?"] == "TBD or TCRP Specific"
+    assert live["Level of Survivor / Relative Input?"] == "Somewhat"
+
+
 def test_approval_sync_live_to_pending(sync):
     approval_sync, client = sync
     client.live_table.create(
