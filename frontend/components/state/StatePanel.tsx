@@ -11,12 +11,24 @@ type StatePanelProps = {
   stateCode: string;
   onClose: () => void;
   initialBills?: PublicStateBillsResponse | null;
+  slideIn?: boolean;
+  slideInDurationMs?: number;
+  slideOutDurationMs?: number;
+  onSlideTransitionEnd?: (event: React.TransitionEvent<HTMLElement>) => void;
 };
+
+/** In: accelerates, slight overshoot at rest. Out: ease-in — lingers then exits fast. */
+const SLIDE_IN_EASE = "cubic-bezier(0.38, 0, 0.52, 1.38)";
+const SLIDE_OUT_EASE = "cubic-bezier(0.72, 0, 0.98, 0.35)";
 
 export function StatePanel({
   stateCode,
   onClose,
   initialBills = null,
+  slideIn = true,
+  slideInDurationMs = 440,
+  slideOutDurationMs = 340,
+  onSlideTransitionEnd,
 }: StatePanelProps) {
   const titleId = useId();
   const panelRef = useRef<HTMLElement>(null);
@@ -42,11 +54,21 @@ export function StatePanel({
     <aside
       ref={panelRef}
       data-mmip-state-panel
+      onPointerDown={(event) => event.stopPropagation()}
       tabIndex={-1}
       role="dialog"
       aria-modal="false"
       aria-labelledby={titleId}
-      className="fixed inset-y-0 right-0 z-[110] flex w-full max-w-[28rem] flex-col border-l border-surface-border bg-background shadow-2xl outline-none"
+      onTransitionEnd={onSlideTransitionEnd}
+      style={{
+        transitionDuration: slideIn
+          ? `${slideInDurationMs}ms`
+          : `${slideOutDurationMs}ms`,
+        transitionTimingFunction: slideIn ? SLIDE_IN_EASE : SLIDE_OUT_EASE,
+      }}
+      className={`fixed inset-y-0 right-0 z-[110] flex w-full max-w-[28rem] flex-col border-l border-surface-border bg-background shadow-2xl outline-none transition-transform motion-reduce:transition-none ${
+        slideIn ? "translate-x-0" : "translate-x-full"
+      }`}
     >
       <header className="flex shrink-0 items-start justify-between gap-4 border-b border-surface-border px-5 py-4">
         <div>

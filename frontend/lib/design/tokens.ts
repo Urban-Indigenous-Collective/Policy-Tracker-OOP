@@ -22,8 +22,9 @@ export const policyStatusColor = {
 export const MAP_PENDING_PATTERN_ID = "uic-map-pending-pattern";
 
 export const mapInteraction = {
-  stroke: "#1a1a1a",
-  strokeWidth: "0.5",
+  /** Darker than unlisted fill so shared edges read on #212121 (Figma export uses black). */
+  stroke: "#000000",
+  strokeWidth: "1.5",
   /** Dim non-selected states when one state is selected (see `--opacity-inactive`). */
   inactiveOpacity: "0.4",
   /** No Live row in API — usa.svg idle (#212121); not a legend category. */

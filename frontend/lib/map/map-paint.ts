@@ -15,10 +15,12 @@ function buildMapOutlineCss(): string {
   const width = mapInteraction.strokeWidth;
   return `
 svg g[id^="US-"] > path {
-  fill: none !important;
+  display: none !important;
+}
+svg g[id^="US-"] > use {
   stroke: ${stroke} !important;
   stroke-width: ${width}px !important;
-  pointer-events: none;
+  stroke-linejoin: round;
 }
 path#US-AK,
 path#US-HI {

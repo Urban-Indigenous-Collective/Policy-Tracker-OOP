@@ -31,7 +31,7 @@
   --color-status-failed-additional: #fadd82;
   --color-status-failed: #f8cf4d;
   --color-map-unlisted: #212121;
-  --color-map-stroke: #1a1a1a;
+  --color-map-stroke: #000000;
 
   /* ——— Typography ——— */
   --font-sans: var(--font-montserrat), system-ui, sans-serif;
@@ -105,7 +105,7 @@
   --opacity-map-selected: 0.42;
   --opacity-inactive: 0.4;
   --opacity-donate-hover: 0.9;
-  --width-map-stroke: 0.5px;
+  --width-map-stroke: 1.5px;
 
   --min-height-map: 17.5rem;
   --min-height-map-sm: 25rem;

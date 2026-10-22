@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useMemo } from "react";
+import { useMemo } from "react";
 
 import { MapAndLegend } from "@/components/map/MapAndLegend";
 import { MapIntro } from "@/components/map/MapIntro";
@@ -10,11 +10,12 @@ import {
   StatePrefetchProvider,
   useStatePrefetch,
 } from "@/components/map/state-prefetch-context";
-import { StatePanel } from "@/components/state/StatePanel";
+import { StatePanelDrawer } from "@/components/state/StatePanelDrawer";
 import { FilterChip } from "@/components/ui/FilterChip";
 import { usePublicStates } from "@/lib/api/hooks";
 import type { PublicStatesResponse } from "@/lib/api/types";
 import { stateCategoriesFromResponse } from "@/lib/map/state-categories-from-api";
+import { useCloseDrawerOutsideMap } from "@/lib/map/use-close-drawer-outside-map";
 import { useMapSelection } from "@/lib/map/use-map-selection";
 
 const FILTER_LABELS = [
@@ -48,11 +49,7 @@ function MapExperienceInner({
 
   const introStatusLine = mapIntroStatusLine(resolvedStates, statsLoading);
 
-  useLayoutEffect(() => {
-    document.body
-      .querySelectorAll("aside[data-mmip-state-panel]")
-      .forEach((node) => node.remove());
-  }, []);
+  useCloseDrawerOutsideMap(selectedState, closeState);
 
   const initialBills =
     selectedState && prefetch?.state === selectedState
@@ -101,13 +98,11 @@ function MapExperienceInner({
         </div>
       </section>
 
-      {selectedState ? (
-        <StatePanel
-          stateCode={selectedState}
-          onClose={closeState}
-          initialBills={initialBills}
-        />
-      ) : null}
+      <StatePanelDrawer
+        stateCode={selectedState}
+        onClose={closeState}
+        initialBills={initialBills}
+      />
     </div>
   );
 }

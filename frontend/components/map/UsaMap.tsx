@@ -148,7 +148,7 @@ export function UsaMap({
   }
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full" data-mmip-usa-map>
       {!svgReady ? (
         <div
           className="min-h-map w-full animate-pulse rounded bg-white/[0.04] sm:min-h-map-sm"
