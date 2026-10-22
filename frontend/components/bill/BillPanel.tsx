@@ -7,6 +7,8 @@ import { DrawerTopBorder } from "@/components/state/DrawerTopBorder";
 import { useStatePrefetch } from "@/components/map/state-prefetch-context";
 import { findBillBySlug } from "@/lib/api/bill-utils";
 import { useBillDetail, useStateBills } from "@/lib/api/hooks";
+import { billStatusFocusRingClass } from "@/lib/bill/status-classes";
+import { billStatusVariant } from "@/lib/bill/status-variant";
 import { drawerSlideStyle } from "@/lib/state/drawer-motion";
 
 type BillPanelProps = {
@@ -49,6 +51,9 @@ export function BillPanel({
     !prefetchedAnalysis;
   const showMissing =
     !bill && listSettled && !listQuery.isLoading && !waitingForDetail;
+  const dismissFocusRingClass = bill
+    ? billStatusFocusRingClass[billStatusVariant(bill)]
+    : "focus-visible:ring-accent";
 
   useEffect(() => {
     panelRef.current?.focus({ preventScroll: true });
@@ -77,7 +82,7 @@ export function BillPanel({
             type="button"
             onClick={onClose}
             aria-label="Close bill"
-            className="inline-flex size-drawer-dismiss shrink-0 cursor-pointer items-center justify-center bg-background outline-none hover:opacity-80 focus-visible:ring-2 focus-visible:ring-accent"
+            className={`inline-flex size-drawer-dismiss shrink-0 cursor-pointer items-center justify-center bg-background outline-none hover:opacity-80 focus-visible:ring-2 ${dismissFocusRingClass}`}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img

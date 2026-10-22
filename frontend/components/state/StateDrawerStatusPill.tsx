@@ -1,15 +1,6 @@
+import { billStatusPillClass } from "@/lib/bill/status-classes";
 import { billStatusVariant } from "@/lib/bill/status-variant";
 import type { PublicBill } from "@/lib/api/types";
-
-const pillClass: Record<
-  ReturnType<typeof billStatusVariant>,
-  string
-> = {
-  passed: "border-accent text-accent",
-  failed: "border-status-failed text-status-failed",
-  pending: "border-status-pending text-status-pending",
-  neutral: "border-muted text-muted",
-};
 
 type StateDrawerStatusPillProps = {
   bill: PublicBill;
@@ -37,7 +28,7 @@ export function StateDrawerStatusPill({
 
   return (
     <span
-      className={`flex h-drawer-status-pill shrink-0 items-center justify-center overflow-hidden rounded-[30px] border bg-transparent px-1 text-center text-drawer-status-pill font-sans font-semibold leading-none uppercase tracking-label ${widthClass} ${pillClass[variant]}`}
+      className={`flex h-drawer-status-pill shrink-0 items-center justify-center overflow-hidden rounded-[30px] border bg-transparent px-1 text-center text-drawer-status-pill font-sans font-semibold leading-none uppercase tracking-label ${widthClass} ${billStatusPillClass[variant]}`}
     >
       {label}
     </span>

@@ -2,6 +2,13 @@ import type { ReactNode } from "react";
 
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { PublicBill } from "@/lib/api/types";
+import {
+  billStatusIconLinkClass,
+  billStatusLinkClass,
+  billStatusPillClass,
+  billStatusTextClass,
+  type BillStatusVariant,
+} from "@/lib/bill/status-classes";
 import { billStatusVariant } from "@/lib/bill/status-variant";
 import { DRAWER_EVAL_FILTERS } from "@/lib/state/drawer-eval-filters";
 
@@ -17,10 +24,8 @@ function DetailGridLabel({
   variant?: "summary" | "meta";
 }) {
   const className =
-    variant === "summary"
-      ? "uic-bill-summary-label text-bill-summary-label font-bold leading-bill-summary-label"
-      : "uic-bill-meta-label text-bill-title font-bold leading-bill-title";
-  return <h2 className={className}>{children}</h2>;
+    variant === "summary" ? "uic-bill-summary-label" : "uic-bill-meta-label";
+  return <div className={className}>{children}</div>;
 }
 
 function DetailGridBody({
@@ -35,6 +40,27 @@ function DetailGridBody({
   return <div className={className}>{children}</div>;
 }
 
+function DetailRow({
+  label,
+  variant = "summary",
+  children,
+}: {
+  label: string;
+  variant?: "summary" | "meta";
+  children: ReactNode;
+}) {
+  const rowClass =
+    variant === "meta"
+      ? "uic-bill-detail-row"
+      : "uic-bill-detail-row uic-bill-detail-row--summary";
+  return (
+    <div className={rowClass}>
+      <DetailGridLabel variant={variant}>{label}</DetailGridLabel>
+      <DetailGridBody variant={variant}>{children}</DetailGridBody>
+    </div>
+  );
+}
+
 function TextRow({
   label,
   body,
@@ -43,12 +69,7 @@ function TextRow({
   body: string | undefined;
 }) {
   if (!body?.trim()) return null;
-  return (
-    <>
-      <DetailGridLabel>{label}</DetailGridLabel>
-      <DetailGridBody>{body}</DetailGridBody>
-    </>
-  );
+  return <DetailRow label={label}>{body}</DetailRow>;
 }
 
 function MetaRow({
@@ -59,34 +80,47 @@ function MetaRow({
   children: ReactNode;
 }) {
   return (
-    <>
-      <DetailGridLabel variant="meta">{label}</DetailGridLabel>
-      <DetailGridBody variant="meta">{children}</DetailGridBody>
-    </>
+    <DetailRow variant="meta" label={label}>
+      {children}
+    </DetailRow>
   );
 }
 
-function ExternalLink({ href, label }: { href: string; label: string }) {
+function ExternalLink({
+  href,
+  label,
+  statusVariant,
+}: {
+  href: string;
+  label: string;
+  statusVariant: BillStatusVariant;
+}) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="text-accent underline decoration-accent/40 underline-offset-2 outline-none hover:opacity-80 focus-visible:ring-2 focus-visible:ring-accent"
+      className={billStatusLinkClass(statusVariant)}
     >
       {label}
     </a>
   );
 }
 
-function OverviewSearchLink({ href }: { href: string }) {
+function OverviewSearchLink({
+  href,
+  statusVariant,
+}: {
+  href: string;
+  statusVariant: BillStatusVariant;
+}) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="View official bill overview"
-      className="inline-flex h-bill-pill shrink-0 items-center justify-center text-accent outline-none hover:opacity-80 focus-visible:ring-2 focus-visible:ring-accent"
+      className={`inline-flex h-bill-pill shrink-0 items-center justify-center ${billStatusIconLinkClass(statusVariant)}`}
     >
       <svg
         width={18}
@@ -118,7 +152,8 @@ export function BillAnalysisView({ bill }: BillAnalysisViewProps) {
   const name = bill.name?.trim();
   const hero = billNumber || name || "Policy analysis";
   const subtitle = billNumber && name && name !== billNumber ? name : "";
-  const statusLabel = bill.status?.trim();
+  const statusLabel = bill.status?.trim() || bill.progression?.trim();
+  const statusVariant = billStatusVariant(bill);
   const progression = bill.progression?.trim();
   const chamber = bill.chamber?.trim();
   const session = bill.session?.trim();
@@ -129,6 +164,11 @@ export function BillAnalysisView({ bill }: BillAnalysisViewProps) {
     const answer = bill[filter.key]?.trim();
     if (!answer) return [];
     return [{ key: filter.key, label: filter.label, answer }];
+  });
+  const evalJustifications = DRAWER_EVAL_FILTERS.flatMap((filter) => {
+    const body = bill[filter.justificationKey]?.trim();
+    if (!body) return [];
+    return [{ key: filter.justificationKey, label: filter.justificationLabel, body }];
   });
 
   const hasMetadata =
@@ -147,31 +187,34 @@ export function BillAnalysisView({ bill }: BillAnalysisViewProps) {
         <h1
           className={
             billNumber
-              ? "uic-bill-number text-bill-number font-semibold leading-bill-number tracking-bill-number text-accent"
-              : "uic-bill-title text-bill-title font-medium leading-bill-title"
+              ? `uic-bill-number text-bill-number font-semibold leading-bill-number tracking-bill-number ${billStatusTextClass[statusVariant]}`
+              : "uic-bill-title text-bill-title font-medium leading-bill-title text-foreground"
           }
         >
           {hero}
         </h1>
         {subtitle ? (
-          <p className="uic-bill-title mt-bill-title-mt">{subtitle}</p>
+          <p className="uic-bill-title mt-bill-title-mt text-foreground">{subtitle}</p>
         ) : null}
       </header>
 
       <div className="mt-bill-pills-mt flex flex-wrap items-center gap-bill-pill-gap">
         {statusLabel ? (
-          <StatusBadge variant={billStatusVariant(bill)}>{statusLabel}</StatusBadge>
+          <StatusBadge variant={statusVariant}>{statusLabel}</StatusBadge>
         ) : null}
         {evalAnswers.map((item) => (
           <span
             key={item.key}
-            className="uic-bill-pill rounded-bill-pill border border-accent px-bill-pill-x text-bill-pill font-semibold leading-bill-pill text-accent lg:h-bill-pill"
+            className={`uic-bill-pill rounded-bill-pill border px-bill-pill-x text-bill-pill font-semibold leading-bill-pill lg:h-bill-pill ${billStatusPillClass[statusVariant]}`}
           >
             {item.label}: {item.answer}
           </span>
         ))}
         {bill.billOverviewUrl ? (
-          <OverviewSearchLink href={bill.billOverviewUrl} />
+          <OverviewSearchLink
+            href={bill.billOverviewUrl}
+            statusVariant={statusVariant}
+          />
         ) : null}
       </div>
 
@@ -180,6 +223,14 @@ export function BillAnalysisView({ bill }: BillAnalysisViewProps) {
         <TextRow label="Pros" body={bill.uicPros} />
         <TextRow label="Cons" body={bill.uicCons} />
       </div>
+
+      {evalJustifications.length > 0 ? (
+        <div className="uic-bill-detail-grid mt-bill-summary-mt">
+          {evalJustifications.map((row) => (
+            <TextRow key={row.key} label={row.label} body={row.body} />
+          ))}
+        </div>
+      ) : null}
 
       {hasMetadata ? (
         <div className="uic-bill-detail-grid uic-bill-detail-grid--meta mt-bill-summary-mt">
@@ -215,12 +266,20 @@ export function BillAnalysisView({ bill }: BillAnalysisViewProps) {
           ) : null}
           {bill.billTextUrl?.trim() ? (
             <MetaRow label="Bill text">
-              <ExternalLink href={bill.billTextUrl.trim()} label="Open bill text" />
+              <ExternalLink
+                href={bill.billTextUrl.trim()}
+                label="Open bill text"
+                statusVariant={statusVariant}
+              />
             </MetaRow>
           ) : null}
           {bill.optionalLink?.trim() ? (
             <MetaRow label="Optional link">
-              <ExternalLink href={bill.optionalLink.trim()} label="Open link" />
+              <ExternalLink
+                href={bill.optionalLink.trim()}
+                label="Open link"
+                statusVariant={statusVariant}
+              />
             </MetaRow>
           ) : null}
           {bill.billOverviewUrl?.trim() ? (
@@ -228,6 +287,7 @@ export function BillAnalysisView({ bill }: BillAnalysisViewProps) {
               <ExternalLink
                 href={bill.billOverviewUrl.trim()}
                 label="View official overview"
+                statusVariant={statusVariant}
               />
             </MetaRow>
           ) : null}

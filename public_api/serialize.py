@@ -66,5 +66,20 @@ def record_to_bill_dto(record: dict[str, Any], *, include_analysis: bool = False
         dto["uicPros"] = str(_field(fields, "UIC Pros") or "").strip()
         dto["uicCons"] = str(_field(fields, "UIC Cons") or "").strip()
         dto["reviewStatus"] = str(fields.get(LIVE_REVIEW_STATUS_FIELD) or "").strip()
+        dto["mechanismsForEvaluationJustification"] = str(
+            _field(fields, "Mechanisms for Evaluation") or ""
+        ).strip()
+        dto["genderInclusiveLanguageJustification"] = str(
+            _field(fields, "Gender Inclusive Language") or ""
+        ).strip()
+        dto["preventionEffortsJustification"] = str(
+            _field(fields, "Prevention Efforts") or ""
+        ).strip()
+        dto["survivorRelativeInputJustification"] = str(
+            _field(fields, "Level of Survivor / Relative Input") or ""
+        ).strip()
+        dto["centeringIndigenousVoicesJustification"] = str(
+            _field(fields, "Centering of Indigenous Voices") or ""
+        ).strip()
 
     return dto

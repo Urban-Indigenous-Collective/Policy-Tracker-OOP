@@ -45,6 +45,9 @@ def test_serialize_bill_dto():
         "Session": "2024",
         "Bill Overview (Link)": "https://example.com/bill",
         "Mechanisms for Evaluation?": "Yes",
+        "Mechanisms for Evaluation": "Clear reporting requirements.",
+        "Gender Inclusive Language?": "No",
+        "Gender Inclusive Language": "Uses gendered terms throughout.",
         "Centering of Indigenous Voices?": "Somewhat",
         LIVE_REVIEW_STATUS_FIELD: REVIEW_STATUS_LIVE,
     }
@@ -65,6 +68,10 @@ def test_serialize_bill_dto():
     assert full["uicPros"] == ""
     assert full["uicCons"] == ""
     assert full["reviewStatus"] == REVIEW_STATUS_LIVE
+    assert full["mechanismsForEvaluationJustification"] == "Clear reporting requirements."
+    assert full["genderInclusiveLanguageJustification"] == "Uses gendered terms throughout."
+    assert full["preventionEffortsJustification"] == ""
+    assert "genderInclusiveLanguageJustification" not in dto
 
 
 def test_summary_stats():

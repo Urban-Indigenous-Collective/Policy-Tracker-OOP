@@ -73,6 +73,12 @@ export type PublicBill = {
   uicPros?: string;
   uicCons?: string;
   reviewStatus?: string;
+  /** Main v3 multiline explanations (bill detail only). */
+  mechanismsForEvaluationJustification?: string;
+  genderInclusiveLanguageJustification?: string;
+  preventionEffortsJustification?: string;
+  survivorRelativeInputJustification?: string;
+  centeringIndigenousVoicesJustification?: string;
 };
 
 export type PublicStateBillsResponse = {
