@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { StateDrawerStatusPill } from "@/components/state/StateDrawerStatusPill";
 import type { PublicBill } from "@/lib/api/types";
+import { stateCodeForUrl } from "@/lib/api/state-code";
 
 type StateDrawerBillRowProps = {
   stateCode: string;
@@ -9,7 +10,7 @@ type StateDrawerBillRowProps = {
 };
 
 export function StateDrawerBillRow({ stateCode, bill }: StateDrawerBillRowProps) {
-  const href = `/states/${stateCode}/bills/${bill.slug}`;
+  const href = `/states/${stateCodeForUrl(stateCode)}/bills/${bill.slug}`;
   const billId = bill.billNumber?.trim() || "—";
   const title = bill.name?.trim() || bill.summary?.trim() || "Untitled bill";
 

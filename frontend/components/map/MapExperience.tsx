@@ -15,6 +15,10 @@ import { FilterChip } from "@/components/ui/FilterChip";
 import { usePublicStates } from "@/lib/api/hooks";
 import type { PublicStatesResponse } from "@/lib/api/types";
 import { stateCategoriesFromResponse } from "@/lib/map/state-categories-from-api";
+import {
+  isSvgMapStateCode,
+  NATIONAL_STATE_CODE,
+} from "@/lib/api/state-code";
 import { useCloseDrawerOutsideMap } from "@/lib/map/use-close-drawer-outside-map";
 import { useMapSelection } from "@/lib/map/use-map-selection";
 
@@ -34,7 +38,10 @@ function MapExperienceInner({
   initialStates = null,
   children = null,
 }: MapExperienceProps) {
-  const { selectedState, onMapStateClick, closeState } = useMapSelection();
+  const { selectedState, onMapStateClick, closeState, selectState } =
+    useMapSelection();
+  const mapHighlightedState =
+    selectedState && isSvgMapStateCode(selectedState) ? selectedState : null;
   const { prefetch } = useStatePrefetch();
   const { data, isLoading, isError, error } = usePublicStates({
     initialData: initialStates,
@@ -79,7 +86,7 @@ function MapExperienceInner({
       <section className="mt-section lg:mt-section-lg" aria-label="Policy map">
         <MapAndLegend
           stateCategories={stateCategories}
-          selectedState={selectedState}
+          selectedState={mapHighlightedState}
           onStateSelect={onMapStateClick}
         />
       </section>
@@ -93,7 +100,15 @@ function MapExperienceInner({
           role="group"
         >
           {FILTER_LABELS.map((label) => (
-            <FilterChip key={label} label={label} />
+            <FilterChip
+              key={label}
+              label={label}
+              onClick={
+                label === "NATIONAL LEGISLATION"
+                  ? () => selectState(NATIONAL_STATE_CODE)
+                  : undefined
+              }
+            />
           ))}
         </div>
       </section>

@@ -27,7 +27,7 @@ Open [http://localhost:3000](http://localhost:3000). The placeholder page calls 
 | Variable | Purpose |
 |----------|---------|
 | `FLASK_DEV_URL` | Rewrite target for `/api/*` and `/health-check` (default `http://127.0.0.1:5000` = `python app.py`) |
-| `NEXT_PUBLIC_SITE_URL` | Public site URL for metadata (Phase 4+) |
+| `NEXT_PUBLIC_SITE_URL` | Public origin for canonicals, `sitemap.xml`, and `robots.txt` (prod: `https://policy.urbanindigenouscollective.org`) |
 | `NEXT_PUBLIC_API_BASE` | Browser API prefix; empty = same-origin `/api` behind nginx in prod |
 | `INTERNAL_API_BASE` | Server-side fetch target for SSR (`http://web:8000` in Docker frontend service; Mac dev uses `FLASK_DEV_URL` fallback) |
 
@@ -75,6 +75,19 @@ python3 scripts/smoke_public_api.py
 ```
 
 See [../docs/API_V1.md](../docs/API_V1.md). Dev footer banner also calls `/api/v1/health` and `/api/v1/states` via Next rewrites.
+
+### SEO / sitemap smoke (Phase 4)
+
+With Flask and Next running:
+
+```bash
+SMOKE_API_BASE=http://127.0.0.1:5000 SMOKE_SITE_BASE=http://127.0.0.1:3000 \
+  python3 scripts/smoke_sitemap.py
+```
+
+### LCP (Phase 4 baseline)
+
+Home LCP is expected to be the hero **H1** in `MapIntro` (text), not the client-loaded USA SVG. Mitigations in place: `display: swap` on fonts, `priority` on nav logo, `content-visibility: auto` on the map container. Re-check with Lighthouse (mobile, slow 4G) after major layout changes.
 
 ## Scripts
 

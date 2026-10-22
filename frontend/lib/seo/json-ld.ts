@@ -1,4 +1,5 @@
 import type { PublicBill } from "@/lib/api/types";
+import { NATIONAL_STATE_CODE, stateCodeForUrl } from "@/lib/api/state-code";
 import { STATE_NAMES } from "@/lib/map/state-codes";
 
 import { absoluteUrl } from "@/lib/seo/site-url";
@@ -32,9 +33,12 @@ export function webSiteJsonLd() {
 }
 
 export function billAnalysisJsonLd(bill: PublicBill, stateCode: string) {
-  const stateName = STATE_NAMES[stateCode] ?? stateCode;
+  const stateName =
+    stateCode === NATIONAL_STATE_CODE
+      ? "United States (federal)"
+      : (STATE_NAMES[stateCode] ?? stateCode);
   const name = bill.name || bill.billNumber || "Policy";
-  const path = `/states/${stateCode}/bills/${bill.slug}`;
+  const path = `/states/${stateCodeForUrl(stateCode)}/bills/${bill.slug}`;
   return {
     "@context": "https://schema.org",
     "@type": "Article",

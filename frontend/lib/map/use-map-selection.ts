@@ -4,17 +4,18 @@ import { useParams, usePathname, useRouter } from "next/navigation";
 import { useCallback, useMemo } from "react";
 
 import {
-  isSvgMapStateCode,
+  isPublicStatePanelCode,
   normalizeStateRouteParam,
+  stateCodeForUrl,
 } from "@/lib/api/state-code";
 
-const STATE_PATH = /^\/states\/([A-Za-z]{2})\/?$/;
+const STATE_PATH = /^\/states\/([^/]+)\/?$/;
 
 function stateFromPath(pathname: string | null): string | null {
   const match = pathname?.match(STATE_PATH);
   if (!match) return null;
   const code = normalizeStateRouteParam(match[1]);
-  return isSvgMapStateCode(code) ? code : null;
+  return isPublicStatePanelCode(code) ? code : null;
 }
 
 function stateFromRouteParams(
@@ -23,7 +24,7 @@ function stateFromRouteParams(
   const raw = params.code;
   if (typeof raw !== "string") return null;
   const code = normalizeStateRouteParam(raw);
-  return isSvgMapStateCode(code) ? code : null;
+  return isPublicStatePanelCode(code) ? code : null;
 }
 
 /** Drawer + map highlight follow the URL only (no optimistic override). */
@@ -39,7 +40,7 @@ export function useMapSelection() {
   const selectState = useCallback(
     (code: string | null) => {
       if (code) {
-        router.replace(`/states/${code}`, { scroll: false });
+        router.replace(`/states/${stateCodeForUrl(code)}`, { scroll: false });
       } else {
         router.replace("/", { scroll: false });
       }
@@ -62,5 +63,5 @@ export function useMapSelection() {
     selectState(null);
   }, [selectState]);
 
-  return { selectedState, onMapStateClick, closeState };
+  return { selectedState, onMapStateClick, closeState, selectState };
 }

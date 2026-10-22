@@ -11,6 +11,7 @@ import { useStateBills } from "@/lib/api/hooks";
 import type { PublicStateBillsResponse } from "@/lib/api/types";
 import type { LegendCategory } from "@/lib/map/legend";
 import { stateCategoryTitleClass } from "@/lib/map/state-category-title-class";
+import { NATIONAL_STATE_CODE } from "@/lib/api/state-code";
 import { STATE_NAMES } from "@/lib/map/state-codes";
 
 type StatePanelProps = {
@@ -62,7 +63,10 @@ export function StatePanel({
     setSearchQuery("");
   }, [stateCode]);
 
-  const name = (STATE_NAMES[stateCode] ?? stateCode).toUpperCase();
+  const name =
+    stateCode === NATIONAL_STATE_CODE
+      ? "NATIONAL"
+      : (STATE_NAMES[stateCode] ?? stateCode).toUpperCase();
   const allBills = data?.bills ?? [];
   const filteredBills = useMemo(
     () => filterDrawerBills(allBills, searchQuery),

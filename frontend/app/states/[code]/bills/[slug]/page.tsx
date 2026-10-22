@@ -6,7 +6,11 @@ import { BillAnalysisView } from "@/components/bill/BillAnalysisView";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { findBillBySlug } from "@/lib/api/bill-utils";
 import { fetchBillById, fetchStateBills } from "@/lib/api/client";
-import { isSvgMapStateCode, normalizeStateRouteParam } from "@/lib/api/state-code";
+import {
+  isPublicStatePanelCode,
+  normalizeStateRouteParam,
+  stateCodeForUrl,
+} from "@/lib/api/state-code";
 import { billAnalysisJsonLd } from "@/lib/seo/json-ld";
 import { absoluteUrl } from "@/lib/seo/site-url";
 
@@ -20,7 +24,7 @@ type PageProps = {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { code: rawCode, slug } = await params;
   const code = normalizeStateRouteParam(rawCode);
-  if (!isSvgMapStateCode(code)) {
+  if (!isPublicStatePanelCode(code)) {
     return { title: "Bill not found | MMIP Policy Tracker" };
   }
 
@@ -33,7 +37,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const detail = await fetchBillById(match.id, { base: "server" });
     const bill = detail.bill;
     const name = bill.name || bill.billNumber || "Policy";
-    const path = `/states/${code}/bills/${slug}`;
+    const path = `/states/${stateCodeForUrl(code)}/bills/${slug}`;
     const description =
       bill.summary?.slice(0, 160) ||
       `UIC policy analysis for ${name} (${code}).`;
@@ -57,7 +61,7 @@ export default async function BillAnalysisPage({ params }: PageProps) {
   const { code: rawCode, slug } = await params;
   const code = normalizeStateRouteParam(rawCode);
 
-  if (!isSvgMapStateCode(code)) {
+  if (!isPublicStatePanelCode(code)) {
     notFound();
   }
 

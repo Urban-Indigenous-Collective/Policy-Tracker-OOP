@@ -102,6 +102,8 @@ Flask ← Airtable Main v3, existing jobs unchanged
 
 **Phase 2 handoff:** Plan Phase 3 (TanStack Query, state/bill routes, wire map to API).
 
+**Phase 4 handoff:** Plan Phase 5 (GitHub CD nginx + Next + Flask, tunnel, legacy redirects).
+
 ### Phase 3 — Core routes (Figma P0–P2)
 
 - [x] `/` map + TanStack Query
@@ -118,11 +120,12 @@ Flask ← Airtable Main v3, existing jobs unchanged
 - [x] `sitemap.xml`, `robots.txt` (`app/sitemap.ts`, `app/robots.ts`, `lib/seo/sitemap-urls.ts`)
 - [x] JSON-LD where appropriate (home `WebSite` + `Organization`; bill `Article` via `JsonLd`)
 - [x] Canonical URLs; hub copy on `/` and MMIP-oriented titles (`metadataBase`, map + state + bill metadata)
-- [ ] Performance pass on LCP for public pages (fonts `display: swap`; further image/map LCP TBD)
+- [x] Performance pass on LCP for public pages (font `swap`, nav logo `priority`, map `content-visibility`; baseline documented in `frontend/README.md`)
+- [x] National drawer at `/states/National` + sitemap coverage for federal Live bills (`scripts/smoke_sitemap.py`)
 
 **Exit criteria:** All indexable Main v3 Live rows appear in sitemap; bill pages have unique titles/descriptions.
 
-**In progress 2026-10-22:** Set `NEXT_PUBLIC_SITE_URL=https://policy.urbanindigenouscollective.org` in prod. National/federal bill URLs deferred until `/states/National/...` routes exist.
+**Completed 2026-10-22:** `NEXT_PUBLIC_SITE_URL` in Docker frontend + build ARG; rep/sponsor-by-state map for National legislation is **future** product work.
 
 ### Phase 5 — Production cutover
 
