@@ -45,6 +45,8 @@ def record_to_bill_dto(record: dict[str, Any], *, include_analysis: bool = False
         "billOverviewUrl": str(
             _field(fields, BILL_OVERVIEW_LINK_FIELD, "Bill Overview") or ""
         ).strip(),
+        "optionalLink": str(_field(fields, "Optional Link") or "").strip(),
+        "billTextUrl": str(_field(fields, "Bill Text") or "").strip(),
         "categories": _field(fields, "Categories") or [],
     }
     if isinstance(dto["categories"], str):

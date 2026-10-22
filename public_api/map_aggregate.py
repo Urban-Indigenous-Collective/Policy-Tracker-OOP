@@ -63,13 +63,10 @@ def build_summary_stats(bills: list[dict[str, Any]]) -> dict[str, int]:
     return {"passed": passed, "pending": pending, "rejected": rejected}
 
 
-def build_states_payload(
-    records: list[dict[str, Any]],
-) -> tuple[dict[str, int], dict[str, dict[str, Any]]]:
-    """Return (summary, states map) from Airtable records."""
-    bills = [record_to_bill_dto(record) for record in records]
-    summary = build_summary_stats(bills)
-
+def build_states_map(
+    bills: list[dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
+    """Map SVG state codes → legend entry for the given bill DTOs."""
     by_state: dict[str, list[dict[str, Any]]] = {}
     for bill in bills:
         code = bill["state"]
@@ -89,4 +86,40 @@ def build_states_payload(
             "billCount": len(state_bills),
         }
 
+    return states
+
+
+def build_map_layers(bills: list[dict[str, Any]]) -> dict[str, Any]:
+    """Precomputed map paint inputs for policy-type filter toggles."""
+    from public_api.bill_layers import (
+        is_doj_initiative_bill,
+        is_national_legislation_bill,
+        is_state_legislation_bill,
+    )
+
+    state_bills = [b for b in bills if is_state_legislation_bill(b)]
+    national_bills = [b for b in bills if is_national_legislation_bill(b)]
+    doj_bills = [b for b in bills if is_doj_initiative_bill(b)]
+
+    national_category = state_legend_category(national_bills)
+    doj_states = build_states_map(doj_bills)
+    doj_category = state_legend_category(doj_bills) if doj_bills else None
+
+    return {
+        "stateLegislation": {"states": build_states_map(state_bills)},
+        "nationalLegislation": {"category": national_category},
+        "dojInitiative": {
+            "states": doj_states,
+            "category": doj_category,
+        },
+    }
+
+
+def build_states_payload(
+    records: list[dict[str, Any]],
+) -> tuple[dict[str, int], dict[str, dict[str, Any]]]:
+    """Return (summary, states map) from Airtable records."""
+    bills = [record_to_bill_dto(record) for record in records]
+    summary = build_summary_stats(bills)
+    states = build_states_map(bills)
     return summary, states

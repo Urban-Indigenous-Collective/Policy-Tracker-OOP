@@ -43,6 +43,7 @@ def test_states_endpoint(client, monkeypatch):
     data = resp.get_json()
     assert data["summary"]["passed"] == 1
     assert data["states"]["WA"]["category"] == "passed"
+    assert data["mapLayers"]["stateLegislation"]["states"]["WA"]["category"] == "passed"
     assert "generatedAt" in data
 
 
@@ -64,6 +65,21 @@ def test_state_bills_not_found(client, monkeypatch):
 
     resp = client.get("/api/v1/states/ZZ/bills")
     assert resp.status_code == 404
+
+
+def test_sitemap_index(client, monkeypatch):
+    snap = _sample_snapshot()
+    monkeypatch.setattr("public_api.routes.get_snapshot", lambda **_: snap)
+
+    resp = client.get("/api/v1/sitemap")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data["paths"][0] == "/"
+    assert data["billCount"] == 1
+    assert data["liveCount"] == 1
+    assert "/states/WA/bills/" in data["paths"][1] or any(
+        "/states/WA/bills/" in p for p in data["paths"]
+    )
 
 
 def test_state_bills_empty_map_state(client, monkeypatch):

@@ -7,6 +7,10 @@ import { StateDrawerSearch } from "@/components/state/StateDrawerSearch";
 import { StateBillList } from "@/components/state/StateBillList";
 import { emptyStatePoliciesMessage } from "@/lib/state/empty-state-policies-message";
 import { filterDrawerBills } from "@/lib/state/filter-drawer-bills";
+import {
+  filterBillsForMapLayer,
+  type MapLayerSelection,
+} from "@/lib/map/bill-layers";
 import { useStateBills } from "@/lib/api/hooks";
 import type { PublicStateBillsResponse } from "@/lib/api/types";
 import type { LegendCategory } from "@/lib/map/legend";
@@ -17,6 +21,7 @@ import { STATE_NAMES } from "@/lib/map/state-codes";
 type StatePanelProps = {
   stateCode: string;
   stateCategory?: LegendCategory;
+  mapLayerMode: MapLayerSelection;
   onClose: () => void;
   initialBills?: PublicStateBillsResponse | null;
   slideIn?: boolean;
@@ -33,6 +38,7 @@ export function StatePanel({
   stateCode,
   stateCategory,
   onClose,
+  mapLayerMode,
   initialBills = null,
   slideIn = true,
   slideInDurationMs = 440,
@@ -61,13 +67,16 @@ export function StatePanel({
 
   useEffect(() => {
     setSearchQuery("");
-  }, [stateCode]);
+  }, [stateCode, mapLayerMode]);
 
   const name =
     stateCode === NATIONAL_STATE_CODE
       ? "NATIONAL"
       : (STATE_NAMES[stateCode] ?? stateCode).toUpperCase();
-  const allBills = data?.bills ?? [];
+  const allBills = useMemo(
+    () => filterBillsForMapLayer(data?.bills ?? [], mapLayerMode),
+    [data?.bills, mapLayerMode],
+  );
   const filteredBills = useMemo(
     () => filterDrawerBills(allBills, searchQuery),
     [allBills, searchQuery],
@@ -120,7 +129,7 @@ export function StatePanel({
 
           <h2
             id={titleId}
-            className={`uic-drawer-state-title text-drawer-state-title font-mono font-bold leading-drawer-state-title mt-drawer-title-mt pr-10 ${titleColorClass}`}
+            className={`uic-drawer-state-title text-drawer-state-title font-mono font-bold leading-drawer-state-title mt-drawer-title-mt max-w-[calc(100%-2.75rem)] pr-10 ${titleColorClass}`}
           >
             {name}
           </h2>
@@ -131,8 +140,7 @@ export function StatePanel({
             </p>
             {hasPolicies ? (
               <span
-                className="absolute top-0 left-drawer-filter-from-content inline-flex h-drawer-filter-pill w-drawer-filter-pill items-center justify-center rounded-drawer-filter border border-foreground font-sans text-drawer-filter font-semibold tracking-drawer-filter text-foreground uppercase"
-                aria-hidden
+                className="uic-drawer-filter-pill absolute top-0 left-drawer-filter-from-content h-drawer-filter-pill w-drawer-filter-pill rounded-drawer-filter border border-foreground font-sans text-drawer-filter font-semibold text-foreground uppercase"
               >
                 Filter
               </span>

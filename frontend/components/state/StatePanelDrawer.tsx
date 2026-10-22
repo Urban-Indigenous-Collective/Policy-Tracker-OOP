@@ -9,15 +9,21 @@ import {
 } from "react";
 
 import { StatePanel } from "@/components/state/StatePanel";
-import type { PublicStateBillsResponse } from "@/lib/api/types";
-import type { LegendCategory } from "@/lib/map/legend";
+import type { PublicStateBillsResponse, PublicStatesResponse } from "@/lib/api/types";
+import type { MapLayerSelection } from "@/lib/map/bill-layers";
+import {
+  drawerCategoryForState,
+  type MapPaintFallback,
+} from "@/lib/map/resolve-map-paint-categories";
 
 const SLIDE_IN_MS = 440;
 const SLIDE_OUT_MS = 340;
 
 type StatePanelDrawerProps = {
   stateCode: string | null;
-  stateCategories: Record<string, LegendCategory>;
+  statesResponse?: PublicStatesResponse | null;
+  mapLayerMode: MapLayerSelection;
+  mapPaintFallback?: MapPaintFallback;
   onClose: () => void;
   initialBills?: PublicStateBillsResponse | null;
 };
@@ -39,7 +45,9 @@ function usePrefersReducedMotion(): boolean {
 /** Keeps the panel mounted through the slide-out, then unmounts. */
 export function StatePanelDrawer({
   stateCode,
-  stateCategories,
+  statesResponse = null,
+  mapLayerMode,
+  mapPaintFallback,
   onClose,
   initialBills = null,
 }: StatePanelDrawerProps) {
@@ -87,10 +95,18 @@ export function StatePanelDrawer({
 
   if (!activeCode) return null;
 
+  const stateCategory = drawerCategoryForState(
+    statesResponse ?? undefined,
+    mapLayerMode,
+    activeCode,
+    mapPaintFallback,
+  );
+
   return (
     <StatePanel
       stateCode={activeCode}
-      stateCategory={stateCategories[activeCode]}
+      stateCategory={stateCategory}
+      mapLayerMode={mapLayerMode}
       onClose={onClose}
       initialBills={activeCode === stateCode ? initialBills : null}
       slideIn={slideIn}

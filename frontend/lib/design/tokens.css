@@ -208,7 +208,8 @@
     letter-spacing: var(--tracking-drawer-state-title);
     line-height: var(--leading-drawer-state-title);
     text-transform: uppercase;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    hyphens: auto;
   }
 
   .uic-drawer-policies-count {
@@ -228,6 +229,18 @@
     letter-spacing: var(--tracking-drawer-bill-id);
     line-height: 1.5rem;
     color: var(--color-foreground);
+  }
+
+  /* Figma filter chip — optical center with wide letter-spacing */
+  .uic-drawer-filter-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1;
+    letter-spacing: var(--tracking-drawer-filter);
+    padding-inline: 0.5rem;
+    padding-left: calc(0.5rem + var(--tracking-drawer-filter) * 0.5);
   }
 
   .uic-drawer-bill-body-regular {

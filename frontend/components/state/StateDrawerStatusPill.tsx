@@ -23,7 +23,7 @@ export function StateDrawerStatusPill({ bill }: StateDrawerStatusPillProps) {
 
   return (
     <span
-      className={`inline-flex h-drawer-status-pill w-drawer-status-pill shrink-0 items-center justify-center overflow-hidden rounded-[30px] border bg-transparent px-1 text-drawer-status-pill font-sans font-semibold uppercase tracking-label ${pillClass[variant]}`}
+      className={`inline-flex h-drawer-status-pill w-drawer-status-pill shrink-0 items-center justify-center overflow-hidden rounded-[30px] border bg-transparent px-1 text-center text-drawer-status-pill font-sans font-semibold leading-none uppercase tracking-label ${pillClass[variant]}`}
     >
       {label}
     </span>

@@ -102,3 +102,66 @@ def test_build_states_payload_excludes_national():
     assert summary["passed"] == 2
     assert "WA" in states
     assert "National" not in states
+
+
+def test_build_map_layers_includes_usao_name_only_or():
+    from public_api.map_aggregate import build_map_layers
+    from public_api.serialize import record_to_bill_dto
+
+    bills = [
+        record_to_bill_dto(
+            _record(
+                "recOR",
+                State="OR",
+                Status="Pending",
+                Name="USAO plan",
+                **{LIVE_REVIEW_STATUS_FIELD: REVIEW_STATUS_LIVE},
+            )
+        ),
+    ]
+    layers = build_map_layers(bills)
+    assert "OR" in layers["dojInitiative"]["states"]
+
+
+def test_build_map_layers_splits_national_and_doj():
+    from public_api.map_aggregate import build_map_layers
+    from public_api.serialize import record_to_bill_dto
+
+    bills = [
+        record_to_bill_dto(
+            _record(
+                "recWA",
+                State="WA",
+                Status="Passed",
+                **{LIVE_REVIEW_STATUS_FIELD: REVIEW_STATUS_LIVE},
+            )
+        ),
+        record_to_bill_dto(
+            _record(
+                "recNat",
+                State="National",
+                Status="Pending",
+                **{
+                    "Bill Overview (Link)": "https://www.congress.gov/bill",
+                    LIVE_REVIEW_STATUS_FIELD: REVIEW_STATUS_LIVE,
+                },
+            )
+        ),
+        record_to_bill_dto(
+            _record(
+                "recDoj",
+                State="National",
+                Status="Passed",
+                **{
+                    "Bill Overview (Link)": "https://www.justice.gov/usao-ak/pr/mmip",
+                    LIVE_REVIEW_STATUS_FIELD: REVIEW_STATUS_LIVE,
+                },
+            )
+        ),
+    ]
+    layers = build_map_layers(bills)
+    assert "WA" in layers["stateLegislation"]["states"]
+    assert layers["nationalLegislation"]["category"] == "pending"
+    assert "National" not in layers["dojInitiative"]["states"]
+    assert layers["dojInitiative"]["states"] == {}
+    assert layers["dojInitiative"]["category"] == "passed"

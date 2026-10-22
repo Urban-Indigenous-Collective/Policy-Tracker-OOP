@@ -20,9 +20,26 @@ export type StateMapEntry = {
   billCount: number;
 };
 
+export type PublicMapLayerStateEntry = {
+  code: string;
+  name: string;
+  category: LegendCategory;
+  billCount: number;
+};
+
+export type PublicMapLayers = {
+  stateLegislation: { states: Record<string, PublicMapLayerStateEntry> };
+  nationalLegislation: { category: LegendCategory | null };
+  dojInitiative: {
+    states: Record<string, PublicMapLayerStateEntry>;
+    category: LegendCategory | null;
+  };
+};
+
 export type PublicStatesResponse = {
   summary: MapSummary;
   states: Record<string, StateMapEntry>;
+  mapLayers?: PublicMapLayers;
   liveCount?: number;
   mainV3Count?: number;
   /** Last successful nightly status refresh (ISO), when available. */
@@ -44,6 +61,8 @@ export type PublicBill = {
   lastUpdate: string;
   summary: string;
   billOverviewUrl: string;
+  optionalLink?: string;
+  billTextUrl?: string;
   categories: string[];
   uicPros?: string;
   uicCons?: string;
@@ -63,6 +82,16 @@ export type PublicApiHealthResponse = {
   mainV3Count?: number;
   cacheAgeSeconds: number;
   generatedAt: string;
+};
+
+export type PublicSitemapResponse = {
+  paths: string[];
+  billCount: number;
+  liveCount: number;
+  skippedNoSlug: number;
+  skippedNotIndexable: number;
+  generatedAt: string;
+  cacheAgeSeconds: number;
 };
 
 export type PublicBillDetailResponse = {

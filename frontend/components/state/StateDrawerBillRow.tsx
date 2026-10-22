@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { StateDrawerBillId } from "@/components/state/StateDrawerBillId";
 import { StateDrawerStatusPill } from "@/components/state/StateDrawerStatusPill";
 import type { PublicBill } from "@/lib/api/types";
 import { stateCodeForUrl } from "@/lib/api/state-code";
@@ -21,10 +22,10 @@ export function StateDrawerBillRow({ stateCode, bill }: StateDrawerBillRowProps)
         className="group flex gap-3 outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
         <div className="flex w-drawer-bill-col-id shrink-0 flex-col gap-2">
-          <span className="uic-drawer-bill-id group-hover:text-accent">{billId}</span>
+          <StateDrawerBillId>{billId}</StateDrawerBillId>
           <StateDrawerStatusPill bill={bill} />
         </div>
-        <p className="uic-drawer-bill-body-regular font-sans font-normal leading-drawer-bill-body w-drawer-bill-col-title min-w-0 group-hover:text-accent">
+        <p className="uic-drawer-bill-body-regular w-drawer-bill-col-title min-w-0 font-sans font-normal leading-drawer-bill-body opacity-100 transition-opacity duration-150 group-hover:opacity-70 group-focus-visible:opacity-70 motion-reduce:transition-none">
           {title}
         </p>
       </Link>

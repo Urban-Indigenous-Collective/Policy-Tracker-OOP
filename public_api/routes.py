@@ -6,6 +6,7 @@ from flask import Blueprint, jsonify
 
 from public_api.cache import UpstreamUnavailableError, get_snapshot
 from public_api.serialize import record_to_bill_dto
+from public_api.sitemap import build_sitemap_payload
 from public_api.states import is_map_state_code, normalize_public_state
 
 public_api_bp = Blueprint("public_api", __name__, url_prefix="/api/v1")
@@ -46,6 +47,7 @@ def list_states():
         {
             "summary": snap.summary,
             "states": snap.states,
+            "mapLayers": snap.map_layers,
             "liveCount": snap.live_count,
             "mainV3Count": snap.main_v3_count,
             "policyDataAsOf": snap.policy_data_as_of.isoformat()
@@ -88,6 +90,16 @@ def state_bills(code: str):
             "cacheAgeSeconds": round(snap.cache_age_seconds, 1),
         }
     )
+
+
+@public_api_bp.get("/sitemap")
+def sitemap_index():
+    try:
+        snap = get_snapshot()
+    except UpstreamUnavailableError as exc:
+        return _error("upstream_unavailable", str(exc), 503)
+
+    return jsonify(build_sitemap_payload(snap))
 
 
 @public_api_bp.get("/bills/<record_id>")

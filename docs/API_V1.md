@@ -55,6 +55,11 @@ Map home payload.
       "billCount": 4
     }
   },
+  "mapLayers": {
+    "stateLegislation": { "states": { "WA": { "code": "WA", "name": "Washington", "category": "passed", "billCount": 4 } } },
+    "nationalLegislation": { "category": "pending" },
+    "dojInitiative": { "states": {}, "category": null }
+  },
   "policyDataAsOf": "2026-10-21T06:00:00+00:00",
   "generatedAt": "2026-10-21T19:00:00+00:00",
   "cacheAgeSeconds": 12.4
@@ -69,6 +74,22 @@ Map home payload.
 {
   "state": "WA",
   "bills": [ { "id": "rec…", "slug": "…", "name": "…", "status": "Passed", … } ],
+  "generatedAt": "…",
+  "cacheAgeSeconds": 12.4
+}
+```
+
+### `GET /api/v1/sitemap`
+
+Indexable Next.js paths from the Live snapshot (home, state/National hubs, bill analysis pages). Used by `app/sitemap.ts` so bill URLs stay aligned with `liveCount`.
+
+```json
+{
+  "paths": ["/", "/states/WA", "/states/WA/bills/sb-1-…-wa001"],
+  "billCount": 240,
+  "liveCount": 240,
+  "skippedNoSlug": 0,
+  "skippedNotIndexable": 0,
   "generatedAt": "…",
   "cacheAgeSeconds": 12.4
 }

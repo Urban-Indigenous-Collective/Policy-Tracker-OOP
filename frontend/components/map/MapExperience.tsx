@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 
 import { MapAndLegend } from "@/components/map/MapAndLegend";
 import { MapIntro } from "@/components/map/MapIntro";
@@ -11,23 +11,22 @@ import {
   useStatePrefetch,
 } from "@/components/map/state-prefetch-context";
 import { StatePanelDrawer } from "@/components/state/StatePanelDrawer";
-import { FilterChip } from "@/components/ui/FilterChip";
-import { usePublicStates } from "@/lib/api/hooks";
+import { FilterToggle } from "@/components/ui/FilterToggle";
+import { usePublicStates, useStateBills } from "@/lib/api/hooks";
 import type { PublicStatesResponse } from "@/lib/api/types";
-import { stateCategoriesFromResponse } from "@/lib/map/state-categories-from-api";
-import {
-  isSvgMapStateCode,
-  NATIONAL_STATE_CODE,
-} from "@/lib/api/state-code";
+import { isSvgMapStateCode, NATIONAL_STATE_CODE } from "@/lib/api/state-code";
 import { useCloseDrawerOutsideMap } from "@/lib/map/use-close-drawer-outside-map";
+import {
+  filterLabelForKey,
+  MAP_FILTER_ROWS,
+  useMapLayerFilters,
+} from "@/lib/map/use-map-layer-filters";
+import {
+  deriveFallbackBillsFromNationalResponse,
+  resolveMapPaintCategories,
+} from "@/lib/map/resolve-map-paint-categories";
+import { drawerStateForMapClick } from "@/lib/map/map-click-for-layer";
 import { useMapSelection } from "@/lib/map/use-map-selection";
-
-const FILTER_LABELS = [
-  "NATIONAL LEGISLATION",
-  "STATE LEGISLATION",
-  "DOJ INITIATIVE",
-  "EXECUTIVE ORDERS",
-] as const;
 
 type MapExperienceProps = {
   initialStates?: PublicStatesResponse | null;
@@ -49,12 +48,67 @@ function MapExperienceInner({
   const resolvedStates = data ?? initialStates ?? undefined;
   const statsLoading = isLoading && !resolvedStates;
 
+  const { mode: mapLayerMode, toggle: toggleMapLayer, isActive } =
+    useMapLayerFilters();
+
+  const needsNationalFallback =
+    !resolvedStates?.mapLayers &&
+    (mapLayerMode === "nationalLegislation" ||
+      mapLayerMode === "dojInitiative");
+  const { data: nationalBillsForLayers } = useStateBills(
+    needsNationalFallback ? NATIONAL_STATE_CODE : null,
+  );
+
+  const mapPaintFallback = useMemo(
+    () =>
+      nationalBillsForLayers?.bills?.length
+        ? deriveFallbackBillsFromNationalResponse(nationalBillsForLayers.bills)
+        : undefined,
+    [nationalBillsForLayers?.bills],
+  );
+
   const stateCategories = useMemo(
-    () => stateCategoriesFromResponse(resolvedStates),
-    [resolvedStates],
+    () =>
+      resolveMapPaintCategories(
+        resolvedStates,
+        mapLayerMode,
+        mapPaintFallback,
+      ),
+    [resolvedStates, mapLayerMode, mapPaintFallback],
   );
 
   const introStatusLine = mapIntroStatusLine(resolvedStates, statsLoading);
+
+  const handleMapStateSelect = useCallback(
+    (code: string | null) => {
+      if (!code) {
+        closeState();
+        return;
+      }
+      if (!mapLayerMode || mapLayerMode === "stateLegislation") {
+        onMapStateClick(code);
+        return;
+      }
+      const drawerCode = drawerStateForMapClick(
+        code,
+        mapLayerMode,
+        resolvedStates,
+      );
+      if (selectedState === drawerCode) {
+        closeState();
+      } else {
+        selectState(drawerCode);
+      }
+    },
+    [
+      closeState,
+      mapLayerMode,
+      onMapStateClick,
+      resolvedStates,
+      selectState,
+      selectedState,
+    ],
+  );
 
   useCloseDrawerOutsideMap(selectedState, closeState);
 
@@ -87,7 +141,7 @@ function MapExperienceInner({
         <MapAndLegend
           stateCategories={stateCategories}
           selectedState={mapHighlightedState}
-          onStateSelect={onMapStateClick}
+          onStateSelect={handleMapStateSelect}
         />
       </section>
 
@@ -96,18 +150,15 @@ function MapExperienceInner({
         aria-label="Policy type filters"
       >
         <div
-          className="mx-auto flex w-fit max-w-full min-w-0 flex-wrap items-center justify-center gap-x-section gap-y-5 xl:mx-0 xl:w-full xl:flex-nowrap xl:justify-start xl:gap-x-nav-gap xl:gap-y-0 xl:pl-filter-inset"
+          className="mx-auto flex w-full max-w-full min-w-0 flex-wrap items-center justify-center gap-x-section gap-y-5 xl:flex-nowrap xl:gap-x-nav-gap"
           role="group"
         >
-          {FILTER_LABELS.map((label) => (
-            <FilterChip
-              key={label}
-              label={label}
-              onClick={
-                label === "NATIONAL LEGISLATION"
-                  ? () => selectState(NATIONAL_STATE_CODE)
-                  : undefined
-              }
+          {MAP_FILTER_ROWS.map((key) => (
+            <FilterToggle
+              key={key}
+              label={filterLabelForKey(key)}
+              active={isActive(key)}
+              onToggle={() => toggleMapLayer(key)}
             />
           ))}
         </div>
@@ -115,7 +166,9 @@ function MapExperienceInner({
 
       <StatePanelDrawer
         stateCode={selectedState}
-        stateCategories={stateCategories}
+        statesResponse={resolvedStates}
+        mapLayerMode={mapLayerMode}
+        mapPaintFallback={mapPaintFallback}
         onClose={closeState}
         initialBills={initialBills}
       />

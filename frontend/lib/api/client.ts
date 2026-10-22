@@ -2,6 +2,7 @@ import { isSvgMapStateCode } from "@/lib/api/state-code";
 import type {
   PublicApiHealthResponse,
   PublicBillDetailResponse,
+  PublicSitemapResponse,
   PublicStateBillsResponse,
   PublicStatesResponse,
 } from "@/lib/api/types";
@@ -58,6 +59,16 @@ export async function fetchPublicApiHealth(
   options?: { base?: "browser" | "server" },
 ): Promise<PublicApiHealthResponse> {
   const res = await fetch(apiUrl("/api/v1/health", options?.base), defaultFetchInit);
+  return parseJson(res);
+}
+
+export async function fetchPublicSitemap(
+  options?: { base?: "browser" | "server" },
+): Promise<PublicSitemapResponse> {
+  const res = await fetch(apiUrl("/api/v1/sitemap", options?.base), {
+    ...defaultFetchInit,
+    next: options?.base === "server" ? { revalidate: 300 } : undefined,
+  });
   return parseJson(res);
 }
 

@@ -129,6 +129,8 @@ Flask ← Airtable Main v3, existing jobs unchanged
 
 ### Phase 5 — Production cutover
 
+**Deferred (2026-10-22):** Not production-ready yet — see [PHASE5_CUTOVER_DEFERRED.md](./PHASE5_CUTOVER_DEFERRED.md) before executing cutover.
+
 - [ ] GitHub CD builds/deploys nginx + Next + Flask
 - [ ] Cloudflare tunnel → nginx
 - [ ] Redirect legacy Flask template routes when ready

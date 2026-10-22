@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare Live bill count from Flask /api/v1 with bill URLs in Next sitemap.
+"""Compare Flask /api/v1/sitemap bill paths with Next /sitemap.xml.
 
 Requires:
   - Flask: SMOKE_API_BASE (default http://127.0.0.1:5000)
@@ -24,6 +24,7 @@ API_BASE = os.getenv("SMOKE_API_BASE", "http://127.0.0.1:5000").rstrip("/")
 SITE_BASE = os.getenv("SMOKE_SITE_BASE", "http://127.0.0.1:3000").rstrip("/")
 
 NS = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9"}
+BILL_PATH = re.compile(r"^/states/[^/]+/bills/")
 
 
 def get_json(path: str, base: str) -> tuple[int, dict]:
@@ -50,59 +51,50 @@ def get_text(path: str, base: str) -> tuple[int, str]:
         return exc.code, exc.read().decode()
 
 
-def count_live_bills() -> int:
-    status, health = get_json("/api/v1/health", API_BASE)
+def api_bill_paths() -> tuple[int, set[str]]:
+    status, data = get_json("/api/v1/sitemap", API_BASE)
     if status != 200:
-        print(f"GET /api/v1/health -> HTTP {status}", file=sys.stderr)
-        return -1
-    live = int(health.get("liveCount") or 0)
-
-    status, states = get_json("/api/v1/states", API_BASE)
-    if status != 200:
-        print(f"GET /api/v1/states -> HTTP {status}", file=sys.stderr)
-        return -1
-
-    counted = 0
-    codes = list((states.get("states") or {}).keys())
-    codes.append("National")
-    seen: set[str] = set()
-    for code in codes:
-        st, data = get_json(f"/api/v1/states/{code}/bills", API_BASE)
-        if st != 200:
-            continue
-        for bill in data.get("bills") or []:
-            slug = bill.get("slug")
-            if not slug:
-                continue
-            bill_state = (bill.get("state") or code).strip()
-            key = f"{bill_state}:{slug}"
-            if key in seen:
-                continue
-            seen.add(key)
-            counted += 1
-
-    if counted != live:
+        print(f"GET /api/v1/sitemap -> HTTP {status}", file=sys.stderr)
+        return -1, set()
+    paths = {p for p in data.get("paths") or [] if BILL_PATH.match(p)}
+    bill_count = int(data.get("billCount") or len(paths))
+    live = int(data.get("liveCount") or 0)
+    if bill_count != len(paths):
         print(
-            f"Note: enumerated {counted} unique bill slugs from state lists "
-            f"(health liveCount={live}).",
+            f"Note: billCount={bill_count} vs {len(paths)} bill paths in payload",
             file=sys.stderr,
         )
-    return counted
+    if live != bill_count:
+        print(
+            f"Note: liveCount={live} vs billCount={bill_count} "
+            f"(skippedNoSlug={data.get('skippedNoSlug')}, "
+            f"skippedNotIndexable={data.get('skippedNotIndexable')})",
+            file=sys.stderr,
+        )
+    return bill_count, paths
 
 
-def count_sitemap_bill_urls(xml_text: str) -> list[str]:
+def sitemap_bill_paths(xml_text: str) -> set[str]:
     root = ET.fromstring(xml_text)
     locs = [el.text.strip() for el in root.findall("sm:url/sm:loc", NS) if el.text]
     bill_re = re.compile(r"/states/[^/]+/bills/")
-    return [loc for loc in locs if bill_re.search(loc)]
+    out: set[str] = set()
+    for loc in locs:
+        if not bill_re.search(loc):
+            continue
+        # normalize to path only for comparison
+        from urllib.parse import urlparse
+
+        out.add(urlparse(loc).path)
+    return out
 
 
 def main() -> int:
     print(f"SMOKE_API_BASE={API_BASE}")
     print(f"SMOKE_SITE_BASE={SITE_BASE}\n")
 
-    api_bills = count_live_bills()
-    if api_bills < 0:
+    api_count, api_paths = api_bill_paths()
+    if api_count < 0:
         return 1
 
     status, xml = get_text("/sitemap.xml", SITE_BASE)
@@ -111,25 +103,44 @@ def main() -> int:
         print(xml[:500], file=sys.stderr)
         return 1
 
-    bill_urls = count_sitemap_bill_urls(xml)
-    print(f"API bill rows (unique slugs): {api_bills}")
-    print(f"Sitemap bill URLs:           {len(bill_urls)}")
+    site_paths = sitemap_bill_paths(xml)
+    print(f"API bill paths:     {api_count}")
+    print(f"Sitemap bill URLs:  {len(site_paths)}")
 
-    if len(bill_urls) < api_bills:
+    missing = api_paths - site_paths
+    extra = site_paths - api_paths
+
+    if missing:
+        print("\nMissing from Next sitemap (first 10):", file=sys.stderr)
+        for path in sorted(missing)[:10]:
+            print(f"  {path}", file=sys.stderr)
+        if len(missing) > 10:
+            print(f"  … and {len(missing) - 10} more", file=sys.stderr)
+
+    if extra:
+        print("\nExtra in Next sitemap (first 5):", file=sys.stderr)
+        for path in sorted(extra)[:5]:
+            print(f"  {path}", file=sys.stderr)
+
+    if len(site_paths) < api_count:
         print(
-            "FAIL: sitemap has fewer bill URLs than API Live bills.",
+            "\nFAIL: sitemap has fewer bill URLs than API sitemap index.",
+            file=sys.stderr,
+        )
+        print(
+            "Tip: restart Next dev server after pulling sitemap fixes; "
+            "sitemap.xml is cached ~5 minutes.",
             file=sys.stderr,
         )
         return 1
 
-    if len(bill_urls) > api_bills + 5:
+    if len(site_paths) > api_count + 5:
         print(
-            "WARN: sitemap bill URL count exceeds API count by more than 5 "
-            "(possible duplicates or stale data).",
+            "WARN: sitemap bill URL count exceeds API count by more than 5.",
             file=sys.stderr,
         )
 
-    print("\nOK: sitemap bill coverage looks consistent.")
+    print("\nOK: sitemap bill coverage matches API.")
     return 0
 
 

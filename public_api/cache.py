@@ -12,7 +12,7 @@ from typing import Any
 
 from airtable_client import AirtableClient, is_airtable_rate_limit_error
 from public_api.gate import filter_public_live_records
-from public_api.map_aggregate import build_states_payload
+from public_api.map_aggregate import build_map_layers, build_states_payload
 from public_api.serialize import record_to_bill_dto
 from public_api.policy_freshness import last_successful_status_refresh_at
 from public_api.states import normalize_public_state
@@ -39,6 +39,7 @@ class PublicSnapshot:
     by_state: dict[str, list[dict[str, Any]]]
     summary: dict[str, int]
     states: dict[str, dict[str, Any]]
+    map_layers: dict[str, Any]
     generated_at: datetime
     live_count: int = field(default=0)
     main_v3_count: int = field(default=0)
@@ -65,6 +66,7 @@ def _build_snapshot(
         by_state.setdefault(code, []).append(bill)
 
     summary, states = build_states_payload(live)
+    map_layers = build_map_layers(bills)
     return PublicSnapshot(
         records=live,
         bills=bills,
@@ -72,6 +74,7 @@ def _build_snapshot(
         by_state=by_state,
         summary=summary,
         states=states,
+        map_layers=map_layers,
         generated_at=datetime.now(timezone.utc),
         live_count=len(live),
         main_v3_count=main_v3_count if main_v3_count is not None else len(records),
