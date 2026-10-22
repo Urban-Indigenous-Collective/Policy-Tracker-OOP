@@ -18,11 +18,61 @@ function prepareStateRegion(node: Element, code: string) {
   node.setAttribute("data-state-code", code);
   node.setAttribute("aria-label", `${name}. Select to view policies.`);
   node.classList.add(
+    "uic-map-state",
     "cursor-pointer",
-    "transition-opacity",
-    "duration-200",
     "focus:outline-none",
   );
+}
+
+function mapStatePaintTarget(node: Element): Element | null {
+  if (node instanceof SVGPathElement && node.id.startsWith("US-")) {
+    return node;
+  }
+  return node.querySelector("use");
+}
+
+function bindMapHoverDelegation(svg: SVGSVGElement) {
+  let hoveredPaint: Element | null = null;
+
+  const setHovered = (region: Element | null) => {
+    const next = region ? mapStatePaintTarget(region) : null;
+    if (next === hoveredPaint) return;
+    hoveredPaint?.classList.remove("uic-map-fill-hovered");
+    hoveredPaint = next;
+    hoveredPaint?.classList.add("uic-map-fill-hovered");
+  };
+
+  svg.addEventListener("mouseover", (event) => {
+    if (!(event.target instanceof Element)) return;
+    const region = event.target.closest("[data-state-code]");
+    if (region instanceof Element) setHovered(region);
+  });
+
+  svg.addEventListener("mouseout", (event) => {
+    if (!(event.target instanceof Element)) return;
+    const region = event.target.closest("[data-state-code]");
+    if (!(region instanceof Element)) return;
+    const related = event.relatedTarget;
+    if (related instanceof Node && region.contains(related)) return;
+    if (hoveredPaint && region.contains(hoveredPaint)) {
+      setHovered(null);
+    }
+  });
+
+  svg.addEventListener("focusin", (event) => {
+    if (!(event.target instanceof Element)) return;
+    const region = event.target.closest("[data-state-code]");
+    if (region instanceof Element) setHovered(region);
+  });
+
+  svg.addEventListener("focusout", (event) => {
+    if (!(event.target instanceof Element)) return;
+    const region = event.target.closest("[data-state-code]");
+    if (!(region instanceof Element)) return;
+    const related = event.relatedTarget;
+    if (related instanceof Node && region.contains(related)) return;
+    setHovered(null);
+  });
 }
 
 export function UsaMap({
@@ -97,6 +147,7 @@ export function UsaMap({
           });
         });
 
+        bindMapHoverDelegation(svg);
         container.replaceChildren(svg);
         applyMapPaintStyles(
           container,

@@ -27,6 +27,8 @@ export const mapInteraction = {
   strokeWidth: "1.5",
   /** Dim non-selected states when one state is selected (see `--opacity-inactive`). */
   inactiveOpacity: "0.4",
+  /** Hover/focus darken via CSS `filter: brightness(...)`. */
+  hoverBrightness: 0.82,
   /** No Live row in API — usa.svg idle (#212121); not a legend category. */
   unlistedFill: "#212121",
 } as const;

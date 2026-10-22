@@ -112,6 +112,7 @@
 
   /* ——— Map interaction ——— */
   --opacity-map-selected: 0.42;
+  --map-hover-brightness: 0.82;
   --opacity-inactive: 0.4;
   --opacity-donate-hover: 0.9;
   --width-map-stroke: 1.5px;
@@ -253,5 +254,17 @@
 
   .uic-drawer-search-input::-webkit-search-cancel-button {
     display: none;
+  }
+
+  /* USA map — darken fill on hover (`filter` does not apply to SVG `<g>` in Chromium). */
+  .uic-map-state > use,
+  path.uic-map-state {
+    transition: filter 0.15s ease;
+  }
+
+  .uic-map-fill-hovered,
+  .uic-map-state:focus-visible > use,
+  path.uic-map-state:focus-visible {
+    filter: brightness(var(--map-hover-brightness));
   }
 }

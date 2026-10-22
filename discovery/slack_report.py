@@ -79,12 +79,10 @@ def merge_status_refresh_report(
     path = report_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     report = load_deferred_report() or {}
-    merged_items = (report.get("status_items") or []) + status_items
-    report["status_items"] = merged_items
-    if identity_mismatch_items:
-        report["identity_mismatch_items"] = (
-            report.get("identity_mismatch_items") or []
-        ) + identity_mismatch_items
+    # One status refresh run produces the full list; do not accumulate across merges
+    # (pytest or retries used to append the same fixture rows dozens of times).
+    report["status_items"] = list(status_items)
+    report["identity_mismatch_items"] = list(identity_mismatch_items or [])
     report["status_refresh"] = refresh_stats
     if legiscan_quota:
         report["legiscan_quota"] = merge_legiscan_quota(
