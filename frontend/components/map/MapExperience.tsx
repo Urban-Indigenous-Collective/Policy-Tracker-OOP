@@ -124,7 +124,7 @@ function MapExperienceInner({
       : null;
 
   return (
-    <div className="pb-section-sm">
+    <div className="pb-map-content-pb">
       {children}
       <MapIntro
         statusLine={introStatusLine}
