@@ -6,7 +6,7 @@ import { PolicyListStateSection } from "@/components/policy-list/PolicyListState
 import { PolicyListToolbar } from "@/components/policy-list/PolicyListToolbar";
 import type { PublicBill, PublicStatesResponse } from "@/lib/api/types";
 import { filterDrawerBills } from "@/lib/state/filter-drawer-bills";
-import type { DrawerEvalFilterKey } from "@/lib/state/drawer-eval-filters";
+import type { DrawerFilterKey } from "@/lib/state/drawer-eval-filters";
 import { policyListStateCategory } from "@/lib/policy-list/state-category";
 import { sortPolicyListStateCodes } from "@/lib/policy-list/sort-state-codes";
 
@@ -21,7 +21,7 @@ export function PolicyListView({
 }: PolicyListViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
-  const [evalFilters, setEvalFilters] = useState<DrawerEvalFilterKey[]>([]);
+  const [evalFilters, setEvalFilters] = useState<DrawerFilterKey[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const filteredByState = useMemo(() => {

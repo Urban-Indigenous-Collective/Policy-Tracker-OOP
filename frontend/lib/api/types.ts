@@ -70,6 +70,8 @@ export type PublicBill = {
   preventionEfforts?: string;
   survivorRelativeInput?: string;
   centeringIndigenousVoices?: string;
+  /** True when Main v3 Indigenous Sponsorship text is present. */
+  hasIndigenousSponsorship?: boolean;
   uicPros?: string;
   uicCons?: string;
   reviewStatus?: string;
@@ -92,6 +94,8 @@ export type PublicApiHealthResponse = {
   ok: boolean;
   liveCount: number;
   mainV3Count?: number;
+  /** Live bills with Main v3 Indigenous Sponsorship populated. */
+  indigenousSponsorshipCount?: number;
   cacheAgeSeconds: number;
   generatedAt: string;
 };

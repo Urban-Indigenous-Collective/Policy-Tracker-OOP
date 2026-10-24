@@ -10,7 +10,7 @@ import {
 import { StateDrawerSearch } from "@/components/state/StateDrawerSearch";
 import { StateBillList } from "@/components/state/StateBillList";
 import { emptyStatePoliciesMessage } from "@/lib/state/empty-state-policies-message";
-import type { DrawerEvalFilterKey } from "@/lib/state/drawer-eval-filters";
+import type { DrawerFilterKey } from "@/lib/state/drawer-eval-filters";
 import { filterDrawerBills } from "@/lib/state/filter-drawer-bills";
 import {
   filterBillsForMapLayer,
@@ -51,7 +51,7 @@ export function StatePanel({
   const searchId = useId();
   const panelRef = useRef<HTMLElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [evalFilters, setEvalFilters] = useState<DrawerEvalFilterKey[]>([]);
+  const [evalFilters, setEvalFilters] = useState<DrawerFilterKey[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filterTrayId = useId();
   const { data, isLoading, isError, error } = useStateBills(stateCode, {
@@ -169,6 +169,7 @@ export function StatePanel({
                 open={filtersOpen}
                 active={evalFilters.length > 0}
                 controlsId={filterTrayId}
+                stateCategory={stateCategory}
                 onToggle={() => setFiltersOpen((open) => !open)}
               />
             ) : null}
@@ -177,6 +178,7 @@ export function StatePanel({
                 id={filterTrayId}
                 open={filtersOpen}
                 selected={evalFilters}
+                stateCategory={stateCategory}
                 onChange={setEvalFilters}
                 onClose={() => setFiltersOpen(false)}
               />

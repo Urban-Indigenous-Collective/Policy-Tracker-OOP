@@ -41,14 +41,39 @@ export const DRAWER_EVAL_FILTERS = [
 
 export type DrawerEvalFilterKey = (typeof DRAWER_EVAL_FILTERS)[number]["key"];
 
+/** Presence filters (non–single-select Main v3 fields). */
+export const DRAWER_FLAG_FILTERS = [
+  {
+    key: "indigenousSponsorship",
+    label: "Indigenous sponsorship",
+  },
+] as const;
+
+export type DrawerFlagFilterKey = (typeof DRAWER_FLAG_FILTERS)[number]["key"];
+
+export type DrawerFilterKey = DrawerEvalFilterKey | DrawerFlagFilterKey;
+
+export const DRAWER_FILTERS: ReadonlyArray<{
+  key: DrawerFilterKey;
+  label: string;
+}> = [
+  ...DRAWER_EVAL_FILTERS.map(({ key, label }) => ({ key, label })),
+  ...DRAWER_FLAG_FILTERS,
+];
+
 const AFFIRMATIVE_EVAL = new Set(["yes", "somewhat"]);
+
+function billMatchesFilterKey(bill: PublicBill, key: DrawerFilterKey): boolean {
+  if (key === "indigenousSponsorship") {
+    return bill.hasIndigenousSponsorship === true;
+  }
+  return AFFIRMATIVE_EVAL.has((bill[key] ?? "").trim().toLowerCase());
+}
 
 export function billMatchesEvalFilters(
   bill: PublicBill,
-  keys: readonly DrawerEvalFilterKey[],
+  keys: readonly DrawerFilterKey[],
 ): boolean {
   if (keys.length === 0) return true;
-  return keys.every((key) =>
-    AFFIRMATIVE_EVAL.has((bill[key] ?? "").trim().toLowerCase()),
-  );
+  return keys.every((key) => billMatchesFilterKey(bill, key));
 }

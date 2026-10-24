@@ -2,37 +2,55 @@
 
 import { useEffect } from "react";
 
+import type { LegendCategory } from "@/lib/map/legend";
 import {
-  DRAWER_EVAL_FILTERS,
-  type DrawerEvalFilterKey,
+  stateCategoryFilterActiveClass,
+  stateCategoryFilterFocusRingClass,
+} from "@/lib/map/state-category-title-class";
+import {
+  DRAWER_FILTERS,
+  type DrawerFilterKey,
 } from "@/lib/state/drawer-eval-filters";
 
 type StateDrawerFilterButtonProps = {
   open: boolean;
   active: boolean;
   controlsId: string;
+  stateCategory?: LegendCategory;
   onToggle: () => void;
+  /** Drawer: aligned to policies row; toolbar: inline in policy list controls. */
+  placement?: "drawer" | "toolbar";
 };
 
 export function StateDrawerFilterButton({
   open,
   active,
   controlsId,
+  stateCategory,
   onToggle,
+  placement = "drawer",
 }: StateDrawerFilterButtonProps) {
+  const emphasis = active || open;
+  const activeClass = stateCategoryFilterActiveClass(stateCategory);
+  const focusRingClass = stateCategoryFilterFocusRingClass(stateCategory);
+  const placementClass =
+    placement === "drawer"
+      ? "absolute top-0 left-drawer-filter-from-content"
+      : "shrink-0";
+
   return (
     <button
       type="button"
       aria-expanded={open}
       aria-controls={controlsId}
       onClick={onToggle}
-      className={`uic-drawer-filter-pill absolute top-0 left-drawer-filter-from-content h-drawer-filter-pill w-drawer-filter-pill cursor-pointer rounded-drawer-filter border bg-transparent font-sans text-drawer-filter font-semibold uppercase outline-none focus-visible:ring-2 focus-visible:ring-accent ${
-        active || open
-          ? "border-accent text-accent"
+      className={`uic-drawer-filter-pill ${placementClass} box-border h-drawer-filter-pill w-drawer-filter-pill cursor-pointer rounded-drawer-filter border bg-transparent text-drawer-filter outline-none focus-visible:ring-2 ${focusRingClass} ${
+        emphasis
+          ? activeClass
           : "border-foreground text-foreground"
       }`}
     >
-      Filter
+      <span className="uic-drawer-filter-pill-label">Filter</span>
     </button>
   );
 }
@@ -40,8 +58,9 @@ export function StateDrawerFilterButton({
 type StateDrawerFilterMenuProps = {
   id: string;
   open: boolean;
-  selected: readonly DrawerEvalFilterKey[];
-  onChange: (next: DrawerEvalFilterKey[]) => void;
+  selected: readonly DrawerFilterKey[];
+  stateCategory?: LegendCategory;
+  onChange: (next: DrawerFilterKey[]) => void;
   onClose: () => void;
 };
 
@@ -50,9 +69,12 @@ export function StateDrawerFilterMenu({
   id,
   open,
   selected,
+  stateCategory,
   onChange,
   onClose,
 }: StateDrawerFilterMenuProps) {
+  const activeClass = stateCategoryFilterActiveClass(stateCategory);
+  const focusRingClass = stateCategoryFilterFocusRingClass(stateCategory);
   useEffect(() => {
     if (!open) return;
     const onPointerDown = (event: PointerEvent) => {
@@ -68,7 +90,7 @@ export function StateDrawerFilterMenu({
     return () => window.removeEventListener("pointerdown", onPointerDown);
   }, [id, onClose, open]);
 
-  const toggleKey = (key: DrawerEvalFilterKey) => {
+  const toggleKey = (key: DrawerFilterKey) => {
     onChange(
       selected.includes(key)
         ? selected.filter((item) => item !== key)
@@ -85,7 +107,7 @@ export function StateDrawerFilterMenu({
       aria-label="Policy analysis filters"
       className="absolute top-full right-0 left-0 z-20 mt-drawer-filter-menu flex flex-wrap gap-drawer-filter-stack rounded-drawer-filter border border-surface-border bg-background p-drawer-filter-options-x"
     >
-      {DRAWER_EVAL_FILTERS.map((option) => {
+      {DRAWER_FILTERS.map((option) => {
         const checked = selected.includes(option.key);
         return (
           <button
@@ -93,9 +115,9 @@ export function StateDrawerFilterMenu({
             type="button"
             aria-pressed={checked}
             onClick={() => toggleKey(option.key)}
-            className={`uic-drawer-filter-option w-auto cursor-pointer rounded-drawer-filter border bg-transparent px-drawer-filter-option-x py-drawer-filter-option-y font-sans text-drawer-filter font-semibold uppercase outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+            className={`uic-drawer-filter-option w-auto cursor-pointer rounded-drawer-filter border bg-transparent px-drawer-filter-option-x py-drawer-filter-option-y font-sans text-drawer-filter font-semibold uppercase outline-none focus-visible:ring-2 ${focusRingClass} ${
               checked
-                ? "border-accent text-accent"
+                ? activeClass
                 : "border-foreground text-foreground"
             }`}
           >

@@ -2,17 +2,20 @@
 
 import { useId } from "react";
 
-import { StateDrawerFilterMenu } from "@/components/state/StateDrawerFilter";
+import {
+  StateDrawerFilterButton,
+  StateDrawerFilterMenu,
+} from "@/components/state/StateDrawerFilter";
 import { StateDrawerSearch } from "@/components/state/StateDrawerSearch";
-import type { DrawerEvalFilterKey } from "@/lib/state/drawer-eval-filters";
+import type { DrawerFilterKey } from "@/lib/state/drawer-eval-filters";
 
 type PolicyListToolbarProps = {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   searchOpen: boolean;
   onSearchOpenChange: (open: boolean) => void;
-  evalFilters: DrawerEvalFilterKey[];
-  onEvalFiltersChange: (next: DrawerEvalFilterKey[]) => void;
+  evalFilters: DrawerFilterKey[];
+  onEvalFiltersChange: (next: DrawerFilterKey[]) => void;
   filtersOpen: boolean;
   onFiltersOpenChange: (open: boolean) => void;
 };
@@ -35,19 +38,13 @@ export function PolicyListToolbar({
     <div className="relative">
       <div className="relative w-full">
         <div className="flex min-h-policy-list-toolbar-row items-center justify-end gap-4">
-          <button
-            type="button"
-            aria-expanded={filtersOpen}
-            aria-controls={filterTrayId}
-            onClick={() => onFiltersOpenChange(!filtersOpen)}
-            className={`uic-policy-list-filter-pill inline-flex h-drawer-filter-pill w-drawer-filter-pill shrink-0 cursor-pointer items-center justify-center rounded-drawer-filter border bg-transparent pl-policy-list-filter-pl pr-policy-list-filter-x font-sans text-drawer-filter font-semibold uppercase tracking-policy-list-filter outline-none focus-visible:ring-2 focus-visible:ring-accent ${
-              filtersActive || filtersOpen
-                ? "border-accent text-accent"
-                : "border-foreground text-foreground"
-            }`}
-          >
-            Filter
-          </button>
+          <StateDrawerFilterButton
+            open={filtersOpen}
+            active={filtersActive}
+            controlsId={filterTrayId}
+            placement="toolbar"
+            onToggle={() => onFiltersOpenChange(!filtersOpen)}
+          />
 
           <button
             type="button"

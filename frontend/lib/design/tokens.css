@@ -59,8 +59,9 @@
   --tracking-tight-ui: -0.025em;
 
   --leading-hero: 1.15;
-  /* Figma intro copy: 13px / 24px line-height */
+  /* Figma intro copy: body-sm 13px / 24px; hero intro (uic-body-md) 14px / 26px */
   --leading-body-sm: 1.5rem;
+  --leading-body-md: 1.625rem;
 
   --font-weight-light: 300;
   --font-weight-regular: 400;
@@ -158,7 +159,8 @@
   --height-drawer-status-pill: 1.5625rem;
   --width-drawer-filter-pill: 5.9375rem;
   --height-drawer-filter-pill: 1.4375rem;
-  --spacing-drawer-filter-pill-x: 0.5rem;
+  /* FILTER pill inset — drawer + policy list (Figma 202:6589 / 202:6590) */
+  --spacing-drawer-filter-pill-x: 0.875rem;
   --spacing-drawer-filter-option-x: 0.75rem;
   --tracking-drawer-filter-option: 0.5px;
   --spacing-drawer-filter-option-y: 0.625rem;
@@ -186,7 +188,8 @@
   --spacing-drawer-bill-session-gap: 0.75rem;
   --text-drawer-status-pill: 0.8125rem;
   --text-drawer-filter: 0.75rem;
-  --tracking-drawer-filter: 0.3075rem;
+  /* Figma 161:3152 / 202:6590 — 12px SemiBold, 41% tracking (= 4.92px) */
+  --tracking-drawer-filter: 0.41em;
   --radius-drawer-filter: 19px;
   --width-drawer-search: var(--width-drawer-content);
   --height-drawer-search: 2.9375rem;
@@ -221,6 +224,8 @@
   --leading-bill-pill: 1.125rem;
   --radius-bill-pill: 30px;
   --size-bill-search: 1.125rem;
+  --width-bill-inline-search: 11.25rem;
+  --spacing-bill-inline-search-x: 0.375rem;
   --spacing-bill-summary-mt: 4.4375rem;
   --spacing-bill-summary-col: 6.875rem;
   --text-bill-summary-label: 1.75rem;
@@ -237,11 +242,6 @@
   --spacing-policy-list-top: 3.5rem;
   /* Figma `202:6522`: FILTER pill bottom (223) → Alaska title top (248) = 25px; search row height `202:6591` = 38px */
   --height-policy-list-toolbar-row: 2.375rem;
-  --tracking-policy-list-filter: 4.92px;
-  --spacing-policy-list-filter-x: 0.875rem;
-  --spacing-policy-list-filter-pl: calc(
-    var(--spacing-policy-list-filter-x) + var(--tracking-policy-list-filter) * 0.5
-  );
   --spacing-policy-list-toolbar-to-content: 3rem;
   /* @deprecated alias — use --spacing-policy-list-toolbar-to-content */
   --spacing-policy-list-toolbar: var(--spacing-policy-list-toolbar-to-content);
@@ -390,6 +390,13 @@
     line-height: var(--leading-body-sm);
   }
 
+  .uic-body-md {
+    font-family: var(--font-sans);
+    font-size: var(--text-body-md);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--leading-body-md);
+  }
+
   .uic-drawer-top-border {
     height: var(--height-drawer-top-border);
     background-color: var(--color-top-border-stripe-gray);
@@ -469,31 +476,28 @@
     margin-top: var(--spacing-policy-list-toolbar-to-content) !important;
   }
 
-  .uic-policy-list-filter-pill {
+  /* FILTER pill — symmetric inset; label nudge corrects trailing letter-spacing. */
+  .uic-drawer-filter-pill {
+    box-sizing: border-box;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    text-align: center;
-    line-height: 1;
-    letter-spacing: var(--tracking-policy-list-filter);
-    padding-inline: var(--spacing-policy-list-filter-x);
-    padding-left: calc(
-      var(--spacing-policy-list-filter-x) + var(--tracking-policy-list-filter) * 0.5
-    );
+    padding-inline: var(--spacing-drawer-filter-pill-x);
   }
 
-  /* Figma filter chip — optical center with wide letter-spacing */
-  .uic-drawer-filter-pill {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
+  /*
+   * letter-spacing adds a full track after the last glyph, so a centered line box
+   * sits half a track too far left. Shift right by half the track (Figma 161:3152).
+   */
+  .uic-drawer-filter-pill-label {
+    display: inline-block;
+    font-family: var(--font-sans);
+    font-size: var(--text-drawer-filter);
+    font-weight: var(--font-weight-semibold);
     line-height: 1;
     letter-spacing: var(--tracking-drawer-filter);
-    padding-inline: var(--spacing-drawer-filter-pill-x);
-    padding-left: calc(
-      var(--spacing-drawer-filter-pill-x) + var(--tracking-drawer-filter) * 0.5
-    );
+    transform: translateX(calc(0.5 * var(--tracking-drawer-filter)));
+    text-transform: uppercase;
   }
 
   /* Question pills: tracking only. Padding is the px/py utilities so it is not lost under the fixed Filter height. */
@@ -535,6 +539,23 @@
   }
 
   .uic-drawer-search-input::-webkit-search-cancel-button {
+    display: none;
+  }
+
+  .uic-bill-inline-search-input {
+    font-family: var(--font-sans);
+    font-size: var(--text-bill-pill);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--leading-bill-pill);
+    color: inherit;
+  }
+
+  .uic-bill-inline-search-input::placeholder {
+    color: currentColor;
+    opacity: 0.55;
+  }
+
+  .uic-bill-inline-search-input::-webkit-search-cancel-button {
     display: none;
   }
 
@@ -665,7 +686,7 @@
       grid-template-columns: var(--width-bill-detail-label)
         minmax(0, var(--max-width-bill-summary));
       column-gap: var(--spacing-bill-summary-col);
-      gap: 0;
+      row-gap: 0;
     }
 
     .uic-bill-detail-row--summary {
@@ -681,6 +702,18 @@
       padding-block: 0;
       white-space: nowrap;
     }
+  }
+
+  .uic-bill-search-mark {
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--color-accent) 35%, transparent);
+    color: inherit;
+  }
+
+  .uic-bill-search-mark[data-bill-search-active] {
+    background: color-mix(in srgb, var(--color-accent) 60%, transparent);
+    outline: 1px solid var(--color-accent);
+    outline-offset: 1px;
   }
 
   /* USA map — darken fill on hover (`filter` does not apply to SVG `<g>` in Chromium). */

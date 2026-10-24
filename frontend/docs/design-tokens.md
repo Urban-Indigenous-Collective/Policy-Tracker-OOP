@@ -30,7 +30,7 @@ Single source of truth for the reusable design system:
 | `--spacing-drawer-x` | 63px horizontal inset |
 | Typography | `uic-drawer-state-title` (34px / bold mono), `uic-drawer-policies-count`, `uic-drawer-bill-id`, `uic-drawer-bill-session` (14px, 0.1em tracking) above the description, `uic-drawer-bill-body-regular` (16px / 28px leading) |
 | Bill row | grid 158px + 40px gap + title col; row width `--width-drawer-content` (397px) |
-| Chrome | `/ui/dismiss.svg`; status pill `--width/height-drawer-status-pill`; filter menu stays inside the content gutters |
+| Chrome | `/ui/dismiss.svg`; status pill `--width/height-drawer-status-pill`; FILTER pill 95×23 with 14px inset, centered label + `--tracking-drawer-filter` end-padding; filter menu stays inside the content gutters |
 | Site top bar | `--height-top-border` (3px teal accent) — `TopBorder` |
 | Drawer top stripe | `--height-drawer-top-border` (~22px), `uic-drawer-top-border` / `DrawerTopBorder` |
 | Drawer search | `--color-drawer-search` → `bg-drawer-search`, `--spacing-drawer-search-mt` (54px), `uic-drawer-search-input` |
@@ -40,9 +40,7 @@ Single source of truth for the reusable design system:
 | Token | Value |
 |--------|--------|
 | `--spacing-policy-list-top` | 56px below nav band |
-| `--tracking-policy-list-filter` | 4.92px — FILTER pill (`202:6590`) |
-| `--spacing-policy-list-filter-x` | 14px horizontal inset (`202:6589`) |
-| `--spacing-policy-list-filter-pl` | 14px + half tracking — optical center |
+| FILTER pill | Same as drawer: `--tracking-drawer-filter` (0.41em), `uic-drawer-filter-pill-label` on inner span |
 | `--height-policy-list-toolbar-row` | 38px filter/search control row (`202:6591`) |
 | `--spacing-policy-list-toolbar-to-content` | 48px below toolbar row before first state title (`202:6522`: filter row y=200 → title y=248) |
 | `--max-width-policy-list` | 1260px content column (394 + 317 + 549) |
