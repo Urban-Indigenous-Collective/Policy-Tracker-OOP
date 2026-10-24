@@ -20,11 +20,15 @@ def _error(code: str, message: str, http_status: int):
 def health():
     try:
         snap = get_snapshot()
+        indigenous_sponsorship_count = sum(
+            1 for bill in snap.bills if bill.get("hasIndigenousSponsorship")
+        )
         return jsonify(
             {
                 "ok": True,
                 "liveCount": snap.live_count,
                 "mainV3Count": snap.main_v3_count,
+                "indigenousSponsorshipCount": indigenous_sponsorship_count,
                 "cacheAgeSeconds": round(snap.cache_age_seconds, 1),
                 "policyDataAsOf": snap.policy_data_as_of.isoformat()
                 if snap.policy_data_as_of

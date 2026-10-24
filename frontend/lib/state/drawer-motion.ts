@@ -95,3 +95,66 @@ export function useDrawerSlide(openKey: string | null) {
 
   return { activeKey, slideIn, onSlideTransitionEnd };
 }
+
+/** Same durations/easing as drawer slide — for width/opacity reveals (e.g. inline search). */
+export function drawerRevealStyle(revealed: boolean): CSSProperties {
+  return drawerSlideStyle(revealed);
+}
+
+/**
+ * Mount → reveal on open; hide → unmount on close (matches drawer slide-out timing).
+ */
+export function useDrawerReveal(open: boolean) {
+  const reduceMotion = usePrefersReducedMotion();
+  const [mounted, setMounted] = useState(open);
+  const [revealed, setRevealed] = useState(open && reduceMotion);
+  const wasOpenRef = useRef(false);
+
+  useLayoutEffect(() => {
+    if (open) {
+      setMounted(true);
+      if (wasOpenRef.current || reduceMotion) {
+        setRevealed(true);
+      } else {
+        setRevealed(false);
+        const id = requestAnimationFrame(() => setRevealed(true));
+        wasOpenRef.current = true;
+        return () => cancelAnimationFrame(id);
+      }
+      wasOpenRef.current = true;
+      return;
+    }
+
+    if (reduceMotion) {
+      setRevealed(false);
+      setMounted(false);
+      wasOpenRef.current = false;
+      return;
+    }
+
+    setRevealed(false);
+  }, [open, reduceMotion]);
+
+  const onRevealTransitionEnd = useCallback(
+    (event: TransitionEvent<HTMLElement>) => {
+      if (reduceMotion || open) return;
+      if (event.target !== event.currentTarget) return;
+      if (
+        event.propertyName !== "max-width" &&
+        event.propertyName !== "opacity"
+      ) {
+        return;
+      }
+      setMounted(false);
+      wasOpenRef.current = false;
+    },
+    [open, reduceMotion],
+  );
+
+  return {
+    mounted,
+    revealed,
+    revealStyle: drawerRevealStyle(revealed),
+    onRevealTransitionEnd,
+  };
+}

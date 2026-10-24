@@ -42,13 +42,17 @@ export function BillPanel({
     detailQuery.data?.bill.slug === slug ? detailQuery.data.bill : null;
   const prefetchedAnalysis =
     prefetched?.bill && "uicPros" in prefetched.bill ? prefetched.bill : null;
-  const bill = detailBill ?? prefetchedAnalysis ?? fromList ?? null;
-  const listSettled = Boolean(listQuery.data) || listQuery.isError;
   const waitingForDetail =
     Boolean(recordId) &&
-    detailQuery.isLoading &&
+    (detailQuery.isLoading || detailQuery.isFetching) &&
     !detailBill &&
     !prefetchedAnalysis;
+  const bill =
+    detailBill ??
+    prefetchedAnalysis ??
+    (waitingForDetail ? null : fromList) ??
+    null;
+  const listSettled = Boolean(listQuery.data) || listQuery.isError;
   const showMissing =
     !bill && listSettled && !listQuery.isLoading && !waitingForDetail;
   const dismissFocusRingClass = bill
@@ -97,7 +101,7 @@ export function BillPanel({
         </div>
 
         {bill ? (
-          <BillAnalysisView bill={bill} />
+          <BillAnalysisView key={slug} bill={bill} />
         ) : showMissing ? (
           <p className="uic-bill-title mt-bill-number-mt" role="alert">
             {detailQuery.isError || listQuery.isError

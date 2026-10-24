@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchPublicApiHealth, fetchPublicStates } from "@/lib/api/client";
+import {
+  fetchPublicApiHealth,
+  fetchPublicStates,
+  fetchStateBills,
+} from "@/lib/api/client";
 
 type HealthState =
   | { status: "loading" }
@@ -10,6 +14,8 @@ type HealthState =
       healthPayload: string;
       liveCount: number | null;
       mapStates: number | null;
+      indigenousSponsorshipCount: number | null;
+      sponsorshipFieldMissing: boolean;
     }
   | { status: "error"; message: string };
 
@@ -27,13 +33,15 @@ export function ApiHealthSmoke({ placement = "inline" }: ApiHealthSmokeProps) {
 
     async function run() {
       try {
-        const [healthRes, apiHealthRes, statesRes] = await Promise.allSettled([
+        const [healthRes, apiHealthRes, statesRes, sampleBillsRes] =
+          await Promise.allSettled([
           fetch("/health-check").then(async (res) => {
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             return res.text();
           }),
           fetchPublicApiHealth(),
           fetchPublicStates(),
+          fetchStateBills("WA"),
         ]);
 
         if (cancelled) return;
@@ -57,11 +65,27 @@ export function ApiHealthSmoke({ placement = "inline" }: ApiHealthSmokeProps) {
           }
         }
 
+        let indigenousSponsorshipCount: number | null = null;
+        if (apiHealthRes.status === "fulfilled") {
+          indigenousSponsorshipCount =
+            apiHealthRes.value.indigenousSponsorshipCount ?? null;
+        }
+
+        let sponsorshipFieldMissing = false;
+        if (sampleBillsRes.status === "fulfilled") {
+          const sample = sampleBillsRes.value.bills[0];
+          sponsorshipFieldMissing = Boolean(
+            sample && !("hasIndigenousSponsorship" in sample),
+          );
+        }
+
         setHealth({
           status: "ok",
           healthPayload: healthRes.value,
           liveCount,
           mapStates,
+          indigenousSponsorshipCount,
+          sponsorshipFieldMissing,
         });
       } catch (err: unknown) {
         if (!cancelled) {
@@ -92,8 +116,9 @@ export function ApiHealthSmoke({ placement = "inline" }: ApiHealthSmokeProps) {
         className={`${marginClass} rounded-lg border border-status-pending/40 bg-status-pending/10 px-4 py-3 text-body-md text-status-pending`}
         role="status"
       >
-        Flask API not reachable ({health.message}). Start Flask on port 8000 or
-        set <code className="font-mono">FLASK_DEV_URL</code> for Next rewrites.
+        Flask API not reachable ({health.message}). Start Flask with{" "}
+        <code className="font-mono">python app.py</code> (port 5000) or set{" "}
+        <code className="font-mono">FLASK_DEV_URL</code> for Next rewrites.
       </p>
     );
   }
@@ -116,6 +141,22 @@ export function ApiHealthSmoke({ placement = "inline" }: ApiHealthSmokeProps) {
         <>
           {" "}
           · <span className="font-mono">{health.mapStates}</span> map states
+        </>
+      ) : null}
+      {health.indigenousSponsorshipCount != null ? (
+        <>
+          {" "}
+          ·{" "}
+          <span className="font-mono">{health.indigenousSponsorshipCount}</span>{" "}
+          with Indigenous sponsorship
+        </>
+      ) : null}
+      {health.sponsorshipFieldMissing ? (
+        <>
+          {" "}
+          · Restart Flask to pick up{" "}
+          <code className="font-mono">hasIndigenousSponsorship</code> in bill
+          JSON (filters need it)
         </>
       ) : null}
     </p>

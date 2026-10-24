@@ -60,6 +60,7 @@ def test_serialize_bill_dto():
     assert dto["mechanismsForEvaluation"] == "Yes"
     assert dto["centeringIndigenousVoices"] == "Somewhat"
     assert dto["preventionEfforts"] == ""
+    assert dto["hasIndigenousSponsorship"] is False
     assert "uicPros" not in dto
     assert "uicCons" not in dto
     assert "reviewStatus" not in dto
@@ -72,6 +73,28 @@ def test_serialize_bill_dto():
     assert full["genderInclusiveLanguageJustification"] == "Uses gendered terms throughout."
     assert full["preventionEffortsJustification"] == ""
     assert "genderInclusiveLanguageJustification" not in dto
+
+    legacy_gi = _record(
+        "recLEGACY",
+        **{
+            **fields,
+            "Gender Inclusive Language": "",
+            "Gender Inclusive Explanation": "Legacy pending column text.",
+        },
+    )
+    legacy_dto = record_to_bill_dto(legacy_gi, include_analysis=True)
+    assert (
+        legacy_dto["genderInclusiveLanguageJustification"] == "Legacy pending column text."
+    )
+
+    sponsored = _record(
+        "recSPON",
+        **{
+            **fields,
+            "Indigenous Sponsorship": "Sen. Donald Olson (D-Inupiaq)",
+        },
+    )
+    assert record_to_bill_dto(sponsored)["hasIndigenousSponsorship"] is True
 
 
 def test_summary_stats():

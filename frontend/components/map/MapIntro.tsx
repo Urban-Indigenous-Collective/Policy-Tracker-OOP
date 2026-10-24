@@ -21,7 +21,7 @@ export function MapIntro({ statusLine = null, statusBusy = false }: MapIntroProp
           Policies
         </h1>
 
-        <div className="max-w-intro space-y-6 uic-body-sm text-foreground">
+        <div className="max-w-intro space-y-6 uic-body-md text-foreground">
           {INTRO_PARAGRAPHS.map((paragraph) => (
             <p key={paragraph.slice(0, 32)}>{paragraph}</p>
           ))}

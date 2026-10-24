@@ -23,6 +23,10 @@ def _field(fields: dict[str, Any], *names: str) -> Any:
     return None
 
 
+def _has_indigenous_sponsorship(fields: dict[str, Any]) -> bool:
+    return bool(str(_field(fields, "Indigenous Sponsorship") or "").strip())
+
+
 def bill_slug(record_id: str, fields: dict[str, Any]) -> str:
     bill_number = str(_field(fields, "Bill Number") or "bill")
     session = str(_field(fields, "Session") or "session")
@@ -58,6 +62,7 @@ def record_to_bill_dto(record: dict[str, Any], *, include_analysis: bool = False
         "preventionEfforts": _eval_answer(fields, "Prevention Efforts?"),
         "survivorRelativeInput": _eval_answer(fields, "Level of Survivor / Relative Input?"),
         "centeringIndigenousVoices": _eval_answer(fields, "Centering of Indigenous Voices?"),
+        "hasIndigenousSponsorship": _has_indigenous_sponsorship(fields),
     }
     if isinstance(dto["categories"], str):
         dto["categories"] = [dto["categories"]]
@@ -70,7 +75,7 @@ def record_to_bill_dto(record: dict[str, Any], *, include_analysis: bool = False
             _field(fields, "Mechanisms for Evaluation") or ""
         ).strip()
         dto["genderInclusiveLanguageJustification"] = str(
-            _field(fields, "Gender Inclusive Language") or ""
+            _field(fields, "Gender Inclusive Language", "Gender Inclusive Explanation") or ""
         ).strip()
         dto["preventionEffortsJustification"] = str(
             _field(fields, "Prevention Efforts") or ""
