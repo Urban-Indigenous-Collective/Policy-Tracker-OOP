@@ -185,11 +185,30 @@ class ApprovalSync:
         self.airtable.delete_record(self.airtable.pending_table, record_id)
         self.seen_store.update_status(url, "approved")
 
-        self.slack.notify_approval(
-            fields.get("Title") or fields.get("Name") or "Untitled",
-            fields.get("State", ""),
-            "to_live",
-        )
+        title = fields.get("Title") or fields.get("Name") or "Untitled"
+        state = fields.get("State", "")
+        self.slack.notify_approval(title, state, "to_live")
+        try:
+            from public_api.states import normalize_public_state
+            from subscriptions.digest import public_bill_path
+            from subscriptions.digest_queue import enqueue_new_live
+
+            normalized_state = normalize_public_state(state)
+            enqueue_new_live(
+                state=normalized_state,
+                title=str(title),
+                url=url,
+                record_id=str(created_id),
+                public_path=public_bill_path(
+                    state=normalized_state,
+                    record_id=str(created_id),
+                    fields=live_fields,
+                ),
+            )
+        except Exception:
+            logger.exception(
+                "Failed to queue subscriber digest for new Live bill %s", created_id
+            )
         logger.info("Moved to live: %s (live_id=%s)", url, created_id)
         return True
 

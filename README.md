@@ -53,6 +53,20 @@ python3 scripts/smoke_public_api.py
 
 On macOS, **port 8000 is often used by another process** — do not assume Policy Tracker is there unless you bound it explicitly. See [docs/API_V1.md](docs/API_V1.md) and [frontend/README.md](frontend/README.md).
 
+### State subscriptions (optional)
+
+Env-gated map/list feature: visitors subscribe to state updates by email. New addresses are added immediately; managing or unsubscribing an existing address requires email OTP (digests are a later phase). Off by default. Local store under `data/`. Design-system HTML templates; delivery defaults to the Flask log, or Gmail API as `info@` (same Workspace SA as UIC membership). Roadmap: [docs/STATE_SUBSCRIPTIONS.md](docs/STATE_SUBSCRIPTIONS.md).
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `STATE_SUBSCRIBE_ENABLED` | `false` | Flask `/api/v1/subscriptions/*` accepts requests |
+| `NEXT_PUBLIC_STATE_SUBSCRIBE_ENABLED` | unset/`false` | Show the subscribe bell in the drawer and policy list |
+| `STATE_SUBSCRIBE_MAIL_PROVIDER` | `log` | `log` or `gmail` |
+| `STATE_SUBSCRIBE_MAIL_FROM` | UIC info@ | From header when using `gmail` |
+| `STATE_SUBSCRIBE_GMAIL_SA_KEY_PATH` | `~/.config/gmail-migration/service-account.json` | Workspace SA JSON for `gmail.send` |
+
+Enable both feature flags, restart Flask and Next (`NEXT_PUBLIC_*` is baked in at Next start).
+
 ## Cutover timeline
 
 Dates below come from git history (and, for Qwen3.6, from scripts in `deploy/` that are not yet a completed git-dated cutover).
@@ -130,7 +144,7 @@ After deploy, register hooks once (needs Airtable API quota):
 docker compose exec scheduler python scripts/register_airtable_webhooks.py
 ```
 
-The pipeline runs enabled steps sequentially: discovery → status refresh → validation refresh, then approval catch-up and webhook refresh.
+The pipeline runs enabled steps sequentially: discovery → status refresh → validation refresh, then approval catch-up and webhook refresh. Overnight Slack digests and **subscriber state-update emails** (Live new + Status/Progression changes) send together at `SLACK_SUMMARY_CRON` (default 7:30am ET).
 
 ```bash
 docker compose --profile tunnel up -d   # includes web + tunnel + scheduler
@@ -143,6 +157,7 @@ docker compose --profile tunnel up -d   # includes web + tunnel + scheduler
 | `STATUS_REFRESH_ENABLED` | `true` | Run LegiScan status refresh as pipeline step 2 |
 | `VALIDATION_REFRESH_ENABLED` | `false` | Run pending validation refresh as pipeline step 3 |
 | `DISCOVERY_TZ` | `America/New_York` | Timezone for cron |
+| `SLACK_SUMMARY_CRON` | `30 7 * * *` | Morning Slack summary + subscriber digests |
 | `APPROVAL_SYNC_INTERVAL_MIN` | `0` | Optional poller; `0` means webhook + nightly catch-up only |
 | `DISCOVERY_MAX_ANALYSES_PER_RUN` | `25` | Cap LLM analyses per run (safety valve) |
 | `DISCOVERY_RELEVANCE_MIN_CONFIDENCE` | `0.6` | MMIP relevance gate threshold |

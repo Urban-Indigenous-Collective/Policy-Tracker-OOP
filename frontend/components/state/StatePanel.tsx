@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { DrawerTopBorder } from "@/components/state/DrawerTopBorder";
 import {
@@ -9,6 +16,8 @@ import {
 } from "@/components/state/StateDrawerFilter";
 import { StateDrawerSearch } from "@/components/state/StateDrawerSearch";
 import { StateBillList } from "@/components/state/StateBillList";
+import { StateSubscribeBell } from "@/components/state/StateSubscribeBell";
+import { StateSubscribeModal } from "@/components/state/StateSubscribeModal";
 import { emptyStatePoliciesMessage } from "@/lib/state/empty-state-policies-message";
 import type { DrawerFilterKey } from "@/lib/state/drawer-eval-filters";
 import { filterDrawerBills } from "@/lib/state/filter-drawer-bills";
@@ -17,6 +26,7 @@ import {
   type MapLayerSelection,
 } from "@/lib/map/bill-layers";
 import { useStateBills } from "@/lib/api/hooks";
+import { isStateSubscribeEnabled } from "@/lib/api/subscriptions";
 import type { PublicStateBillsResponse } from "@/lib/api/types";
 import type { LegendCategory } from "@/lib/map/legend";
 import { stateCategoryTitleClass } from "@/lib/map/state-category-title-class";
@@ -50,19 +60,27 @@ export function StatePanel({
   const titleId = useId();
   const searchId = useId();
   const panelRef = useRef<HTMLElement>(null);
+  const metaRowRef = useRef<HTMLDivElement>(null);
+  const policiesCountRef = useRef<HTMLParagraphElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [evalFilters, setEvalFilters] = useState<DrawerFilterKey[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [subscribeOpen, setSubscribeOpen] = useState(false);
+  /** Match Filter→bell gap to Policies→Filter gap. */
+  const [metaControlGapPx, setMetaControlGapPx] = useState<number | null>(null);
   const filterTrayId = useId();
+  const subscribeEnabled = isStateSubscribeEnabled();
   const { data, isLoading, isError, error } = useStateBills(stateCode, {
     initialData: initialBills,
   });
   const filtersOpenRef = useRef(filtersOpen);
+  const subscribeOpenRef = useRef(subscribeOpen);
   const billPanelOpenRef = useRef(billPanelOpen);
   const dismissBillLatch = useRef(false);
   const onCloseRef = useRef(onClose);
   const onCloseBillRef = useRef(onCloseBill);
   filtersOpenRef.current = filtersOpen;
+  subscribeOpenRef.current = subscribeOpen;
   billPanelOpenRef.current = billPanelOpen;
   onCloseRef.current = onClose;
   onCloseBillRef.current = onCloseBill;
@@ -71,6 +89,10 @@ export function StatePanel({
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
+      if (subscribeOpenRef.current) {
+        setSubscribeOpen(false);
+        return;
+      }
       if (filtersOpenRef.current) {
         setFiltersOpen(false);
         return;
@@ -95,6 +117,7 @@ export function StatePanel({
     setSearchQuery("");
     setEvalFilters([]);
     setFiltersOpen(false);
+    setSubscribeOpen(false);
   }, [stateCode, mapLayerMode]);
 
   const name =
@@ -116,6 +139,41 @@ export function StatePanel({
   const titleColorClass = hasPolicies
     ? stateCategoryTitleClass(stateCategory)
     : "text-foreground";
+
+  useLayoutEffect(() => {
+    if (!hasPolicies || !subscribeEnabled) {
+      setMetaControlGapPx(null);
+      return;
+    }
+    const row = metaRowRef.current;
+    const policies = policiesCountRef.current;
+    if (!row || !policies) return;
+
+    const measure = () => {
+      const raw = getComputedStyle(row)
+        .getPropertyValue("--spacing-drawer-filter-from-content")
+        .trim();
+      const rootFontPx = parseFloat(
+        getComputedStyle(document.documentElement).fontSize,
+      );
+      let filterLeftPx = row.getBoundingClientRect().left;
+      if (raw.endsWith("rem")) {
+        filterLeftPx += parseFloat(raw) * rootFontPx;
+      } else if (raw.endsWith("px")) {
+        filterLeftPx += parseFloat(raw);
+      } else {
+        filterLeftPx += 12.125 * rootFontPx;
+      }
+      const gap = filterLeftPx - policies.getBoundingClientRect().right;
+      setMetaControlGapPx(Number.isFinite(gap) ? Math.max(0, gap) : null);
+    };
+
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(row);
+    ro.observe(policies);
+    return () => ro.disconnect();
+  }, [hasPolicies, subscribeEnabled, shownCount, name]);
 
   return (
     <aside
@@ -160,18 +218,48 @@ export function StatePanel({
             {name}
           </h2>
 
-          <div className="relative mt-drawer-meta-mt min-h-drawer-filter-pill">
-            <p className="uic-drawer-policies-count" aria-live="polite">
+          <div
+            ref={metaRowRef}
+            className="relative mt-drawer-meta-mt min-h-drawer-filter-pill"
+          >
+            <p
+              ref={policiesCountRef}
+              className="uic-drawer-policies-count w-max"
+              aria-live="polite"
+            >
               {isLoading && !data ? "…" : shownCount} POLICIES
             </p>
             {hasPolicies ? (
-              <StateDrawerFilterButton
-                open={filtersOpen}
-                active={evalFilters.length > 0}
-                controlsId={filterTrayId}
-                stateCategory={stateCategory}
-                onToggle={() => setFiltersOpen((open) => !open)}
-              />
+              <div
+                className="absolute top-0 left-drawer-filter-from-content flex items-center"
+                style={
+                  subscribeEnabled && metaControlGapPx != null
+                    ? { gap: `${metaControlGapPx}px` }
+                    : undefined
+                }
+              >
+                <StateDrawerFilterButton
+                  open={filtersOpen}
+                  active={evalFilters.length > 0}
+                  controlsId={filterTrayId}
+                  stateCategory={stateCategory}
+                  placement="toolbar"
+                  onToggle={() => setFiltersOpen((open) => !open)}
+                />
+                {subscribeEnabled ? (
+                  <StateSubscribeBell
+                    label={`Subscribe to updates for ${name}`}
+                    onClick={() => setSubscribeOpen(true)}
+                  />
+                ) : null}
+              </div>
+            ) : subscribeEnabled ? (
+              <div className="absolute top-0 right-0">
+                <StateSubscribeBell
+                  label={`Subscribe to updates for ${name}`}
+                  onClick={() => setSubscribeOpen(true)}
+                />
+              </div>
             ) : null}
             {hasPolicies ? (
               <StateDrawerFilterMenu
@@ -226,6 +314,13 @@ export function StatePanel({
           </div>
         </div>
       </div>
+      {subscribeEnabled ? (
+        <StateSubscribeModal
+          stateCode={stateCode}
+          open={subscribeOpen}
+          onClose={() => setSubscribeOpen(false)}
+        />
+      ) : null}
     </aside>
   );
 }

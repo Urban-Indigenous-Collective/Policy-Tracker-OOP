@@ -78,7 +78,12 @@ export function SiteNavigation() {
       <NavBand>
         <div className="flex min-h-nav-row flex-col lg:flex-row lg:items-center lg:justify-between">
           <div className="flex w-full items-center justify-between gap-nav-brand-gap lg:w-auto lg:max-w-nav-brand lg:justify-start">
-            <div className="flex min-w-0 items-center gap-nav-brand-gap">
+            <Link
+              href="/"
+              className="flex min-w-0 items-center gap-nav-brand-gap outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              aria-label="Urban Indigenous Collective — Policy map"
+              onClick={closeMenu}
+            >
               <div className="relative h-logo w-logo shrink-0">
                 <Image
                   src="/brand/uic-logo.png"
@@ -92,7 +97,7 @@ export function SiteNavigation() {
               <p className="font-mono text-body font-bold leading-tight tracking-tight-ui text-foreground">
                 URBAN INDIGENOUS COLLECTIVE
               </p>
-            </div>
+            </Link>
 
             <button
               type="button"

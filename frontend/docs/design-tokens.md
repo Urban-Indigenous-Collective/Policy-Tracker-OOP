@@ -57,7 +57,7 @@ Single source of truth for the reusable design system:
 | Token / class | Value |
 |--------|--------|
 | Panel frame | `--width-bill-panel` (1004px on the 1512 frame). At large breakpoints it fills from the left edge to the state drawer and slides with the drawer motion. Dismiss offset is `--spacing-bill-panel-pt`. |
-| Content column | `--max-width-bill-panel` (893px) with `--spacing-bill-inset` (111px) |
+| Content column | `--max-width-bill-panel` (893px) with `--spacing-bill-inset` (111px) left and `--spacing-bill-dismiss-end` (57px) right |
 | Bill number | `uic-bill-number` — Roboto Mono SemiBold 55px, 30% tracking, accent |
 | Title | `uic-bill-title` — Montserrat Medium 18 / 31, max 408px |
 | Pills | `uic-bill-pill` — 25px outline, 13px semibold, 30px radius, 14px gap. Status uses `StatusBadge` + `text-status-*`. Qualitative pills use accent and the stored answer. |

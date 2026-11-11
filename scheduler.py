@@ -108,7 +108,7 @@ def run_status_refresh_job():
 
 
 def run_slack_summary_job():
-    """Post the deferred overnight discovery/status digest to Slack."""
+    """Post deferred overnight Slack digest and fan out subscriber emails."""
     from discovery.slack_report import send_deferred_report
 
     logger.info("Starting scheduled Slack summary")
@@ -122,6 +122,17 @@ def run_slack_summary_job():
         logger.exception("Slack summary job failed: %s", exc)
         SlackNotifier().notify_error(f"Slack summary failed: {exc}")
         raise
+
+    # Digests are independent of Slack quiet/empty rules — always attempt.
+    try:
+        from subscriptions.digest import send_morning_digests
+
+        digest_stats = send_morning_digests()
+        logger.info("Morning subscriber digests: %s", digest_stats)
+    except Exception as exc:
+        logger.exception("Morning subscriber digests failed: %s", exc)
+        SlackNotifier().notify_error(f"Subscriber digests failed: {exc}")
+        # Do not re-raise: Slack already posted; digest failure shouldn't retry Slack.
 
 
 def run_validation_refresh_job():

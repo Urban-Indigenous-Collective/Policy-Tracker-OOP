@@ -548,15 +548,41 @@ class StatusRefreshPipeline:
 
             stats.updated += 1
             canonical = self.legiscan.get_bill_link(bill_details.get("bill") or {})
+            filtered_changes = [
+                c for c in changes if c["field"] != BILL_OVERVIEW_LINK_FIELD
+            ]
             stats.status_items.append(
                 {
                     "title": title,
                     "state": state,
                     "table": table_label,
+                    "record_id": record_id,
                     "source_url": canonical if canonical and canonical != "N/A" else url,
-                    "changes": [c for c in changes if c["field"] != BILL_OVERVIEW_LINK_FIELD],
+                    "changes": filtered_changes,
                 }
             )
+            if not self.dry_run and table_label == "Live":
+                try:
+                    from subscriptions.digest import public_bill_path
+                    from subscriptions.digest_queue import enqueue_live_status_changes
+
+                    enqueue_live_status_changes(
+                        state=state,
+                        title=title,
+                        url=canonical if canonical and canonical != "N/A" else url,
+                        changes=filtered_changes,
+                        record_id=record_id,
+                        public_path=public_bill_path(
+                            state=state,
+                            record_id=record_id,
+                            fields=fields,
+                        ),
+                    )
+                except Exception:
+                    logger.exception(
+                        "Failed to queue subscriber digest for Live status change %s",
+                        record_id,
+                    )
         except Exception as exc:
             if is_legiscan_limit_error(exc):
                 stats.legiscan_limited = True

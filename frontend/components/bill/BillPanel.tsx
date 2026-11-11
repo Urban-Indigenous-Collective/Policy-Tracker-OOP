@@ -109,8 +109,8 @@ export function BillPanel({
       } ${slideIn ? "translate-x-0" : "translate-x-full"}`}
     >
       <DrawerTopBorder />
-      <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain pt-drawer-header-pt pl-page-x sm:pl-page-x-md lg:pl-bill-inset">
-        <div className="sticky top-drawer-header-pt z-10 ml-auto w-fit pr-bill-dismiss-end">
+      <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain pt-drawer-header-pt pl-page-x pr-page-x sm:pl-page-x-md sm:pr-page-x-md lg:pl-bill-inset lg:pr-bill-dismiss-end">
+        <div className="sticky top-drawer-header-pt z-10 ml-auto w-fit">
           <button
             type="button"
             onClick={onClose}

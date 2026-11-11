@@ -105,6 +105,21 @@ Full public bill DTO (includes `uicPros`, `uicCons`). 404 if id not in Live snap
 { "ok": true, "liveCount": 240, "cacheAgeSeconds": 1.2, "generatedAt": "…" }
 ```
 
+## State subscriptions (optional)
+
+Gated by `STATE_SUBSCRIBE_ENABLED` (default off). When disabled, all routes under `/api/v1/subscriptions` return `404`. Local JSON store (`data/state_subscriptions.json` by default). Signup always adds the requested state immediately (no OTP). If the email already had subscriptions, the response sets `hasExistingSubscriptions` so the UI can offer optional manage. OTP is only sent via `request-code` / magic link when managing. Design-system HTML templates; delivery is `log` (default) or Gmail API as `info@` (`STATE_SUBSCRIBE_MAIL_PROVIDER=gmail`). Full roadmap: [STATE_SUBSCRIPTIONS.md](STATE_SUBSCRIPTIONS.md). Pair with `NEXT_PUBLIC_STATE_SUBSCRIBE_ENABLED` on the Next frontend to show the drawer/list bell.
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `GET` | `/api/v1/subscriptions/status` | `{ "enabled": true }` |
+| `POST` | `/api/v1/subscriptions/signup` | `{ email, state }` → always `subscribed` (+ `hasExistingSubscriptions` when email already known) |
+| `POST` | `/api/v1/subscriptions/request-code` | Existing email → OTP + magic link (`verification_required`) for manage |
+| `POST` | `/api/v1/subscriptions/verify` | `{ email, code }` → `{ sessionToken, states }` |
+| `POST` | `/api/v1/subscriptions/verify-link` | `{ token }` magic link → `{ sessionToken, states }` |
+| `POST` | `/api/v1/subscriptions/subscribe` | session + state → add |
+| `POST` | `/api/v1/subscriptions/unsubscribe` | session + state or `all` → remove |
+| `GET` | `/api/v1/subscriptions/me` | session → current states |
+
 ## Errors
 
 ```json
