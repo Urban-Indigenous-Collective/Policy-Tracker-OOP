@@ -146,7 +146,9 @@
   --spacing-drawer-list-mt: 3.375rem;
   --spacing-drawer-row: 3.5rem;
   --spacing-drawer-filter-from-content: 12.125rem;
-  --width-drawer-bill-col-id: 9.875rem;
+  /* Bill id + status stack (trial; was Figma 9.875rem / 158px). */
+  --width-drawer-bill-id-stack: 7.8125rem;
+  --width-drawer-bill-col-id: var(--width-drawer-bill-id-stack);
   --spacing-drawer-bill-col-gap: 2.5rem;
   --width-drawer-bill-col-title: calc(
     var(--width-drawer-content) - var(--width-drawer-bill-col-id) -
@@ -155,8 +157,9 @@
   --width-drawer-bill-row: var(--width-drawer-content);
   --width-drawer-status-pill: 6.5625rem;
   /* Extra half-width per side (total pill grow = 2× this value). */
-  --spacing-drawer-status-pill-extend-left: 0.625rem;
   --height-drawer-status-pill: 1.5625rem;
+  --spacing-drawer-status-pill-y: 0.1875rem;
+  --leading-drawer-status-pill: 1.125rem;
   --width-drawer-filter-pill: 5.9375rem;
   --height-drawer-filter-pill: 1.4375rem;
   /* FILTER pill inset — drawer + policy list (Figma 202:6589 / 202:6590) */
@@ -464,11 +467,16 @@
     word-break: break-word;
   }
 
-  .uic-drawer-status-pill-extend-left {
+  /* Bill list status pill — id column width; long labels wrap inside the border. */
+  .uic-drawer-status-pill {
     box-sizing: border-box;
-    margin-left: calc(-1 * var(--spacing-drawer-status-pill-extend-left)) !important;
-    width: calc(100% + 2 * var(--spacing-drawer-status-pill-extend-left)) !important;
-    max-width: calc(100% + 2 * var(--spacing-drawer-status-pill-extend-left)) !important;
+    min-height: var(--height-drawer-status-pill);
+    padding: var(--spacing-drawer-status-pill-y) 0.25rem;
+    font-size: var(--text-drawer-status-pill);
+    line-height: var(--leading-drawer-status-pill);
+    white-space: normal;
+    overflow-wrap: anywhere;
+    hyphens: auto;
   }
 
   /* Policy list FILTER chip (Figma MacBook Pro 14" - 35) — wider inset than drawer */
@@ -746,6 +754,23 @@
       right: var(--width-state-drawer);
       z-index: 100;
       width: auto;
+    }
+  }
+
+  /* Policy list — bill analysis covers the viewport (no map state drawer). */
+  .uic-bill-panel.uic-bill-panel--fullscreen {
+    inset: 0;
+    z-index: 120;
+    width: 100%;
+    max-width: 100vw;
+  }
+
+  @media (min-width: 64rem) {
+    .uic-bill-panel.uic-bill-panel--fullscreen {
+      left: 0;
+      right: 0;
+      width: 100%;
+      z-index: 120;
     }
   }
 }

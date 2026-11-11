@@ -1,8 +1,5 @@
-import Link from "next/link";
-
 import { StateDrawerBillIdStack } from "@/components/state/StateDrawerBillIdStack";
 import type { PublicBill } from "@/lib/api/types";
-import { stateCodeForUrl } from "@/lib/api/state-code";
 import { billStatusVariant } from "@/lib/bill/status-variant";
 import { formatDrawerSessionYear } from "@/lib/state/format-drawer-session-year";
 
@@ -17,19 +14,24 @@ const sessionStatusClass: Record<ReturnType<typeof billStatusVariant>, string> =
 type PolicyListBillRowProps = {
   stateCode: string;
   bill: PublicBill;
+  onSelect: (stateCode: string, bill: PublicBill) => void;
 };
 
-export function PolicyListBillRow({ stateCode, bill }: PolicyListBillRowProps) {
-  const href = `/states/${stateCodeForUrl(stateCode)}/bills/${bill.slug}`;
+export function PolicyListBillRow({
+  stateCode,
+  bill,
+  onSelect,
+}: PolicyListBillRowProps) {
   const billId = bill.billNumber?.trim() || "—";
   const title = bill.name?.trim() || bill.summary?.trim() || "Untitled bill";
   const session = formatDrawerSessionYear(bill.session);
 
   return (
     <li className="min-w-0 w-full max-w-full">
-      <Link
-        href={href}
-        className="group grid w-full min-w-0 max-w-full grid-cols-[minmax(0,var(--width-drawer-bill-col-id))_minmax(0,1fr)] gap-x-drawer-bill-col-gap outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      <button
+        type="button"
+        onClick={() => onSelect(stateCode, bill)}
+        className="group grid w-full min-w-0 max-w-full cursor-pointer grid-cols-[minmax(0,var(--width-drawer-bill-col-id))_minmax(0,1fr)] gap-x-drawer-bill-col-gap border-0 bg-transparent p-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
         <div className="col-start-1 flex min-w-0 max-w-full items-start overflow-visible">
           <StateDrawerBillIdStack billId={billId} bill={bill} />
@@ -44,7 +46,7 @@ export function PolicyListBillRow({ stateCode, bill }: PolicyListBillRowProps) {
             {title}
           </p>
         </div>
-      </Link>
+      </button>
     </li>
   );
 }

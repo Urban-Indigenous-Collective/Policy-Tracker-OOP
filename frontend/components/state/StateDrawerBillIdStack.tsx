@@ -10,10 +10,9 @@ type StateDrawerBillIdStackProps = {
   bill: PublicBill;
 };
 
-type StackLayout = "compact" | "wide" | "wrapped";
+type StackLayout = "default" | "wrapped";
 
-const PILL_WIDTH_REM = 6.5625;
-const ID_COL_WIDTH_REM = 9.875;
+const STACK_WIDTH_REM = 7.8125;
 
 function cssVarRemToPx(name: string, fallbackRem: number): number {
   const root = document.documentElement;
@@ -28,16 +27,12 @@ function cssVarRemToPx(name: string, fallbackRem: number): number {
 
 function initialLayout(billId: string): StackLayout {
   const chars = billId.replace(/\s/g, "").length;
-  if (chars > 14) return "wrapped";
-  if (chars > 8) return "wide";
-  return "compact";
+  return chars > 14 ? "wrapped" : "default";
 }
 
 /**
- * Bill id + status pill share one width.
- * - compact: fixed Figma pill width (default bills).
- * - wide: id wider than pill but fits the id column (e.g. EO 13898).
- * - wrapped: id wider than the column; text breaks inside the column, pill spans column.
+ * Bill id + status pill share `--width-drawer-bill-id-stack` (id column) on every row.
+ * Long ids and status labels wrap inside that width.
  */
 export function StateDrawerBillIdStack({ billId, bill }: StateDrawerBillIdStackProps) {
   const measureRef = useRef<HTMLSpanElement>(null);
@@ -48,30 +43,21 @@ export function StateDrawerBillIdStack({ billId, bill }: StateDrawerBillIdStackP
     if (!measure) return;
 
     const intrinsic = measure.getBoundingClientRect().width;
-    const pillPx = cssVarRemToPx("--width-drawer-status-pill", PILL_WIDTH_REM);
-    const colPx = cssVarRemToPx("--width-drawer-bill-col-id", ID_COL_WIDTH_REM);
+    const colPx = cssVarRemToPx(
+      "--width-drawer-bill-id-stack",
+      STACK_WIDTH_REM,
+    );
 
-    if (intrinsic > colPx + 0.5) setLayout("wrapped");
-    else if (intrinsic > pillPx + 0.5) setLayout("wide");
-    else setLayout("compact");
+    setLayout(intrinsic > colPx + 0.5 ? "wrapped" : "default");
   }, [billId]);
-
-  const stackClass =
-    layout === "wrapped"
-      ? "flex w-full min-w-0 max-w-full flex-col items-stretch gap-2"
-      : layout === "wide"
-        ? "inline-flex w-max max-w-[var(--width-drawer-bill-col-id)] min-w-drawer-status-pill flex-col items-stretch gap-2"
-        : "inline-flex w-drawer-status-pill shrink-0 flex-col items-stretch gap-2 overflow-visible";
 
   const idClass =
     layout === "wrapped"
       ? "uic-drawer-bill-id-constrained text-left"
-      : layout === "wide"
-        ? "uic-drawer-bill-id-constrained uic-drawer-bill-id-centered"
-        : "uic-drawer-bill-id-centered";
+      : "uic-drawer-bill-id-constrained uic-drawer-bill-id-centered";
 
   return (
-    <div className="relative min-w-0 max-w-full">
+    <div className="relative w-full min-w-0 max-w-full">
       <span
         ref={measureRef}
         aria-hidden
@@ -79,15 +65,11 @@ export function StateDrawerBillIdStack({ billId, bill }: StateDrawerBillIdStackP
       >
         {billId}
       </span>
-      <div className={stackClass}>
+      <div className="flex w-full min-w-0 max-w-full flex-col items-stretch gap-2">
         <span className={`uic-drawer-bill-id block w-full min-w-0 ${idClass}`}>
           {billId}
         </span>
-        <StateDrawerStatusPill
-          bill={bill}
-          matchStackWidth
-          extendLeft={layout !== "wrapped"}
-        />
+        <StateDrawerStatusPill bill={bill} />
       </div>
     </div>
   );

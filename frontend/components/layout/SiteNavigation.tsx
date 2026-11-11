@@ -7,7 +7,6 @@ import { NavBand } from "@/components/layout/NavBand";
 import { DonateLink } from "@/components/ui/DonateLink";
 
 const NAV_LINKS = [
-  { href: "#", label: "TRENDS" },
   { href: "/", label: "POLICY MAP" },
   { href: "/policy-list", label: "POLICY LIST" },
 ] as const;

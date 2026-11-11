@@ -17,11 +17,11 @@ export default async function PolicyListPage() {
   let statesResponse: import("@/lib/api/types").PublicStatesResponse | null = null;
 
   try {
-    const data = await loadPolicyListData();
+    const data = await loadPolicyListData({ base: "server" });
     billsByState = data.billsByState;
     statesResponse = data.states;
   } catch {
-    // Client-side empty state; dev banner surfaces API issues.
+    // Empty state; dev banner surfaces API issues.
   }
 
   return (

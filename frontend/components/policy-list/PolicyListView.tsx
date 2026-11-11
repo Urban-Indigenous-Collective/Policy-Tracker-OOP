@@ -1,7 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { StatePrefetchProvider, useStatePrefetch } from "@/components/map/state-prefetch-context";
+import { fetchBillById } from "@/lib/api/client";
+import { publicApiKeys } from "@/lib/api/query-keys";
+import { PolicyListBillDrawer } from "@/components/policy-list/PolicyListBillDrawer";
 import { PolicyListStateSection } from "@/components/policy-list/PolicyListStateSection";
 import { PolicyListToolbar } from "@/components/policy-list/PolicyListToolbar";
 import type { PublicBill, PublicStatesResponse } from "@/lib/api/types";
@@ -15,14 +20,24 @@ type PolicyListViewProps = {
   statesResponse?: PublicStatesResponse | null;
 };
 
-export function PolicyListView({
+type BillSelection = {
+  stateCode: string;
+  slug: string;
+  billId: string;
+  bill: PublicBill;
+};
+
+function PolicyListViewInner({
   billsByState,
   statesResponse = null,
 }: PolicyListViewProps) {
+  const { setPrefetch } = useStatePrefetch();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [evalFilters, setEvalFilters] = useState<DrawerFilterKey[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [billSelection, setBillSelection] = useState<BillSelection | null>(null);
 
   const filteredByState = useMemo(() => {
     const next: Record<string, PublicBill[]> = {};
@@ -43,7 +58,58 @@ export function PolicyListView({
   const filtersActive =
     evalFilters.length > 0 || searchQuery.trim().length > 0;
 
+  const openBill = useCallback(
+    (stateCode: string, bill: PublicBill) => {
+      const bills = billsByState[stateCode];
+      if (bills?.length) {
+        setPrefetch({
+          state: stateCode,
+          bills: {
+            state: stateCode,
+            bills,
+            generatedAt: new Date().toISOString(),
+            cacheAgeSeconds: 0,
+          },
+        });
+      }
+      void queryClient.prefetchQuery({
+        queryKey: publicApiKeys.bill(bill.id),
+        queryFn: () => fetchBillById(bill.id),
+      });
+      setBillSelection({
+        stateCode,
+        slug: bill.slug,
+        billId: bill.id,
+        bill,
+      });
+    },
+    [billsByState, queryClient, setPrefetch],
+  );
+
+  const closeBill = useCallback(() => {
+    setBillSelection(null);
+  }, []);
+
+  useEffect(() => {
+    if (!billSelection) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [billSelection]);
+
+  useEffect(() => {
+    if (!billSelection) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeBill();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [billSelection, closeBill]);
+
   return (
+    <>
     <div className="mx-auto w-full max-w-policy-list pt-policy-list-top">
       <div className="flex flex-col">
         <PolicyListToolbar
@@ -75,11 +141,28 @@ export function PolicyListView({
                   statesResponse,
                   filteredByState[code] ?? [],
                 )}
+                onBillSelect={openBill}
               />
             ))}
           </div>
         )}
       </div>
     </div>
+    <PolicyListBillDrawer
+      stateCode={billSelection?.stateCode ?? null}
+      billSlug={billSelection?.slug ?? null}
+      billId={billSelection?.billId ?? null}
+      fallbackBill={billSelection?.bill ?? null}
+      onClose={closeBill}
+    />
+    </>
+  );
+}
+
+export function PolicyListView(props: PolicyListViewProps) {
+  return (
+    <StatePrefetchProvider>
+      <PolicyListViewInner {...props} />
+    </StatePrefetchProvider>
   );
 }

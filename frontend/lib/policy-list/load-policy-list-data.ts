@@ -20,14 +20,17 @@ function stateCodesWithPolicies(states: PublicStatesResponse): string[] {
   return [...codes];
 }
 
-export async function loadPolicyListData(): Promise<PolicyListData> {
-  const states = await fetchPublicStates({ base: "server" });
+export async function loadPolicyListData(options?: {
+  base?: "browser" | "server";
+}): Promise<PolicyListData> {
+  const base = options?.base ?? "server";
+  const states = await fetchPublicStates({ base });
   const codes = stateCodesWithPolicies(states);
 
   const pairs = await Promise.all(
     codes.map(async (code) => {
       try {
-        const response = await fetchStateBills(code, { base: "server" });
+        const response = await fetchStateBills(code, { base });
         return [code, response.bills] as const;
       } catch {
         return [code, [] as PublicBill[]] as const;

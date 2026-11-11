@@ -6,7 +6,7 @@ import {
   StateDrawerFilterButton,
   StateDrawerFilterMenu,
 } from "@/components/state/StateDrawerFilter";
-import { StateDrawerSearch } from "@/components/state/StateDrawerSearch";
+import { StateDrawerToolbarSearch } from "@/components/state/StateDrawerSearch";
 import type { DrawerFilterKey } from "@/lib/state/drawer-eval-filters";
 
 type PolicyListToolbarProps = {
@@ -46,35 +46,13 @@ export function PolicyListToolbar({
             onToggle={() => onFiltersOpenChange(!filtersOpen)}
           />
 
-          <button
-            type="button"
-            aria-expanded={searchOpen}
-            aria-controls={searchId}
-            aria-label={searchOpen ? "Close search" : "Open search"}
-            onClick={() => onSearchOpenChange(!searchOpen)}
-            className="flex size-bill-search shrink-0 items-center justify-center text-foreground outline-none transition-opacity hover:opacity-70 focus-visible:ring-2 focus-visible:ring-accent"
-          >
-            <svg
-              width={18}
-              height={18}
-              viewBox="0 0 512 512"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden
-            >
-              <path
-                d="M368 192c0 79.5-64.5 144-144 144S80 271.5 80 192 144.5 48 224 48s144 64.5 144 144z"
-                stroke="currentColor"
-                strokeWidth={32}
-              />
-              <path
-                d="M337 337 448 448"
-                stroke="currentColor"
-                strokeWidth={32}
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
+          <StateDrawerToolbarSearch
+            id={searchId}
+            open={searchOpen}
+            onOpenChange={onSearchOpenChange}
+            value={searchQuery}
+            onChange={onSearchChange}
+          />
         </div>
 
         <StateDrawerFilterMenu
@@ -85,18 +63,6 @@ export function PolicyListToolbar({
           onClose={() => onFiltersOpenChange(false)}
         />
       </div>
-
-      {searchOpen ? (
-        <div className="mt-4 flex justify-end">
-          <div className="w-full max-w-drawer-content [&>div]:!mt-0">
-            <StateDrawerSearch
-              id={searchId}
-              value={searchQuery}
-              onChange={onSearchChange}
-            />
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }

@@ -15,6 +15,7 @@ type PolicyListStateSectionProps = {
   stateCode: string;
   bills: PublicBill[];
   stateCategory?: LegendCategory;
+  onBillSelect: (stateCode: string, bill: PublicBill) => void;
 };
 
 function ExpandChevron({ className }: { className?: string }) {
@@ -42,6 +43,7 @@ export function PolicyListStateSection({
   stateCode,
   bills,
   stateCategory,
+  onBillSelect,
 }: PolicyListStateSectionProps) {
   const [expanded, setExpanded] = useState(false);
   const counts = useMemo(() => countPolicyListStatuses(bills), [bills]);
@@ -72,7 +74,12 @@ export function PolicyListStateSection({
       <div className="min-w-0 w-full">
         <ul className="flex flex-col gap-drawer-row">
           {visibleBills.map((bill) => (
-            <PolicyListBillRow key={bill.id} stateCode={stateCode} bill={bill} />
+            <PolicyListBillRow
+              key={bill.id}
+              stateCode={stateCode}
+              bill={bill}
+              onSelect={onBillSelect}
+            />
           ))}
         </ul>
 
