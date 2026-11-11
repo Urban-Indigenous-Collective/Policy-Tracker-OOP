@@ -13,6 +13,13 @@ ACCENT_BRIGHT = "#5ecdb9"
 MUTED = "#a3a3a3"
 SURFACE_BORDER = "#1a1a1a"  # approx white/10 on black for solid borders in email
 
+# ——— Color: bill status pills (tokens.css --color-status-*) ———
+# Outline pills: border + text on black (mirrors frontend StatusBadge / drawer pills).
+STATUS_PASSED = "#3fbfa7"  # --color-status-passed (== accent)
+STATUS_PENDING = "#f8cf4d"  # --color-status-pending
+STATUS_FAILED = "#f8cf4d"  # --color-status-failed (same yellow as pending in tokens)
+STATUS_NEUTRAL = MUTED
+
 FONT_STACK = (
     "Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, "
     "Helvetica, Arial, sans-serif"
@@ -24,6 +31,9 @@ ORG_NAME = "Urban Indigenous Collective"
 DEFAULT_PUBLIC_ORIGIN = "https://policy.urbanindigenouscollective.org"
 # Cropped flush asset for email (source logo has large transparent padding).
 LOGO_PATH = "/brand/uic-logo-email.png"
+# Inline CID used by Gmail MIME (prod /brand currently 404s behind Flask).
+LOGO_CID = "logo"
+LOGO_CID_SRC = f"cid:{LOGO_CID}"
 LOGO_ALT = "Urban Indigenous Collective"
 # Match pre-cleanup visual size (artwork height inside the old 120px box).
 LOGO_HEIGHT_PX = 72
@@ -32,3 +42,5 @@ LOGO_WIDTH_PX = 53
 # Breathing room that used to come from transparent canvas (~24px at 120px box).
 LOGO_PAD_TOP_PX = 60
 LOGO_PAD_BOTTOM_PX = 24
+# Vertical padding per digest list row (noticeable gap between entries).
+DIGEST_ITEM_PAD_Y_PX = 20

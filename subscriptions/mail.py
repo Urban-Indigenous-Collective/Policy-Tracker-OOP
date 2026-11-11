@@ -16,12 +16,18 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from pathlib import Path
 from typing import Sequence
 
-from subscriptions.email_brand import DEFAULT_PUBLIC_ORIGIN
+from subscriptions.email_brand import (
+    DEFAULT_PUBLIC_ORIGIN,
+    LOGO_CID,
+    LOGO_CID_SRC,
+    LOGO_PATH,
+)
 from subscriptions.templates import (
     render_digest_email,
     render_manage_otp_email,
@@ -45,11 +51,42 @@ class MailDeliveryError(RuntimeError):
 
 
 def _public_origin() -> str:
+    """Origin for magic links / site footer (may be localhost in local dev)."""
     return (
         os.getenv("NEXT_PUBLIC_SITE_URL")
         or os.getenv("PUBLIC_SITE_URL")
         or DEFAULT_PUBLIC_ORIGIN
     ).rstrip("/")
+
+
+def _email_asset_origin() -> str:
+    """Public origin for remote email img src only (never localhost site URL).
+
+    Prod currently 404s ``/brand`` on Flask; Gmail sends prefer CID-inline instead.
+    This origin is the HTTP fallback for log/preview renders.
+    """
+    return (
+        os.getenv("STATE_SUBSCRIBE_EMAIL_ASSET_ORIGIN") or DEFAULT_PUBLIC_ORIGIN
+    ).rstrip("/")
+
+
+def _email_logo_path() -> Path:
+    """Tracked email logo under frontend/public/brand."""
+    return (
+        Path(__file__).resolve().parent.parent
+        / "frontend"
+        / "public"
+        / "brand"
+        / Path(LOGO_PATH).name
+    )
+
+
+def _template_logo_kwargs() -> dict[str, str]:
+    """Logo args for templates: CID when sending via Gmail, else asset origin."""
+    kwargs: dict[str, str] = {"asset_origin": _email_asset_origin()}
+    if _mail_provider() == "gmail":
+        kwargs["logo_src"] = LOGO_CID_SRC
+    return kwargs
 
 
 def _mail_provider() -> str:
@@ -176,15 +213,52 @@ def _html_to_plain(html: str) -> str:
     return text.strip() or "MMIP Policy Tracker"
 
 
-def _build_raw_mime(*, sender: str, to: str, subject: str, html: str) -> str:
+def _attach_inline_logo(msg: MIMEMultipart) -> None:
+    """Attach the UIC email logo as an inline CID image (cid:logo)."""
+    path = _email_logo_path()
+    try:
+        payload = path.read_bytes()
+    except OSError as exc:
+        raise MailDeliveryError(f"Email logo not found at {path}") from exc
+    img = MIMEImage(payload, _subtype="png")
+    img.add_header("Content-ID", f"<{LOGO_CID}>")
+    img.add_header("Content-Disposition", "inline", filename=path.name)
+    msg.attach(img)
+
+
+def _build_raw_mime(
+    *,
+    sender: str,
+    to: str,
+    subject: str,
+    html: str,
+    inline_logo: bool = True,
+) -> str:
     if "\r" in to or "\n" in to:
         raise MailDeliveryError("Invalid recipient")
-    msg = MIMEMultipart("alternative")
-    msg["From"] = _from_address() if "<" in _from_address() else f"Urban Indigenous Collective <{sender}>"
-    msg["To"] = to
-    msg["Subject"] = subject
-    msg.attach(MIMEText(_html_to_plain(html), "plain", "utf-8"))
-    msg.attach(MIMEText(html, "html", "utf-8"))
+    from_header = (
+        _from_address()
+        if "<" in _from_address()
+        else f"Urban Indigenous Collective <{sender}>"
+    )
+    use_cid = inline_logo and LOGO_CID_SRC in html
+    if use_cid:
+        msg: MIMEMultipart = MIMEMultipart("related")
+        msg["From"] = from_header
+        msg["To"] = to
+        msg["Subject"] = subject
+        alt = MIMEMultipart("alternative")
+        alt.attach(MIMEText(_html_to_plain(html), "plain", "utf-8"))
+        alt.attach(MIMEText(html, "html", "utf-8"))
+        msg.attach(alt)
+        _attach_inline_logo(msg)
+    else:
+        msg = MIMEMultipart("alternative")
+        msg["From"] = from_header
+        msg["To"] = to
+        msg["Subject"] = subject
+        msg.attach(MIMEText(_html_to_plain(html), "plain", "utf-8"))
+        msg.attach(MIMEText(html, "html", "utf-8"))
     raw = base64.urlsafe_b64encode(msg.as_bytes()).decode("ascii").rstrip("=")
     return raw
 
@@ -260,6 +334,7 @@ def send_subscription_welcome(email: str, state: str) -> None:
         state_label=state,
         manage_url=manage_url,
         public_origin=_public_origin(),
+        **_template_logo_kwargs(),
     )
     send_email(to=email, subject=subject, html=html)
 
@@ -285,6 +360,7 @@ def send_subscription_code(
         state_label=state,
         manage_url=manage_url,
         public_origin=_public_origin(),
+        **_template_logo_kwargs(),
     )
     # Always log plaintext OTP when provider is log — operators need it locally.
     if _mail_provider() in ("", "log", "none", "stdout"):
@@ -310,5 +386,6 @@ def send_subscription_digest(
         state_labels=state_labels,
         items=items,
         public_origin=_public_origin(),
+        **_template_logo_kwargs(),
     )
     send_email(to=email, subject=subject, html=html)

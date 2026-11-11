@@ -89,10 +89,17 @@ def test_fanout_groups_by_subscriber_and_watermarks(digest_env, monkeypatch):
         public_path="/states/WA/bills/wa-bill",
     )
 
-    sent: list[tuple[str, list[str]]] = []
+    sent: list[tuple[str, list[str], list[str], list[str]]] = []
 
     def fake_send(email, *, state_labels, items):
-        sent.append((email, [i["title"] for i in items]))
+        sent.append(
+            (
+                email,
+                list(state_labels),
+                [i["title"] for i in items],
+                [i["state"] for i in items],
+            )
+        )
 
     monkeypatch.setattr(
         "subscriptions.digest.send_subscription_digest", fake_send
@@ -101,9 +108,13 @@ def test_fanout_groups_by_subscriber_and_watermarks(digest_env, monkeypatch):
     stats = send_morning_digests()
     assert stats["emails_sent"] == 2
     assert stats["emails_failed"] == 0
-    by_email = {email: titles for email, titles in sent}
-    assert by_email["nc@example.com"] == ["NC Bill"]
-    assert by_email["wa@example.com"] == ["WA Bill"]
+    by_email = {email: (labels, titles, states) for email, labels, titles, states in sent}
+    assert by_email["nc@example.com"][1] == ["NC Bill"]
+    assert by_email["nc@example.com"][0] == ["North Carolina"]
+    assert by_email["nc@example.com"][2] == ["North Carolina"]
+    assert by_email["wa@example.com"][1] == ["WA Bill"]
+    assert by_email["wa@example.com"][0] == ["Washington"]
+    assert by_email["wa@example.com"][2] == ["Washington"]
     assert load_events() == []
 
     # Same event key re-queued after clear — watermark blocks a second email
@@ -174,6 +185,54 @@ def test_status_refresh_queues_live_status_only(digest_env):
     assert "Status:" in events[0]["summary"]
     assert "Progression:" in events[0]["summary"]
     assert "Last Update" not in events[0]["summary"]
+    assert events[0]["status"] == "B"
+    assert events[0]["progression"] == "Y"
     fp = status_fingerprint(changes)
     assert "Status=B" in fp and "Progression=Y" in fp
     assert EMAIL_STATUS_FIELDS == frozenset({"Status", "Progression"})
+
+
+def test_fanout_passes_status_fields_into_digest_items(digest_env, monkeypatch):
+    from subscriptions.digest import send_morning_digests
+    from subscriptions.digest_queue import enqueue_live_status_changes, enqueue_new_live
+    from subscriptions.store import add_state
+
+    add_state("reader@example.com", "WA")
+    enqueue_new_live(
+        state="WA",
+        title="New Live Bill",
+        url="https://example.com/new",
+        record_id="recNew",
+        public_path="/states/WA/bills/new",
+    )
+    enqueue_live_status_changes(
+        state="WA",
+        title="Status Bill",
+        url="https://example.com/status",
+        record_id="recStatus",
+        public_path="/states/WA/bills/status",
+        changes=[
+            {"field": "Status", "old": "Pending", "new": "Passed"},
+            {"field": "Progression", "old": "Introduced", "new": "Enacted"},
+        ],
+    )
+
+    captured: list[dict] = []
+
+    def fake_send(email, *, state_labels, items):
+        captured.extend(items)
+
+    monkeypatch.setattr(
+        "subscriptions.digest.send_subscription_digest", fake_send
+    )
+
+    stats = send_morning_digests()
+    assert stats["emails_sent"] == 1
+    by_title = {i["title"]: i for i in captured}
+    new_item = by_title["New Live Bill"]
+    assert new_item["kind"] == "new_live"
+    assert "status" not in new_item
+    status_item = by_title["Status Bill"]
+    assert status_item["kind"] == "status"
+    assert status_item["status"] == "Passed"
+    assert status_item["progression"] == "Enacted"

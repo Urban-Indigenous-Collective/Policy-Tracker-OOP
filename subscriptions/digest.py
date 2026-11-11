@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from public_api.serialize import bill_slug
+from slack_client import state_display_name
 from subscriptions.config import subscriptions_enabled
 from subscriptions.digest_queue import load_events, remove_events
 from subscriptions.email_brand import DEFAULT_PUBLIC_ORIGIN
@@ -55,22 +56,50 @@ def public_bill_url(
     return (fallback_url or origin).strip() or origin
 
 
+def _status_fields_from_event(event: dict[str, Any]) -> tuple[str, str]:
+    """Prefer explicit status/progression; else new values from Status/Progression changes."""
+    status = str(event.get("status") or "").strip()
+    progression = str(event.get("progression") or "").strip()
+    changes = event.get("changes")
+    if isinstance(changes, list):
+        for change in changes:
+            if not isinstance(change, dict):
+                continue
+            field = str(change.get("field") or "")
+            new = str(change.get("new") or "").strip()
+            if not new:
+                continue
+            if field == "Status" and not status:
+                status = new
+            elif field == "Progression" and not progression:
+                progression = new
+    return status, progression
+
+
 def _event_to_email_item(event: dict[str, Any]) -> dict[str, str]:
     state = str(event.get("state") or "")
     title = str(event.get("title") or "Policy update")
     summary = str(event.get("summary") or "")
+    kind = str(event.get("kind") or "").strip()
+    status, progression = _status_fields_from_event(event)
     url = public_bill_url(
         state=state,
         record_id=str(event.get("record_id") or ""),
         public_path=str(event.get("public_path") or ""),
         fallback_url=str(event.get("url") or ""),
     )
-    return {
+    item = {
         "title": title,
         "url": url,
-        "state": state,
+        "state": state_display_name(state),
         "summary": summary,
+        "kind": kind,
     }
+    if status:
+        item["status"] = status
+    if progression:
+        item["progression"] = progression
+    return item
 
 
 def send_morning_digests() -> dict[str, int]:
@@ -123,7 +152,11 @@ def send_morning_digests() -> dict[str, int]:
             if key:
                 matched_keys.add(key)
         items = [_event_to_email_item(e) for e in matched]
-        state_labels = sorted({str(e.get("state") or "") for e in matched})
+        # Sort by code so order stays stable (NC before National), then spell out names.
+        state_labels = [
+            state_display_name(code)
+            for code in sorted({str(e.get("state") or "") for e in matched})
+        ]
         try:
             send_subscription_digest(
                 email,

@@ -151,19 +151,31 @@ def enqueue_live_status_changes(
         f"{c['field']}: {c.get('old') or '—'} → {c.get('new') or '—'}"
         for c in meaningful
     ]
-    return enqueue_event(
-        {
-            "key": key,
-            "kind": DIGEST_KIND_STATUS,
-            "state": state,
-            "title": title,
-            "url": url,
-            "record_id": record_id,
-            "public_path": public_path,
-            "summary": "; ".join(summaries),
-            "changes": meaningful,
-        }
-    )
+    status = ""
+    progression = ""
+    for change in meaningful:
+        field = str(change.get("field") or "")
+        new = str(change.get("new") or "").strip()
+        if field == "Status" and new:
+            status = new
+        elif field == "Progression" and new:
+            progression = new
+    payload: dict[str, Any] = {
+        "key": key,
+        "kind": DIGEST_KIND_STATUS,
+        "state": state,
+        "title": title,
+        "url": url,
+        "record_id": record_id,
+        "public_path": public_path,
+        "summary": "; ".join(summaries),
+        "changes": meaningful,
+    }
+    if status:
+        payload["status"] = status
+    if progression:
+        payload["progression"] = progression
+    return enqueue_event(payload)
 
 
 def load_events() -> list[dict[str, Any]]:

@@ -24,7 +24,11 @@ STATE_SUBSCRIBE_MAIL_PROVIDER=gmail
 STATE_SUBSCRIBE_MAIL_FROM=Urban Indigenous Collective <info@urbanindigenouscollective.org>
 STATE_SUBSCRIBE_GMAIL_SA_KEY_PATH=~/.config/gmail-migration/service-account.json
 PUBLIC_SITE_URL=http://127.0.0.1:3000   # so magic links hit local Next
+# Optional: HTTP fallback for logo/img src in non-Gmail renders (Gmail CID-inlines the logo)
+# STATE_SUBSCRIBE_EMAIL_ASSET_ORIGIN=https://policy.urbanindigenouscollective.org
 ```
+
+Gmail delivery attaches `frontend/public/brand/uic-logo-email.png` as an inline `cid:logo` image so the mark shows even when `PUBLIC_SITE_URL` is localhost and prod `/brand` is not yet served by Next.
 
 With `log`, OTP codes and magic links appear in the Flask log instead.
 

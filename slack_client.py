@@ -21,6 +21,15 @@ STATE_NAMES = {
     "WV": "West Virginia", "WI": "Wisconsin", "WY": "Wyoming", "DC": "District of Columbia",
 }
 
+
+def state_display_name(state: str) -> str:
+    """Map 2-letter codes to full names; leave National and other labels unchanged."""
+    raw = (state or "").strip()
+    code = raw.upper()
+    if len(code) == 2 and code in STATE_NAMES:
+        return STATE_NAMES[code]
+    return raw
+
 TEMPLATES = [
     "New policy drop from {state_full}!",
     "Hey — looks like {state_full} just introduced something.",
@@ -72,10 +81,7 @@ class SlackNotifier:
         return bool(self.webhook_url)
 
     def _state_full(self, state: str) -> str:
-        code = (state or "").strip().upper()
-        if len(code) == 2 and code in STATE_NAMES:
-            return STATE_NAMES[code]
-        return state or "Unknown"
+        return state_display_name(state) or "Unknown"
 
     def _post(self, payload: dict[str, Any]) -> bool:
         if not self.enabled:
