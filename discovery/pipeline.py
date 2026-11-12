@@ -293,11 +293,15 @@ class DiscoveryPipeline:
             stats.slack_items.append(
                 {
                     "state": bill_data.get("State", candidate.state),
-                    "title": bill_data.get("Title", candidate.title),
+                    "title": bill_data.get("Name")
+                    or bill_data.get("Title")
+                    or candidate.title,
                     "summary": bill_data.get("Summary", "")[:300],
                     "categories": bill_data.get("Categories", ""),
                     "confidence": relevance_result.confidence if relevance_result else 0.0,
-                    "source_url": bill_data.get("Bill Overview", url),
+                    "source_url": bill_data.get("Bill Overview (Link)")
+                    or bill_data.get("Bill Overview")
+                    or url,
                     "pending_url": "",
                 }
             )

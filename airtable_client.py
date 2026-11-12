@@ -5,8 +5,8 @@ from typing import Any, Optional
 from pyairtable import Api, Table, retry_strategy
 
 import airtable_pace
+from airtable_coercion import coerce_bill_fields
 from airtable_fields import (
-    BILL_FIELD_NAMES,
     BILL_OVERVIEW_FIELD,
     BILL_OVERVIEW_LINK_FIELD,
     LIVE_REVIEW_STATUS_FIELD,
@@ -172,7 +172,12 @@ class AirtableClient:
         relevance_rationale: str,
         discovered_on: str,
     ) -> dict:
-        fields = {k: bill_data.get(k, "") for k in BILL_FIELD_NAMES}
+        # Pending mirrors Main v3 (Name, Bill Overview (Link), …). parse_bill_object
+        # already emits those; coerce also remaps any legacy Title/Bill Overview keys
+        # and turns Categories into a multiple-select list (string values 422).
+        fields = coerce_bill_fields(bill_data)
+        if not fields.get("Categories"):
+            fields.pop("Categories", None)
         fields.update(
             {
                 "Review Status": REVIEW_STATUS_PENDING,
@@ -182,11 +187,15 @@ class AirtableClient:
                 "Discovered On": discovered_on,
             }
         )
+        # Keep discovery metadata that coerce_bill_fields intentionally omits from
+        # the mirrored bill column set when present on bill_data.
+        if "Validation Warnings" in bill_data and "Validation Warnings" not in fields:
+            fields["Validation Warnings"] = bill_data.get("Validation Warnings") or ""
         return self.create_record(self.pending_table, fields)
 
     def create_live_record(self, fields: dict[str, Any]) -> dict:
         """Create a Main v3 row. Caller must already map Pending→Live names (Title→Name)."""
-        # Do not re-filter through Pending BILL_FIELD_NAMES — that reintroduces Title and 422s.
+        # Do not re-filter through legacy Pending Title fields — that reintroduces Title and 422s.
         live_fields = {
             key: value
             for key, value in fields.items()
