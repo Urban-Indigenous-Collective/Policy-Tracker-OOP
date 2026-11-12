@@ -2,6 +2,7 @@ import requests
 from urllib.parse import urlparse
 import re
 from federal_register_client import FederalRegisterAPI
+from discovery.fetchers import BROWSER_UA
 
 class GovProcessor:
     def __init__(self, document_processor, indigenous_db):
@@ -32,8 +33,15 @@ class GovProcessor:
                     return None, error
                 return decoded_text, None
 
-            # Process other .gov URLs
-            response = requests.get(url)
+            # Process other .gov URLs. Use a browser User-Agent so Akamai/Cloudflare
+            # edges (michigan.gov, dojmt.gov, etc.) do not 403 the analysis fetch
+            # after crawl relevance already succeeded with BROWSER_UA.
+            response = requests.get(
+                url,
+                headers={"User-Agent": BROWSER_UA},
+                timeout=60,
+                allow_redirects=True,
+            )
             print(f"Response status code: {response.status_code}")
             if response.status_code != 200:
                 error_msg = f"Failed to retrieve .gov URL: HTTP {response.status_code}"
