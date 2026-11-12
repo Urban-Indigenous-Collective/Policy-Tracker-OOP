@@ -1,28 +1,33 @@
 import type { Metadata } from "next";
-import { Montserrat, Roboto, Roboto_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { SiteShell } from "@/components/layout/SiteShell";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { getSiteUrl } from "@/lib/seo/site-url";
 
-const montserrat = Montserrat({
+/**
+ * Self-hosted latin files (same families/weights as former next/font/google).
+ * Avoids Next 16 Turbopack CI flakes when Google returns extensionless /l/font?kit= URLs
+ * (vercel/next.js#99114).
+ */
+const montserrat = localFont({
+  src: "./fonts/montserrat-latin-var.woff2",
   variable: "--font-montserrat",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: "300 700",
   display: "swap",
 });
 
-const roboto = Roboto({
+const roboto = localFont({
+  src: "./fonts/roboto-latin-600.woff2",
   variable: "--font-roboto-family",
-  subsets: ["latin"],
-  weight: ["600"],
+  weight: "600",
   display: "swap",
 });
 
-const robotoMono = Roboto_Mono({
+const robotoMono = localFont({
+  src: "./fonts/roboto-mono-latin-var.woff2",
   variable: "--font-roboto-mono",
-  subsets: ["latin"],
-  weight: ["600", "700"],
+  weight: "600 700",
   display: "swap",
 });
 
