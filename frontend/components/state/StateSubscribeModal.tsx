@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 
 import { NATIONAL_STATE_CODE } from "@/lib/api/state-code";
 import {
@@ -25,6 +25,7 @@ function stateLabel(code: string): string {
   return STATE_NAMES[code] ?? code;
 }
 
+/** Fresh state on each open — parent remounts with `key` when opening. */
 export function StateSubscribeModal({
   stateCode,
   open,
@@ -42,19 +43,6 @@ export function StateSubscribeModal({
   const [error, setError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [offerManage, setOfferManage] = useState(false);
-
-  useEffect(() => {
-    if (!open) return;
-    setStep("email");
-    setEmail("");
-    setCode("");
-    setSessionToken("");
-    setStates([]);
-    setBusy(false);
-    setError(null);
-    setStatusMessage(null);
-    setOfferManage(false);
-  }, [open, stateCode]);
 
   if (!open) return null;
 

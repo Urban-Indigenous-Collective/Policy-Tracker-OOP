@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import {
@@ -18,6 +18,15 @@ type ManageSession = {
   sessionToken: string;
   email: string;
   states: string[];
+};
+
+type ManageView = {
+  status: "loading" | "ready" | "error" | "done";
+  sessionToken: string;
+  email: string;
+  states: string[];
+  message: string | null;
+  error: string | null;
 };
 
 function stateLabel(code: string): string {
@@ -51,51 +60,67 @@ function writeCachedSession(session: ManageSession) {
   }
 }
 
+const emptySubscribe = () => () => {};
+
+const PREVIEW_VIEW: ManageView = {
+  status: "ready",
+  sessionToken: "preview",
+  email: "preview@example.com",
+  states: ["WA", "OR"],
+  message: "Preview mode — sample subscriptions (not live).",
+  error: null,
+};
+
+function viewFromCached(cached: ManageSession): ManageView {
+  return {
+    status: cached.states.length === 0 ? "done" : "ready",
+    sessionToken: cached.sessionToken,
+    email: cached.email,
+    states: cached.states,
+    message:
+      cached.states.length === 0
+        ? "You are unsubscribed from all state updates."
+        : "Email verified. Manage your state subscriptions below.",
+    error: null,
+  };
+}
+
 function ManageSubscriptionsInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token")?.trim() ?? "";
   const isPreview = searchParams.get("preview") === "1";
 
-  const [status, setStatus] = useState<"loading" | "ready" | "error" | "done">(
-    "loading",
+  const cachedSession = useSyncExternalStore(
+    emptySubscribe,
+    () => (isPreview || token ? null : readCachedSession()),
+    () => null,
   );
-  const [error, setError] = useState<string | null>(null);
-  const [sessionToken, setSessionToken] = useState("");
-  const [email, setEmail] = useState("");
-  const [states, setStates] = useState<string[]>([]);
+
+  const [asyncView, setAsyncView] = useState<ManageView | null>(null);
+  const [liveSession, setLiveSession] = useState<ManageSession | null>(null);
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const syncView: ManageView | null = isPreview
+    ? PREVIEW_VIEW
+    : cachedSession
+      ? viewFromCached(cachedSession)
+      : !token
+        ? {
+            status: "error",
+            sessionToken: "",
+            email: "",
+            states: [],
+            message: null,
+            error: "Missing manage link token.",
+          }
+        : null;
 
   useEffect(() => {
-    if (isPreview) {
-      setSessionToken("preview");
-      setEmail("preview@example.com");
-      setStates(["WA", "OR"]);
-      setStatus("ready");
-      setMessage("Preview mode — sample subscriptions (not live).");
-      return;
-    }
-
-    const cached = readCachedSession();
-    if (cached && !token) {
-      setSessionToken(cached.sessionToken);
-      setEmail(cached.email);
-      setStates(cached.states);
-      setStatus(cached.states.length === 0 ? "done" : "ready");
-      setMessage(
-        cached.states.length === 0
-          ? "You are unsubscribed from all state updates."
-          : "Email verified. Manage your state subscriptions below.",
-      );
-      return;
-    }
-
-    if (!token) {
-      setStatus("error");
-      setError("Missing manage link token.");
-      return;
-    }
+    // Sync paths (preview / cached / missing token) are derived above; only verify magic links here.
+    if (isPreview || !token) return;
 
     let cancelled = false;
     (async () => {
@@ -108,11 +133,15 @@ function ManageSubscriptionsInner() {
           states: result.states,
         };
         writeCachedSession(next);
-        setSessionToken(next.sessionToken);
-        setEmail(next.email);
-        setStates(next.states);
-        setStatus("ready");
-        setMessage("Email verified. Manage your state subscriptions below.");
+        setLiveSession(next);
+        setAsyncView({
+          status: "ready",
+          sessionToken: next.sessionToken,
+          email: next.email,
+          states: next.states,
+          message: "Email verified. Manage your state subscriptions below.",
+          error: null,
+        });
         // Drop one-time token from the URL so refresh / reopen still works.
         router.replace("/subscribe/manage");
       } catch (err) {
@@ -120,26 +149,56 @@ function ManageSubscriptionsInner() {
         // Token already used — reuse session from the first successful open.
         const fallback = readCachedSession();
         if (fallback) {
-          setSessionToken(fallback.sessionToken);
-          setEmail(fallback.email);
-          setStates(fallback.states);
-          setStatus(fallback.states.length === 0 ? "done" : "ready");
-          setMessage(
-            fallback.states.length === 0
-              ? "You are unsubscribed from all state updates."
-              : "Email verified. Manage your state subscriptions below.",
-          );
+          setLiveSession(fallback);
+          setAsyncView(viewFromCached(fallback));
           router.replace("/subscribe/manage");
           return;
         }
-        setStatus("error");
-        setError(err instanceof Error ? err.message : "Could not verify link");
+        setAsyncView({
+          status: "error",
+          sessionToken: "",
+          email: "",
+          states: [],
+          message: null,
+          error: err instanceof Error ? err.message : "Could not verify link",
+        });
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [token, isPreview, router]);
+  }, [isPreview, token, router]);
+
+  const baseView: ManageView =
+    syncView ??
+    asyncView ?? {
+      status: "loading",
+      sessionToken: "",
+      email: "",
+      states: [],
+      message: null,
+      error: null,
+    };
+
+  const baseIdentity = `${baseView.status}:${baseView.email}:${baseView.states.join(",")}`;
+  const [prevBaseIdentity, setPrevBaseIdentity] = useState(baseIdentity);
+  if (baseIdentity !== prevBaseIdentity) {
+    setPrevBaseIdentity(baseIdentity);
+    setActionMessage(null);
+    setActionError(null);
+  }
+
+  const sessionToken = liveSession?.sessionToken ?? baseView.sessionToken;
+  const email = liveSession?.email ?? baseView.email;
+  const states = liveSession?.states ?? baseView.states;
+  const status: ManageView["status"] =
+    liveSession != null
+      ? liveSession.states.length === 0
+        ? "done"
+        : "ready"
+      : baseView.status;
+  const displayMessage = actionMessage ?? baseView.message;
+  const displayError = actionError ?? baseView.error;
 
   const sortedStates = useMemo(() => [...states].sort(), [states]);
 
@@ -147,18 +206,21 @@ function ManageSubscriptionsInner() {
     if (isPreview || sessionToken === "preview") {
       const nextStates =
         target === "all" ? [] : states.filter((code) => code !== target);
-      setStates(nextStates);
+      setLiveSession({
+        sessionToken: "preview",
+        email: email || "preview@example.com",
+        states: nextStates,
+      });
       if (nextStates.length === 0) {
-        setMessage("You are unsubscribed from all state updates.");
-        setStatus("done");
+        setActionMessage("You are unsubscribed from all state updates.");
       } else {
-        setMessage(`Unsubscribed from ${stateLabel(String(target))}.`);
+        setActionMessage(`Unsubscribed from ${stateLabel(String(target))}.`);
       }
       return;
     }
 
     setBusy(true);
-    setError(null);
+    setActionError(null);
     try {
       const result = await unsubscribeFromState(sessionToken, target);
       const next: ManageSession = {
@@ -167,15 +229,14 @@ function ManageSubscriptionsInner() {
         states: result.states,
       };
       writeCachedSession(next);
-      setStates(result.states);
+      setLiveSession(next);
       if (target === "all" || result.states.length === 0) {
-        setMessage("You are unsubscribed from all state updates.");
-        setStatus("done");
+        setActionMessage("You are unsubscribed from all state updates.");
       } else {
-        setMessage(`Unsubscribed from ${stateLabel(String(target))}.`);
+        setActionMessage(`Unsubscribed from ${stateLabel(String(target))}.`);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not unsubscribe");
+      setActionError(err instanceof Error ? err.message : "Could not unsubscribe");
     } finally {
       setBusy(false);
     }
@@ -205,14 +266,14 @@ function ManageSubscriptionsInner() {
           <p className="mt-6 text-sm text-muted">Verifying your link…</p>
         ) : null}
 
-        {message ? (
+        {displayMessage ? (
           <p className="mt-4 text-sm text-muted" aria-live="polite">
-            {message}
+            {displayMessage}
           </p>
         ) : null}
-        {error ? (
+        {displayError ? (
           <p className="mt-4 text-sm text-red-400" role="alert">
-            {error}
+            {displayError}
           </p>
         ) : null}
 

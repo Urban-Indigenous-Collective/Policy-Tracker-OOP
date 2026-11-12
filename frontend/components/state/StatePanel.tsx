@@ -73,52 +73,51 @@ export function StatePanel({
   const { data, isLoading, isError, error } = useStateBills(stateCode, {
     initialData: initialBills,
   });
-  const filtersOpenRef = useRef(filtersOpen);
-  const subscribeOpenRef = useRef(subscribeOpen);
-  const billPanelOpenRef = useRef(billPanelOpen);
   const dismissBillLatch = useRef(false);
-  const onCloseRef = useRef(onClose);
-  const onCloseBillRef = useRef(onCloseBill);
-  filtersOpenRef.current = filtersOpen;
-  subscribeOpenRef.current = subscribeOpen;
-  billPanelOpenRef.current = billPanelOpen;
-  onCloseRef.current = onClose;
-  onCloseBillRef.current = onCloseBill;
-  if (!billPanelOpen) dismissBillLatch.current = false;
+  const [prevResetKey, setPrevResetKey] = useState(
+    () => `${stateCode}:${mapLayerMode}`,
+  );
+  const resetKey = `${stateCode}:${mapLayerMode}`;
+  if (resetKey !== prevResetKey) {
+    setPrevResetKey(resetKey);
+    setSearchQuery("");
+    setEvalFilters([]);
+    setFiltersOpen(false);
+    setSubscribeOpen(false);
+  }
+
+  useEffect(() => {
+    if (!billPanelOpen) {
+      dismissBillLatch.current = false;
+    }
+  }, [billPanelOpen]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
-      if (subscribeOpenRef.current) {
+      if (subscribeOpen) {
         setSubscribeOpen(false);
         return;
       }
-      if (filtersOpenRef.current) {
+      if (filtersOpen) {
         setFiltersOpen(false);
         return;
       }
-      if (billPanelOpenRef.current && !dismissBillLatch.current) {
+      if (billPanelOpen && !dismissBillLatch.current) {
         dismissBillLatch.current = true;
-        onCloseBillRef.current?.();
+        onCloseBill?.();
         return;
       }
-      onCloseRef.current();
+      onClose();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [subscribeOpen, filtersOpen, billPanelOpen, onClose, onCloseBill]);
 
   useEffect(() => {
     if (billPanelOpen) return;
     panelRef.current?.focus({ preventScroll: true });
   }, [billPanelOpen, stateCode]);
-
-  useEffect(() => {
-    setSearchQuery("");
-    setEvalFilters([]);
-    setFiltersOpen(false);
-    setSubscribeOpen(false);
-  }, [stateCode, mapLayerMode]);
 
   const name =
     stateCode === NATIONAL_STATE_CODE
@@ -140,11 +139,11 @@ export function StatePanel({
     ? stateCategoryTitleClass(stateCategory)
     : "text-foreground";
 
+  const effectiveMetaControlGapPx =
+    hasPolicies && subscribeEnabled ? metaControlGapPx : null;
+
   useLayoutEffect(() => {
-    if (!hasPolicies || !subscribeEnabled) {
-      setMetaControlGapPx(null);
-      return;
-    }
+    if (!hasPolicies || !subscribeEnabled) return;
     const row = metaRowRef.current;
     const policies = policiesCountRef.current;
     if (!row || !policies) return;
@@ -168,11 +167,15 @@ export function StatePanel({
       setMetaControlGapPx(Number.isFinite(gap) ? Math.max(0, gap) : null);
     };
 
-    measure();
+    // Defer so the layout effect only subscribes; setState runs from the observer/rAF callback.
+    const rafId = requestAnimationFrame(measure);
     const ro = new ResizeObserver(measure);
     ro.observe(row);
     ro.observe(policies);
-    return () => ro.disconnect();
+    return () => {
+      cancelAnimationFrame(rafId);
+      ro.disconnect();
+    };
   }, [hasPolicies, subscribeEnabled, shownCount, name]);
 
   return (
@@ -233,8 +236,8 @@ export function StatePanel({
               <div
                 className="absolute top-0 left-drawer-filter-from-content flex items-center"
                 style={
-                  subscribeEnabled && metaControlGapPx != null
-                    ? { gap: `${metaControlGapPx}px` }
+                  subscribeEnabled && effectiveMetaControlGapPx != null
+                    ? { gap: `${effectiveMetaControlGapPx}px` }
                     : undefined
                 }
               >
@@ -314,10 +317,11 @@ export function StatePanel({
           </div>
         </div>
       </div>
-      {subscribeEnabled ? (
+      {subscribeEnabled && subscribeOpen ? (
         <StateSubscribeModal
+          key={stateCode}
           stateCode={stateCode}
-          open={subscribeOpen}
+          open
           onClose={() => setSubscribeOpen(false)}
         />
       ) : null}

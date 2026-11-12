@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useState } from "react";
+import { useState } from "react";
 
 import { BillPanel } from "@/components/bill/BillPanel";
 import type { PublicBill } from "@/lib/api/types";
@@ -28,10 +28,10 @@ export function BillPanelDrawer({
     useDrawerSlide(billSlug);
   const [billState, setBillState] = useState(stateCode);
 
-  useLayoutEffect(() => {
-    if (!billSlug) return;
+  // Keep the exit animation on the state that was open; only sync while mounted open.
+  if (billSlug != null && billState !== stateCode) {
     setBillState(stateCode);
-  }, [billSlug, stateCode]);
+  }
 
   if (!activeSlug) return null;
 

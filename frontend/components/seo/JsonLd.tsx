@@ -8,7 +8,8 @@ type JsonLdProps = {
 function asJsonLdDocument(data: JsonLdNode | JsonLdNode[]): JsonLdNode {
   if (!Array.isArray(data)) return data;
   const graph = data.map((node) => {
-    const { "@context": _context, ...rest } = node;
+    const rest = { ...node };
+    delete rest["@context"];
     return rest;
   });
   return {

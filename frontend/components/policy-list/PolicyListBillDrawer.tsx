@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 
 import { BillPanelDrawer } from "@/components/bill/BillPanelDrawer";
@@ -14,6 +14,8 @@ type PolicyListBillDrawerProps = {
   onClose: () => void;
 };
 
+const emptySubscribe = () => () => {};
+
 export function PolicyListBillDrawer({
   stateCode,
   billSlug,
@@ -21,11 +23,11 @@ export function PolicyListBillDrawer({
   fallbackBill = null,
   onClose,
 }: PolicyListBillDrawerProps) {
-  const [portalReady, setPortalReady] = useState(false);
-
-  useEffect(() => {
-    setPortalReady(true);
-  }, []);
+  const portalReady = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  );
 
   if (!portalReady || !stateCode || !billSlug) return null;
 

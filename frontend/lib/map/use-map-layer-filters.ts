@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 import { NATIONAL_STATE_CODE } from "@/lib/api/state-code";
 import {
@@ -37,11 +37,13 @@ export function useMapLayerFilters(selectedState: string | null) {
   const [mode, setMode] = useState<MapLayerSelection>(() =>
     layerForOpenDrawer(selectedState) ?? DEFAULT_MAP_LAYER_MODE,
   );
+  const [prevSelectedState, setPrevSelectedState] = useState(selectedState);
 
-  useEffect(() => {
+  if (selectedState !== prevSelectedState) {
+    setPrevSelectedState(selectedState);
     const routeLayer = layerForOpenDrawer(selectedState);
     if (routeLayer) setMode(routeLayer);
-  }, [selectedState]);
+  }
 
   const toggle = useCallback((key: MapLayerFilterKey) => {
     setMode((prev) => (prev === key ? null : key));

@@ -3,8 +3,8 @@
 import {
   useCallback,
   useLayoutEffect,
-  useRef,
   useState,
+  useSyncExternalStore,
   type CSSProperties,
   type TransitionEvent,
 } from "react";
@@ -28,18 +28,22 @@ export function drawerSlideStyle(slideIn: boolean): CSSProperties {
   };
 }
 
+function subscribePrefersReducedMotion(onChange: () => void) {
+  const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
+}
+
+function getPrefersReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
 export function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(false);
-
-  useLayoutEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduced(mq.matches);
-    const onChange = () => setReduced(mq.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-
-  return reduced;
+  return useSyncExternalStore(
+    subscribePrefersReducedMotion,
+    getPrefersReducedMotion,
+    () => false,
+  );
 }
 
 /**
@@ -50,34 +54,41 @@ export function useDrawerSlide(openKey: string | null) {
   const reduceMotion = usePrefersReducedMotion();
   const [activeKey, setActiveKey] = useState<string | null>(openKey);
   const [slideIn, setSlideIn] = useState(false);
-  const wasOpenRef = useRef(false);
+  const [wasOpen, setWasOpen] = useState(false);
+  const [prevOpenKey, setPrevOpenKey] = useState<string | null | undefined>(
+    undefined,
+  );
+  const [prevReduceMotion, setPrevReduceMotion] = useState<boolean | undefined>(
+    undefined,
+  );
+  const [enterNonce, setEnterNonce] = useState(0);
 
-  useLayoutEffect(() => {
+  if (openKey !== prevOpenKey || reduceMotion !== prevReduceMotion) {
+    setPrevOpenKey(openKey);
+    setPrevReduceMotion(reduceMotion);
     if (openKey) {
       setActiveKey(openKey);
-      if (wasOpenRef.current) {
-        setSlideIn(true);
-      } else if (reduceMotion) {
+      if (wasOpen || reduceMotion) {
         setSlideIn(true);
       } else {
         setSlideIn(false);
-        const id = requestAnimationFrame(() => setSlideIn(true));
-        wasOpenRef.current = true;
-        return () => cancelAnimationFrame(id);
+        setEnterNonce((n) => n + 1);
       }
-      wasOpenRef.current = true;
-      return;
-    }
-
-    if (reduceMotion) {
+      setWasOpen(true);
+    } else if (reduceMotion) {
       setSlideIn(false);
       setActiveKey(null);
-      wasOpenRef.current = false;
-      return;
+      setWasOpen(false);
+    } else {
+      setSlideIn(false);
     }
+  }
 
-    setSlideIn(false);
-  }, [openKey, reduceMotion]);
+  useLayoutEffect(() => {
+    if (!openKey || slideIn || reduceMotion) return;
+    const id = requestAnimationFrame(() => setSlideIn(true));
+    return () => cancelAnimationFrame(id);
+  }, [openKey, slideIn, reduceMotion, enterNonce]);
 
   const onSlideTransitionEnd = useCallback(
     (event: TransitionEvent<HTMLElement>) => {
@@ -88,7 +99,7 @@ export function useDrawerSlide(openKey: string | null) {
         return;
       }
       setActiveKey(null);
-      wasOpenRef.current = false;
+      setWasOpen(false);
     },
     [openKey, reduceMotion],
   );
@@ -107,33 +118,40 @@ export function drawerRevealStyle(revealed: boolean): CSSProperties {
 export function useDrawerReveal(open: boolean) {
   const reduceMotion = usePrefersReducedMotion();
   const [mounted, setMounted] = useState(open);
-  const [revealed, setRevealed] = useState(open && reduceMotion);
-  const wasOpenRef = useRef(false);
+  const [revealed, setRevealed] = useState(false);
+  const [wasOpen, setWasOpen] = useState(false);
+  const [prevOpen, setPrevOpen] = useState<boolean | undefined>(undefined);
+  const [prevReduceMotion, setPrevReduceMotion] = useState<boolean | undefined>(
+    undefined,
+  );
+  const [enterNonce, setEnterNonce] = useState(0);
 
-  useLayoutEffect(() => {
+  if (open !== prevOpen || reduceMotion !== prevReduceMotion) {
+    setPrevOpen(open);
+    setPrevReduceMotion(reduceMotion);
     if (open) {
       setMounted(true);
-      if (wasOpenRef.current || reduceMotion) {
+      if (wasOpen || reduceMotion) {
         setRevealed(true);
       } else {
         setRevealed(false);
-        const id = requestAnimationFrame(() => setRevealed(true));
-        wasOpenRef.current = true;
-        return () => cancelAnimationFrame(id);
+        setEnterNonce((n) => n + 1);
       }
-      wasOpenRef.current = true;
-      return;
-    }
-
-    if (reduceMotion) {
+      setWasOpen(true);
+    } else if (reduceMotion) {
       setRevealed(false);
       setMounted(false);
-      wasOpenRef.current = false;
-      return;
+      setWasOpen(false);
+    } else {
+      setRevealed(false);
     }
+  }
 
-    setRevealed(false);
-  }, [open, reduceMotion]);
+  useLayoutEffect(() => {
+    if (!open || revealed || reduceMotion) return;
+    const id = requestAnimationFrame(() => setRevealed(true));
+    return () => cancelAnimationFrame(id);
+  }, [open, revealed, reduceMotion, enterNonce]);
 
   const onRevealTransitionEnd = useCallback(
     (event: TransitionEvent<HTMLElement>) => {
@@ -146,7 +164,7 @@ export function useDrawerReveal(open: boolean) {
         return;
       }
       setMounted(false);
-      wasOpenRef.current = false;
+      setWasOpen(false);
     },
     [open, reduceMotion],
   );

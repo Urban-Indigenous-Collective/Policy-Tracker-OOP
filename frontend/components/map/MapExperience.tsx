@@ -70,7 +70,7 @@ function MapExperienceInner({
       nationalBillsForLayers?.bills?.length
         ? deriveFallbackBillsFromNationalResponse(nationalBillsForLayers.bills)
         : undefined,
-    [nationalBillsForLayers?.bills],
+    [nationalBillsForLayers],
   );
 
   const stateCategories = useMemo(
