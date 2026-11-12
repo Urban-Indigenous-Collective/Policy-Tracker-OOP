@@ -12,12 +12,18 @@ WorkingDirectory=/opt/llama.cpp-cuda
 Environment=LD_LIBRARY_PATH=/opt/llama.cpp-cuda:/usr/local/lib/ollama/cuda_v12
 Environment=LLAMA_ARG_HOST=0.0.0.0
 Environment=LLAMA_ARG_PORT=8080
+# Context sizing (RTX PRO 5000 48GB, Qwen3.6-27B Q8):
+# Previously -c 32768 with auto -np (~4 slots) reserved ~128k tokens of KV total
+# but capped each request at 32k — NM-sized PDFs (~77k tokens) failed with
+# exceed_context_size_error. Collapse to one slot with the same KV budget so a
+# single analysis can ingest the full document (no head/tail or map-reduce).
 ExecStart=/opt/llama.cpp-cuda/llama-server \
   -m /opt/models/qwen3.6-27b/Qwen3.6-27B-Q8_0.gguf \
   --mmproj /opt/models/qwen3.6-27b/mmproj-Qwen3.6-27B-Q8_0.gguf \
   --host 0.0.0.0 \
   --port 8080 \
-  -c 32768 \
+  -c 131072 \
+  -np 1 \
   -ngl 99 \
   --reasoning off \
   --jinja \

@@ -21,6 +21,11 @@ from urllib.parse import parse_qsl, urlparse
 # 600 clears the empty/stub cases without risking a genuinely short proclamation.
 DEFAULT_MIN_DOC_CHARS = 600
 
+# Absolute floor: Akamai interstitial / empty shells (~0–20 chars) must never
+# reach Pending even when justice.gov/FR metadata bypass would otherwise allow
+# a short body because the URL slug or listing title contains MMIP terms.
+HARD_MIN_DOC_CHARS = 40
+
 # LegiScan bill metadata alone is often short; still long enough to catch
 # query-only contamination while admitting real one-line session titles.
 LEGISCAN_MIN_DOC_CHARS = 200
@@ -176,6 +181,12 @@ def check_document_text(
     length = _visible_length(text)
     if length == 0:
         return GuardVerdict(False, "doc_empty", f"no extractable text at {url or 'document'}")
+    if length < HARD_MIN_DOC_CHARS:
+        return GuardVerdict(
+            False,
+            "doc_too_short",
+            f"{length} chars of text (hard minimum {HARD_MIN_DOC_CHARS}; likely bot-wall/shell)",
+        )
 
     head = re.sub(r"\s+", " ", text)[:SEARCH_MARKER_WINDOW]
     for marker in SEARCH_BODY_MARKERS:

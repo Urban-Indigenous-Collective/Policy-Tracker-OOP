@@ -80,6 +80,18 @@ class TestDocumentText:
     def test_rejects_whitespace_only_text(self):
         assert check_document_text("   \n\t  ").code == "doc_empty"
 
+    def test_rejects_akamai_shell_even_with_justice_gov_mmip_title(self):
+        # Listing titles can pass keyword_prescreen while the analysis fetch only
+        # got an Akamai interstitial (&nbsp; / empty body). Hard floor must block.
+        verdict = check_document_text(
+            "&nbsp;",
+            "https://www.justice.gov/usao-ak/pr/us-attorney-and-fbi-announce-missing-and-murdered-indigenous-persons-initiative",
+            title="U.S. Attorney and FBI Announce Missing and Murdered Indigenous Persons Initiative",
+            context="Missing and Murdered Indigenous Persons Initiative press release",
+        )
+        assert verdict.code == "doc_too_short"
+        assert "hard minimum" in verdict.detail
+
     def test_rejects_short_pdf_wrapper(self):
         wrapper = (
             "Justice for Renee Nicole Good | MELT Act, RADAR Act, NY4ALL Skip to main content "

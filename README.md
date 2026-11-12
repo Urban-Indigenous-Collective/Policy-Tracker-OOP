@@ -162,7 +162,8 @@ docker compose --profile tunnel up -d   # includes web + tunnel + scheduler
 | `DISCOVERY_TZ` | `America/New_York` | Timezone for cron |
 | `SLACK_SUMMARY_CRON` | `30 7 * * *` | Morning Slack summary + subscriber digests |
 | `APPROVAL_SYNC_INTERVAL_MIN` | `0` | Optional poller; `0` means webhook + nightly catch-up only |
-| `DISCOVERY_MAX_ANALYSES_PER_RUN` | `25` | Cap LLM analyses per run (safety valve) |
+| `DISCOVERY_MAX_ANALYSES_PER_RUN` | `50` | Cap LLM analyses per run (safety valve; raise via one-off `-e` for backlog) |
+| `LLM_MAX_CONTEXT_TOKENS` | `131072` | Must match llama-server `-c`; used for `doc_too_large` preflight |
 | `DISCOVERY_RELEVANCE_MIN_CONFIDENCE` | `0.6` | MMIP relevance gate threshold |
 | `SLACK_QUIET_RUNS` | `true` | Suppress Slack when no new policies found |
 | `LLM_HEALTH_TIMEOUT_SEC` | `8` | Nightly + morning LLM reachability probe timeout |

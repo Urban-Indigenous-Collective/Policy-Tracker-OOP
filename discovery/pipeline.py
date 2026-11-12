@@ -4,6 +4,13 @@ from dataclasses import dataclass, field
 from typing import Any, Optional
 
 from airtable_client import AirtableClient, is_airtable_rate_limit_error
+from content_guard import (
+    check_record_consistency,
+    check_url_shape,
+    merge_warnings,
+    screen_candidate_document,
+    screen_legiscan_document,
+)
 from discovery.dedup import AirtableDuplicateIndex
 from discovery.federal_crawler import FederalSiteSource
 from discovery.legiscan_search import LegiScanSearchSource
@@ -127,8 +134,18 @@ class DiscoveryPipeline:
 
     def _get_excerpt(self, candidate: Candidate) -> str:
         combined = f"{candidate.title}\n{candidate.snippet}"
-        if len(combined.strip()) >= 200:
-            return combined
+        if candidate.source == "legiscan":
+            legiscan = getattr(self.main_app, "legiscan_processor", None)
+            getter = getattr(legiscan, "get_bill_excerpt_for_relevance", None) if legiscan else None
+            if callable(getter):
+                try:
+                    excerpt = getter(candidate.url) or ""
+                except Exception as exc:
+                    logger.warning("LegiScan excerpt fetch failed for %s: %s", candidate.url, exc)
+                    excerpt = ""
+                return excerpt or combined
+        # Always fetch crawled page text for document gates (search shells, bot walls).
+        # Title/snippet alone can be MMIP-relevant while the body is an empty Akamai shell.
         if candidate.source == "state_site":
             text, content_hash = self.state_source.fetch_page_text(candidate.url)
             if content_hash:
@@ -140,6 +157,27 @@ class DiscoveryPipeline:
                 candidate.content_hash = content_hash
             return text or combined
         return combined
+
+    def _reject(
+        self,
+        candidate: Candidate,
+        stats: DiscoveryRunStats,
+        *,
+        verdict: str,
+        confidence: float | None = None,
+    ) -> None:
+        self.seen_store.upsert(
+            candidate.url.strip(),
+            candidate.source,
+            state=candidate.state,
+            external_id=candidate.external_id,
+            change_hash=candidate.change_hash,
+            content_hash=candidate.content_hash,
+            status="rejected",
+            verdict=verdict,
+            confidence=confidence,
+        )
+        stats.rejected += 1
 
     def _process_candidate(self, candidate: Candidate, stats: DiscoveryRunStats) -> None:
         url = candidate.url.strip()
@@ -170,21 +208,33 @@ class DiscoveryPipeline:
             stats.skipped += 1
             return
 
+        # URL-shape gate for crawled .gov pages (not LegiScan API results).
+        if candidate.source != "legiscan":
+            shape = check_url_shape(url)
+            if not shape:
+                logger.info("URL shape reject %s: %s", url, shape.code)
+                self._reject(candidate, stats, verdict=shape.code)
+                return
+
         if not self.relevance_gate.prescreen(candidate):
-            self.seen_store.upsert(
-                url,
-                candidate.source,
-                state=candidate.state,
-                external_id=candidate.external_id,
-                change_hash=candidate.change_hash,
-                content_hash=candidate.content_hash,
-                status="rejected",
-                verdict="prescreen_fail",
-            )
-            stats.rejected += 1
+            self._reject(candidate, stats, verdict="prescreen_fail")
             return
 
         excerpt = self._get_excerpt(candidate)
+        if candidate.source == "legiscan":
+            doc_gate = screen_legiscan_document(url, excerpt, title=candidate.title or "")
+        else:
+            doc_gate = screen_candidate_document(
+                url,
+                excerpt,
+                title=candidate.title or "",
+                context=candidate.snippet or "",
+            )
+        if not doc_gate:
+            logger.info("Document gate reject %s: %s (%s)", url, doc_gate.code, doc_gate.detail)
+            self._reject(candidate, stats, verdict=doc_gate.code)
+            return
+
         is_relevant, relevance_result, stage = self.relevance_gate.evaluate(candidate, excerpt)
         if not is_relevant:
             # LLM infrastructure failures: leave seen untouched so next run retries
@@ -198,18 +248,7 @@ class DiscoveryPipeline:
                 )
                 return
             confidence = relevance_result.confidence if relevance_result else None
-            self.seen_store.upsert(
-                url,
-                candidate.source,
-                state=candidate.state,
-                external_id=candidate.external_id,
-                change_hash=candidate.change_hash,
-                content_hash=candidate.content_hash,
-                status="rejected",
-                verdict=stage,
-                confidence=confidence,
-            )
-            stats.rejected += 1
+            self._reject(candidate, stats, verdict=stage, confidence=confidence)
             return
 
         if stats.analyzed >= self.max_analyses:
@@ -229,7 +268,9 @@ class DiscoveryPipeline:
         try:
             doc_id = None
             if candidate.source == "legiscan":
-                doc_id = self.main_app.legiscan_processor.extract_doc_id(url)
+                extract = getattr(self.main_app.legiscan_processor, "extract_doc_id", None)
+                if callable(extract):
+                    doc_id = extract(url)
 
             bill_processor = self.main_app.bill_processor
             bill_processor.compiled_bill = {}
@@ -237,6 +278,30 @@ class DiscoveryPipeline:
             success, message = bill_processor.get_doc_text(url, doc_id=doc_id)
             if not success:
                 raise RuntimeError(message)
+
+            decoded_text = bill_processor.compiled_bill.get("decoded_text") or ""
+            # Hard pre-Pending guard: never send empty/bot-wall bodies to the LLM
+            # or write "Executive Order" stubs with empty-legislation summaries.
+            if candidate.source == "legiscan":
+                analysis_gate = screen_legiscan_document(
+                    url, decoded_text, title=candidate.title or ""
+                )
+            else:
+                analysis_gate = screen_candidate_document(
+                    url,
+                    decoded_text,
+                    title=candidate.title or "",
+                    context=candidate.snippet or "",
+                )
+            if not analysis_gate:
+                logger.info(
+                    "Post-fetch document gate reject %s: %s (%s)",
+                    url,
+                    analysis_gate.code,
+                    analysis_gate.detail,
+                )
+                self._reject(candidate, stats, verdict=analysis_gate.code)
+                return
 
             bill_id = bill_processor.compiled_bill.get("bill_id")
             success, message = bill_processor.get_bill_details(bill_id)
@@ -255,15 +320,40 @@ class DiscoveryPipeline:
             if not bill_data:
                 raise RuntimeError("No bill_data after processing")
 
+            source_label = (
+                "LegiScan"
+                if candidate.source == "legiscan"
+                else "Federal Site"
+                if candidate.source == "federal_site"
+                else "State Site"
+            )
+            consistency = check_record_consistency(
+                bill_data,
+                decoded_text,
+                source=source_label,
+            )
+            if not consistency:
+                logger.info(
+                    "Consistency gate reject %s: %s (%s)",
+                    url,
+                    consistency.blocking_code,
+                    consistency.blocking_detail,
+                )
+                self._reject(
+                    candidate,
+                    stats,
+                    verdict=consistency.blocking_code or "consistency_fail",
+                )
+                return
+            if consistency.warnings:
+                bill_data["Validation Warnings"] = merge_warnings(
+                    bill_data.get("Validation Warnings", ""),
+                    consistency.warnings,
+                )
+
             record = self.airtable.create_pending_record(
                 bill_data=bill_data,
-                source=(
-                    "LegiScan"
-                    if candidate.source == "legiscan"
-                    else "Federal Site"
-                    if candidate.source == "federal_site"
-                    else "State Site"
-                ),
+                source=source_label,
                 relevance_confidence=relevance_result.confidence if relevance_result else 0.0,
                 relevance_rationale=relevance_result.rationale if relevance_result else "",
                 discovered_on=utc_now_iso()[:10],

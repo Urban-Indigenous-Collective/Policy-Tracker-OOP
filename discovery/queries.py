@@ -1,5 +1,9 @@
 """MMIP search queries and keyword lexicon for discovery prescreening."""
 
+from __future__ import annotations
+
+import re
+
 # LegiScan full-text query variants (boolean search)
 MMIP_QUERIES = [
     '"missing and murdered indigenous"',
@@ -47,6 +51,30 @@ HARM_TERMS = [
 ]
 
 MMIP_ACRONYMS = ["mmiw", "mmip", "mmiwg"]
+
+# Word-boundary acronyms for operative-text checks (avoids matching inside longer words).
+MMIP_ACRONYM_RE = re.compile(r"\bmmi[wpr][a-z0-9]*\b", re.IGNORECASE)
+
+
+def strip_mmip_query_contamination(text: str) -> str:
+    """Remove LegiScan discovery query literals that can false-trigger prescreen.
+
+    Only strips boolean/search-syntax queries (AND/OR/parentheses). Natural-language
+    phrase queries like ``"missing and murdered indigenous"`` also appear verbatim in
+    real bill text and must not be erased.
+    """
+    cleaned = text or ""
+    for query in MMIP_QUERIES:
+        # LegiScan boolean operators are uppercase AND/OR. Do not use IGNORECASE —
+        # that would treat the English word "and" inside phrase queries as syntax.
+        if not re.search(r"\b(?:AND|OR)\b|\(|\)", query):
+            continue
+        for variant in {query, query.strip('"'), query.replace('"', "")}:
+            variant = variant.strip()
+            if len(variant) < 4:
+                continue
+            cleaned = re.sub(re.escape(variant), " ", cleaned, flags=re.IGNORECASE)
+    return re.sub(r"\s+", " ", cleaned).strip()
 
 
 def keyword_prescreen(text: str) -> bool:

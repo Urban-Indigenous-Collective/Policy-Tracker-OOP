@@ -74,7 +74,7 @@ class StubBillProcessor:
         self._decoded_text = decoded_text
         self._bill_data = bill_data
 
-    def get_doc_text(self, url, bill_id=None):
+    def get_doc_text(self, url, doc_id=None, bill_id=None, refresh=False):
         self.compiled_bill["decoded_text"] = self._decoded_text
         self.compiled_bill["bill_id"] = None
         return True, "ok"
