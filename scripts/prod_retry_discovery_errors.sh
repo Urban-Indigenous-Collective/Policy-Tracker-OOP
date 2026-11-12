@@ -1,28 +1,16 @@
 #!/bin/bash
 # Retry discovery for URLs that failed with error status in seen_store.
+# Uses reopen_llm_failures.py so matching rows are audited (JSON + sqlite backup)
+# before delete — do not inline DELETE again.
 set -euo pipefail
 cd /opt/policy-tracker
-mkdir -p data
+mkdir -p data/backups
 
 docker compose stop scheduler || true
 
-echo "=== Clearing error rows from seen_store ==="
-docker compose run --rm -T scheduler python - <<'PY'
-import os
-import sqlite3
-
-db = os.getenv("DISCOVERY_DB_PATH", "data/discovery.db")
-conn = sqlite3.connect(db)
-cur = conn.cursor()
-cur.execute("SELECT COUNT(*) FROM seen_candidates WHERE status='error'")
-before = cur.fetchone()[0]
-cur.execute("DELETE FROM seen_candidates WHERE status='error'")
-conn.commit()
-cur.execute("SELECT COUNT(*) FROM seen_candidates WHERE status='error'")
-after = cur.fetchone()[0]
-print(f"Cleared {before} error row(s); remaining errors: {after}")
-conn.close()
-PY
+echo "=== Clearing error rows from seen_store (audited reopen) ==="
+docker compose run --rm -T scheduler python scripts/reopen_llm_failures.py \
+  --errors-only --apply
 
 echo "=== Retry pass (errors only via cleared seen_store) ==="
 docker compose run --rm -T \
