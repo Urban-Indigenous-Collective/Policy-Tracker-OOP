@@ -81,7 +81,11 @@ def status_fingerprint(changes: list[dict[str, str]]) -> str:
 
 
 def enqueue_event(event: dict[str, Any]) -> bool:
-    """Append an event if its key is new. Returns True when queued."""
+    """Append an event if its key is new. Returns True when queued.
+
+    Also dual-writes into the monthly digest archive (durable across morning
+    queue clears).
+    """
     key = str(event.get("key") or "").strip()
     if not key:
         raise ValueError("digest event requires key")
@@ -97,6 +101,15 @@ def enqueue_event(event: dict[str, Any]) -> bool:
         data["events"].append(payload)
         _save(path, data)
     logger.info("Queued subscriber digest event key=%s kind=%s", key, event.get("kind"))
+    try:
+        from subscriptions.monthly_archive import archive_event
+
+        archive_event(payload)
+    except Exception:
+        logger.exception(
+            "Failed to archive monthly digest event key=%s (morning queue ok)",
+            key,
+        )
     return True
 
 

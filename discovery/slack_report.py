@@ -53,6 +53,7 @@ def save_deferred_report(stats, run_at: str | None = None) -> None:
         "rejected": stats.rejected,
         "skipped": stats.skipped,
         "errors": stats.errors,
+        "llm_errors": int(getattr(stats, "llm_errors", 0) or 0),
         "slack_items": stats.slack_items,
         "by_state": stats.by_state,
         "sources_attempted": stats.sources_attempted or existing.get("sources_attempted") or {},
@@ -61,6 +62,7 @@ def save_deferred_report(stats, run_at: str | None = None) -> None:
         "identity_mismatch_items": existing.get("identity_mismatch_items") or [],
         "status_refresh": existing.get("status_refresh") or {},
         "legiscan_quota": legiscan_quota,
+        "llm_health": existing.get("llm_health") or {},
         "airtable_rate_limited": bool(getattr(stats, "airtable_rate_limited", False)),
         "airtable_limit_reason": getattr(stats, "airtable_limit_reason", ""),
     }
@@ -96,14 +98,39 @@ def merge_status_refresh_report(
     report.setdefault("rejected", 0)
     report.setdefault("skipped", 0)
     report.setdefault("errors", 0)
+    report.setdefault("llm_errors", 0)
     report.setdefault("slack_items", [])
     report.setdefault("by_state", {})
+    report.setdefault("llm_health", {})
     path.write_text(json.dumps(report, indent=2), encoding="utf-8")
     logger.info(
         "Merged %d status refresh item(s) and %d identity mismatch item(s) "
         "into deferred Slack report at %s",
         len(status_items),
         len(identity_mismatch_items or []),
+        path,
+    )
+
+
+def merge_llm_health_report(health: dict[str, Any], *, run_at: str | None = None) -> None:
+    """Attach LLM probe results to the overnight deferred Slack report."""
+    path = report_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    report = load_deferred_report() or {}
+    report["llm_health"] = dict(health or {})
+    report.setdefault("run_at", run_at or utc_now_iso())
+    report.setdefault("discovered", 0)
+    report.setdefault("analyzed", 0)
+    report.setdefault("rejected", 0)
+    report.setdefault("skipped", 0)
+    report.setdefault("errors", 0)
+    report.setdefault("llm_errors", 0)
+    report.setdefault("slack_items", [])
+    report.setdefault("by_state", {})
+    path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+    logger.info(
+        "Merged LLM health ok=%s into deferred Slack report at %s",
+        health.get("ok"),
         path,
     )
 
@@ -163,6 +190,9 @@ def send_deferred_report(slack: SlackNotifier | None = None) -> bool:
     send_empty = discovery_slack_always() and not status_items and not identity_items and not slack_items
     status_refresh = report.get("status_refresh") or {}
     has_status_refresh = bool(status_refresh)
+    llm_health = report.get("llm_health") or {}
+    llm_errors = int(report.get("llm_errors", 0) or 0)
+    llm_down = llm_health.get("ok") is False or llm_errors > 0
     if (
         not status_items
         and not identity_items
@@ -170,12 +200,24 @@ def send_deferred_report(slack: SlackNotifier | None = None) -> bool:
         and not has_discovery
         and not has_status_refresh
         and not send_empty
+        and not llm_down
     ):
         logger.info("Deferred report has nothing to send")
         clear_deferred_report()
         return False
 
     ok = True
+    if llm_down:
+        # Morning banner — do not let quiet heartbeats hide a dead model.
+        ok = notifier.notify_llm_health(
+            ok=False,
+            base_url=str(llm_health.get("base_url") or ""),
+            model=str(llm_health.get("model") or ""),
+            error=str(llm_health.get("error") or ""),
+            llm_errors=llm_errors,
+            checked_at=str(llm_health.get("checked_at") or ""),
+        ) and ok
+
     quota = report.get("legiscan_quota") or {}
     quota_limited = bool(quota.get("limited"))
     if quota_limited:
@@ -199,19 +241,21 @@ def send_deferred_report(slack: SlackNotifier | None = None) -> bool:
             errors=int(status_refresh.get("errors", 0)),
             always_notify=discovery_slack_always(),
         ) and ok
-    if not quota_limited and (has_discovery or send_empty or discovery_slack_always()):
+    if not quota_limited and (has_discovery or send_empty or discovery_slack_always() or llm_down):
         ok = notifier.notify_run_complete(
             discovered=int(report.get("discovered", 0)),
             analyzed=int(report.get("analyzed", 0)),
             rejected=int(report.get("rejected", 0)),
             skipped=int(report.get("skipped", 0)),
             errors=int(report.get("errors", 0)),
+            llm_errors=llm_errors,
+            llm_ok=None if not llm_health else bool(llm_health.get("ok")),
             by_state=report.get("by_state") or {},
             run_started_at=report.get("run_started_at") or report.get("run_at") or "",
             run_finished_at=report.get("run_finished_at") or "",
             sources_attempted=report.get("sources_attempted") or {},
             sources_crawled=report.get("sources_crawled") or {},
-            always_notify=send_empty or discovery_slack_always(),
+            always_notify=send_empty or discovery_slack_always() or llm_down,
         ) and ok
 
     if ok:

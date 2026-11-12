@@ -19,11 +19,13 @@ from subscriptions.mail import (
 from subscriptions.store import (
     add_state,
     create_otp,
+    get_monthly_digest,
     get_states,
     is_valid_email,
     normalize_email,
     remove_state,
     resolve_session,
+    set_monthly_digest,
     verify_magic_link,
     verify_otp,
 )
@@ -288,7 +290,46 @@ def me():
     email, err = _session_email_from_request()
     if err:
         return err
-    return jsonify({"email": email, "states": get_states(email)})
+    return jsonify(
+        {
+            "email": email,
+            "states": get_states(email),
+            "monthlyDigest": get_monthly_digest(email),
+        }
+    )
+
+
+@subscriptions_bp.post("/monthly")
+def signup_monthly():
+    """Opt into the tracker-wide monthly digest (no OTP; in-UI confirmation)."""
+    if not subscriptions_enabled():
+        return _feature_off()
+    body = request.get_json(silent=True) or {}
+    email = normalize_email(str(body.get("email") or ""))
+    if not is_valid_email(email):
+        return _error("invalid_email", "A valid email address is required", 400)
+
+    rate_key = f"monthly|{_client_ip()}|{email}"
+    if _rate_limited(rate_key):
+        return _error("rate_limited", "Too many requests; try again later", 429)
+
+    already = get_monthly_digest(email)
+    set_monthly_digest(email, True)
+    if already:
+        message = "You're already subscribed to the monthly digest."
+    else:
+        message = "You're subscribed to the monthly MMIP policy digest."
+    return jsonify(
+        {
+            "ok": True,
+            "status": "subscribed",
+            "email": email,
+            "monthlyDigest": True,
+            "added": not already,
+            "alreadySubscribed": already,
+            "message": message,
+        }
+    )
 
 
 @subscriptions_bp.post("/subscribe")

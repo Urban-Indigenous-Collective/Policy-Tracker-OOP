@@ -5,6 +5,7 @@ from discovery.slack_report import (
     clear_deferred_report,
     discovery_slack_always,
     load_deferred_report,
+    merge_llm_health_report,
     merge_status_refresh_report,
     report_path,
     save_deferred_report,
@@ -182,4 +183,27 @@ def test_send_deferred_empty_run_skipped_when_always_off(tmp_path, monkeypatch):
     slack = MagicMock()
     assert send_deferred_report(slack) is False
     slack.notify_run_complete.assert_not_called()
+    assert load_deferred_report() is None
+
+
+def test_send_deferred_llm_down_alerts_even_when_quiet(tmp_path, monkeypatch):
+    monkeypatch.setenv("DISCOVERY_DB_PATH", str(tmp_path / "discovery.db"))
+    monkeypatch.setenv("DISCOVERY_SLACK_ALWAYS", "false")
+    merge_llm_health_report(
+        {
+            "ok": False,
+            "base_url": "http://host.docker.internal:8080/v1",
+            "model": "Qwen3.6-27B-Q8_0.gguf",
+            "error": "couldn't bind HTTP server socket",
+            "checked_at": "2026-11-11T07:00:00+00:00",
+        },
+        run_at="2026-11-11T07:00:00+00:00",
+    )
+
+    slack = MagicMock()
+    slack.notify_llm_health.return_value = True
+    slack.notify_run_complete.return_value = True
+    assert send_deferred_report(slack) is True
+    slack.notify_llm_health.assert_called_once()
+    assert slack.notify_run_complete.call_args.kwargs["llm_ok"] is False
     assert load_deferred_report() is None

@@ -22,6 +22,13 @@ fi
 echo "Unloading qwen2.5vl:32b from Ollama..."
 ollama stop qwen2.5vl:32b 2>/dev/null || true
 
+# Mirrored networking: clear stale Windows portproxy on :8080 before bind.
+FIX_PP="$(cd "$(dirname "$0")" && pwd)/fix-llm-portproxy.sh"
+if [ -x "$FIX_PP" ]; then
+  echo "Checking Windows LLM portproxy (mirrored networking)..."
+  bash "$FIX_PP" --fix || true
+fi
+
 echo "Starting llama-server..."
 systemctl enable "$SERVICE_NAME"
 systemctl start "$SERVICE_NAME"

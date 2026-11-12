@@ -361,6 +361,22 @@
     opacity: var(--opacity-donate-hover);
   }
 
+  /* Button preflight wins over @layer components — keep learn-more look on <button>. */
+  button.uic-footer-learn {
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    background-color: var(--color-accent) !important;
+    border-radius: var(--radius-footer-learn) !important;
+    color: var(--color-foreground) !important;
+    font-family: var(--font-sans) !important;
+    font-size: var(--text-footer-cta) !important;
+    font-weight: var(--font-weight-semibold) !important;
+    line-height: var(--leading-footer-learn) !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+  }
+
   /* Figma `176:5669`–`176:5672` — outlined pills (nav scale; Learn More keeps --text-footer-cta) */
   .uic-footer-nav-pill {
     display: inline-flex;

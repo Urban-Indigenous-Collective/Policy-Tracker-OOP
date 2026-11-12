@@ -39,6 +39,7 @@ def _empty_payload() -> dict[str, Any]:
         "pending_otps": {},
         "sessions": {},
         "digest_notified": {},
+        "monthly_digest_notified": {},
     }
 
 
@@ -56,6 +57,7 @@ def _load(path: Path) -> dict[str, Any]:
     data.setdefault("pending_otps", {})
     data.setdefault("sessions", {})
     data.setdefault("digest_notified", {})
+    data.setdefault("monthly_digest_notified", {})
     return data
 
 
@@ -220,16 +222,60 @@ def add_state(email: str, state: str) -> list[str]:
         data = _load(store_path())
         entry = data["subscribers"].get(key) or {
             "states": [],
+            "monthly_digest": False,
             "created_at": now,
         }
         states = {str(s) for s in (entry.get("states") or [])}
         states.add(state)
         entry["states"] = sorted(states)
+        entry.setdefault("monthly_digest", False)
         entry["updated_at"] = now
         entry.setdefault("created_at", now)
         data["subscribers"][key] = entry
         _save(store_path(), data)
         return list(entry["states"])
+
+
+def get_monthly_digest(email: str) -> bool:
+    key = normalize_email(email)
+    with _lock:
+        data = _load(store_path())
+        entry = data["subscribers"].get(key) or {}
+        return bool(entry.get("monthly_digest"))
+
+
+def set_monthly_digest(email: str, enabled: bool = True) -> bool:
+    """Opt email into (or out of) the tracker-wide monthly digest.
+
+    Returns the resulting ``monthly_digest`` flag.
+    """
+    key = normalize_email(email)
+    now = _utc_now_iso()
+    with _lock:
+        data = _load(store_path())
+        entry = data["subscribers"].get(key) or {
+            "states": [],
+            "monthly_digest": False,
+            "created_at": now,
+        }
+        entry.setdefault("states", [])
+        entry["monthly_digest"] = bool(enabled)
+        entry["updated_at"] = now
+        entry.setdefault("created_at", now)
+        data["subscribers"][key] = entry
+        _save(store_path(), data)
+        return bool(entry["monthly_digest"])
+
+
+def list_monthly_subscribers() -> list[str]:
+    """Return emails opted into the tracker-wide monthly digest."""
+    with _lock:
+        data = _load(store_path())
+        out: list[str] = []
+        for email, entry in (data.get("subscribers") or {}).items():
+            if (entry or {}).get("monthly_digest"):
+                out.append(str(email))
+        return sorted(out)
 
 
 def remove_state(email: str, state: str | None, *, remove_all: bool = False) -> list[str]:
@@ -299,6 +345,36 @@ def mark_digest_notified(keys: list[str] | set[str]) -> None:
             ordered = sorted(notified.items(), key=lambda kv: kv[1])
             notified = dict(ordered[-4000:])
         data["digest_notified"] = notified
+        _save(store_path(), data)
+
+
+def filter_unnotified_monthly_keys(keys: list[str]) -> list[str]:
+    """Return monthly watermark keys that have not yet been marked notified."""
+    wanted = [str(k) for k in keys if k]
+    if not wanted:
+        return []
+    with _lock:
+        data = _load(store_path())
+        notified = data.get("monthly_digest_notified") or {}
+        return [k for k in wanted if k not in notified]
+
+
+def mark_monthly_digest_notified(keys: list[str] | set[str]) -> None:
+    """Record monthly digest send watermarks (email|YYYY-MM)."""
+    now = _utc_now_iso()
+    incoming = {str(k) for k in keys if k}
+    if not incoming:
+        return
+    with _lock:
+        data = _load(store_path())
+        data.setdefault("monthly_digest_notified", {})
+        notified = dict(data.get("monthly_digest_notified") or {})
+        for key in incoming:
+            notified[key] = now
+        if len(notified) > 5000:
+            ordered = sorted(notified.items(), key=lambda kv: kv[1])
+            notified = dict(ordered[-4000:])
+        data["monthly_digest_notified"] = notified
         _save(store_path(), data)
 
 

@@ -12,17 +12,24 @@ def digest_env(tmp_path, monkeypatch):
     monkeypatch.setenv(
         "STATE_SUBSCRIBE_DIGEST_QUEUE_PATH", str(tmp_path / "digest_queue.json")
     )
+    monkeypatch.setenv(
+        "STATE_SUBSCRIBE_MONTHLY_ARCHIVE_PATH",
+        str(tmp_path / "monthly_archive.json"),
+    )
     monkeypatch.setenv("STATE_SUBSCRIBE_MAIL_PROVIDER", "log")
     monkeypatch.setenv("PUBLIC_SITE_URL", "http://127.0.0.1:3000")
 
     from subscriptions.digest_queue import reset_digest_queue_for_tests
+    from subscriptions.monthly_archive import reset_monthly_archive_for_tests
     from subscriptions.store import reset_store_for_tests
 
     reset_store_for_tests()
     reset_digest_queue_for_tests()
+    reset_monthly_archive_for_tests()
     yield tmp_path
     reset_store_for_tests()
     reset_digest_queue_for_tests()
+    reset_monthly_archive_for_tests()
 
 
 def test_queue_dedupes_by_key(digest_env):

@@ -42,5 +42,7 @@ LOGO_WIDTH_PX = 53
 # Breathing room that used to come from transparent canvas (~24px at 120px box).
 LOGO_PAD_TOP_PX = 60
 LOGO_PAD_BOTTOM_PX = 24
-# Vertical padding per digest list row (noticeable gap between entries).
+# Vertical padding per digest list row.
 DIGEST_ITEM_PAD_Y_PX = 20
+# Space above/below status pills inside a digest listing.
+DIGEST_PILLS_MARGIN_Y_PX = 14

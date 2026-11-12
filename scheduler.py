@@ -109,9 +109,21 @@ def run_status_refresh_job():
 
 def run_slack_summary_job():
     """Post deferred overnight Slack digest and fan out subscriber emails."""
-    from discovery.slack_report import send_deferred_report
+    from discovery.slack_report import merge_llm_health_report, send_deferred_report
+    from llm.alerts import check_and_alert_llm
 
     logger.info("Starting scheduled Slack summary")
+    # Re-check at 7:30 so a dead LLM still surfaces even if overnight crawl looked quiet.
+    try:
+        morning = check_and_alert_llm(
+            when="morning Slack summary",
+            # Nightly already Slack'd on failure; morning banner comes from the report.
+            send_slack_alert=False,
+        )
+        merge_llm_health_report(morning.to_dict())
+    except Exception:
+        logger.exception("Morning LLM health check failed; continuing Slack summary")
+
     try:
         sent = send_deferred_report()
         if sent:
@@ -133,6 +145,20 @@ def run_slack_summary_job():
         logger.exception("Morning subscriber digests failed: %s", exc)
         SlackNotifier().notify_error(f"Subscriber digests failed: {exc}")
         # Do not re-raise: Slack already posted; digest failure shouldn't retry Slack.
+
+
+def run_monthly_digest_job():
+    """Fan out last month's tracker-wide digest to monthly subscribers."""
+    logger.info("Starting scheduled monthly digest")
+    try:
+        from subscriptions.monthly_digest import send_monthly_digests
+
+        stats = send_monthly_digests()
+        logger.info("Monthly digests: %s", stats)
+    except Exception as exc:
+        logger.exception("Monthly digest job failed: %s", exc)
+        SlackNotifier().notify_error(f"Monthly digests failed: {exc}")
+        raise
 
 
 def run_validation_refresh_job():
@@ -240,6 +266,15 @@ def run_airtable_webhook_refresh_job():
         SlackNotifier().notify_error(f"Airtable webhook refresh failed: {exc}")
 
 
+def run_llm_health_check(*, when: str = "nightly probe") -> None:
+    """Probe the configured LLM; Slack + email if down; record on deferred report."""
+    from discovery.slack_report import merge_llm_health_report
+    from llm.alerts import check_and_alert_llm
+
+    result = check_and_alert_llm(when=when)
+    merge_llm_health_report(result.to_dict())
+
+
 def run_nightly_pipeline():
     """Run discovery, status refresh, and validation refresh sequentially.
 
@@ -249,6 +284,10 @@ def run_nightly_pipeline():
       but the pipeline continues with the next enabled step.
     """
     logger.info("Starting nightly pipeline")
+    try:
+        run_llm_health_check(when="nightly pipeline start")
+    except Exception:
+        logger.exception("LLM health check failed unexpectedly; continuing nightly")
     step = 0
     total_steps = 3
     try:
@@ -348,6 +387,8 @@ def main():
         "DISCOVERY_CRON", "0 2 * * *"
     )
     slack_summary_cron = os.getenv("SLACK_SUMMARY_CRON", "30 7 * * *")
+    # Default: 1st of each month at 08:00 (after morning digests on that day).
+    monthly_digest_cron = os.getenv("MONTHLY_DIGEST_CRON", "0 8 1 * *")
     tz = os.getenv("DISCOVERY_TZ", "America/New_York")
     sync_interval = int(os.getenv("APPROVAL_SYNC_INTERVAL_MIN", "0"))
 
@@ -355,6 +396,7 @@ def main():
     status_refresh_enabled = _env_flag("STATUS_REFRESH_ENABLED", "true")
     validation_refresh_enabled = _env_flag("VALIDATION_REFRESH_ENABLED", "false")
     slack_summary_enabled = _env_flag("SLACK_DEFER_DISCOVERY", "true")
+    monthly_digest_enabled = _env_flag("MONTHLY_DIGEST_ENABLED", "true")
 
     scheduler = BlockingScheduler(timezone=tz)
 
@@ -366,6 +408,15 @@ def main():
             "slack_summary",
             run_slack_summary_job,
             slack_summary_cron,
+            tz,
+        )
+
+    if monthly_digest_enabled:
+        _add_cron_job(
+            scheduler,
+            "monthly_digest",
+            run_monthly_digest_job,
+            monthly_digest_cron,
             tz,
         )
 
@@ -399,12 +450,13 @@ def main():
 
     logger.info(
         "Scheduler started: nightly_pipeline cron=%s tz=%s approval_sync=%s "
-        "slack_summary=%s steps: discovery=%s status_refresh=%s validation_refresh=%s "
-        "indigenous_roster_refresh=%s",
+        "slack_summary=%s monthly_digest=%s steps: discovery=%s status_refresh=%s "
+        "validation_refresh=%s indigenous_roster_refresh=%s",
         pipeline_cron,
         tz,
         f"{sync_interval}m interval" if sync_interval > 0 else "webhook + nightly catch-up",
         f"enabled cron={slack_summary_cron}" if slack_summary_enabled else "disabled",
+        f"enabled cron={monthly_digest_cron}" if monthly_digest_enabled else "disabled",
         "enabled" if discovery_enabled else "disabled",
         "enabled" if status_refresh_enabled else "disabled",
         "enabled" if validation_refresh_enabled else "disabled",

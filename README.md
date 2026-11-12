@@ -94,12 +94,15 @@ Hosting today: Internet → Cloudflare Tunnel → Docker (gunicorn) on a private
 
 On the production Docker host, Ollama is typically `http://host.docker.internal:11434/v1`. After the Qwen3.6 cutover, llama-server is `http://host.docker.internal:8080/v1` (see `deploy/llm-cutover.env.snippet`). The production inference host is private (Tailscale); clones should keep the localhost default.
 
-Cutover helpers (run on the GPU host, not from a laptop clone):
+**WSL mirrored networking (UIC host):** `C:\Users\info\.wslconfig` uses `networkingMode=mirrored`. Bind `llama-server` (and Ollama, if used) in WSL on `0.0.0.0` and do **not** add static Windows `netsh interface portproxy` rules that forward LLM ports (`8080`, `11434`) to an ephemeral WSL NAT IP. Those NAT addresses disappear under mirrored mode; a stale proxy still occupies the Windows listen port so the real server cannot bind (silent LLM outage). Prefer mirrored/localhost exposure, or a boot script that refreshes `connectaddress` — never a one-shot NAT IP. Ops backstop: nightly/morning `llm.alerts` (Slack + email to `austin@urbanindigenouscollective.org` by default).
+
+Cutover / recovery helpers (run on the GPU host, not from a laptop clone):
 
 ```bash
-bash deploy/setup-qwen36-llama.sh    # download weights; do not load GPU
-bash deploy/check-qwen36-ready.sh
-bash deploy/cutover-qwen36-llama.sh  # unload Qwen2.5, start llama-server, rewrite .env
+bash deploy/setup-qwen36-llama.sh     # download weights; do not load GPU
+bash deploy/check-qwen36-ready.sh     # Phase 1 + fails on stale LLM portproxy
+bash deploy/fix-llm-portproxy.sh --fix --check-models   # clear stale proxies; smoke /v1/models
+bash deploy/cutover-qwen36-llama.sh   # unload Qwen2.5, start llama-server, rewrite .env
 ```
 
 ## Nightly MMIP discovery
@@ -162,6 +165,8 @@ docker compose --profile tunnel up -d   # includes web + tunnel + scheduler
 | `DISCOVERY_MAX_ANALYSES_PER_RUN` | `25` | Cap LLM analyses per run (safety valve) |
 | `DISCOVERY_RELEVANCE_MIN_CONFIDENCE` | `0.6` | MMIP relevance gate threshold |
 | `SLACK_QUIET_RUNS` | `true` | Suppress Slack when no new policies found |
+| `LLM_HEALTH_TIMEOUT_SEC` | `8` | Nightly + morning LLM reachability probe timeout |
+| `LLM_ALERT_EMAIL` / `OPS_ALERT_EMAIL` | `austin@urbanindigenouscollective.org` | Email once/day while the LLM is down (also posts Slack) |
 
 ## GitHub Actions CD
 

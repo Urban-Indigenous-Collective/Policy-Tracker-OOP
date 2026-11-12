@@ -22,9 +22,10 @@ def pipeline_env():
         },
         clear=False,
     ):
-        with patch.object(scheduler, "run_approval_sync_job"):
-            with patch.object(scheduler, "run_airtable_webhook_refresh_job"):
-                yield
+        with patch.object(scheduler, "run_llm_health_check"):
+            with patch.object(scheduler, "run_approval_sync_job"):
+                with patch.object(scheduler, "run_airtable_webhook_refresh_job"):
+                    yield
 
 
 def test_run_nightly_pipeline_runs_steps_in_order(pipeline_env):
@@ -61,24 +62,25 @@ def test_run_nightly_pipeline_skips_disabled_steps():
         },
         clear=False,
     ):
-        with patch.object(
-            scheduler,
-            "run_discovery_job",
-            side_effect=lambda: call_order.append("discovery"),
-        ):
+        with patch.object(scheduler, "run_llm_health_check"):
             with patch.object(
                 scheduler,
-                "run_status_refresh_job",
-                side_effect=lambda: call_order.append("status_refresh"),
+                "run_discovery_job",
+                side_effect=lambda: call_order.append("discovery"),
             ):
                 with patch.object(
                     scheduler,
-                    "run_validation_refresh_job",
-                    side_effect=lambda: call_order.append("validation_refresh"),
+                    "run_status_refresh_job",
+                    side_effect=lambda: call_order.append("status_refresh"),
                 ):
-                    with patch.object(scheduler, "run_approval_sync_job"):
-                        with patch.object(scheduler, "run_airtable_webhook_refresh_job"):
-                            scheduler.run_nightly_pipeline()
+                    with patch.object(
+                        scheduler,
+                        "run_validation_refresh_job",
+                        side_effect=lambda: call_order.append("validation_refresh"),
+                    ):
+                        with patch.object(scheduler, "run_approval_sync_job"):
+                            with patch.object(scheduler, "run_airtable_webhook_refresh_job"):
+                                scheduler.run_nightly_pipeline()
 
     assert call_order == []
 
@@ -106,6 +108,14 @@ def test_run_nightly_pipeline_continues_after_status_refresh_failure(pipeline_en
     mock_validation.assert_called_once()
 
 
+def test_run_nightly_pipeline_probes_llm_first(pipeline_env):
+    with patch.object(scheduler, "run_llm_health_check") as mock_health:
+        with patch.object(scheduler, "run_discovery_job"):
+            with patch.object(scheduler, "run_status_refresh_job"):
+                with patch.object(scheduler, "run_validation_refresh_job"):
+                    scheduler.run_nightly_pipeline()
+    mock_health.assert_called_once_with(when="nightly pipeline start")
+
 def test_main_registers_single_nightly_pipeline_cron():
     with patch.dict(
         "os.environ",
@@ -114,6 +124,8 @@ def test_main_registers_single_nightly_pipeline_cron():
             "NIGHTLY_PIPELINE_CRON": "0 2 * * *",
             "SLACK_DEFER_DISCOVERY": "true",
             "SLACK_SUMMARY_CRON": "30 7 * * *",
+            "MONTHLY_DIGEST_ENABLED": "true",
+            "MONTHLY_DIGEST_CRON": "0 8 1 * *",
             "VALIDATION_REFRESH_ENABLED": "true",
             "APPROVAL_SYNC_INTERVAL_MIN": "0",
         },
@@ -125,7 +137,7 @@ def test_main_registers_single_nightly_pipeline_cron():
                     scheduler.main()
 
     cron_job_ids = [call.args[1] for call in mock_add_cron.call_args_list]
-    assert cron_job_ids == ["nightly_pipeline", "slack_summary"]
+    assert cron_job_ids == ["nightly_pipeline", "slack_summary", "monthly_digest"]
     assert "discovery" not in cron_job_ids
     assert "validation_refresh" not in cron_job_ids
     assert "status_refresh" not in cron_job_ids

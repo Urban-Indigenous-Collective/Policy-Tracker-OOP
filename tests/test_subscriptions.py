@@ -232,3 +232,43 @@ def test_national_state_allowed(client):
 def test_me_requires_session(client):
     resp = client.get("/api/v1/subscriptions/me")
     assert resp.status_code == 401
+
+
+def test_monthly_signup_opts_in(client):
+    resp = client.post(
+        "/api/v1/subscriptions/monthly",
+        json={"email": "digest@example.com"},
+    )
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body["ok"] is True
+    assert body["monthlyDigest"] is True
+    assert body["added"] is True
+    assert body["alreadySubscribed"] is False
+    assert "monthly" in body["message"].lower()
+
+    again = client.post(
+        "/api/v1/subscriptions/monthly",
+        json={"email": "digest@example.com"},
+    )
+    assert again.status_code == 200
+    again_body = again.get_json()
+    assert again_body["added"] is False
+    assert again_body["alreadySubscribed"] is True
+
+
+def test_monthly_signup_rejects_bad_email(client):
+    resp = client.post(
+        "/api/v1/subscriptions/monthly",
+        json={"email": "not-an-email"},
+    )
+    assert resp.status_code == 400
+    assert resp.get_json()["error"] == "invalid_email"
+
+
+def test_monthly_signup_disabled_returns_404(disabled_client):
+    resp = disabled_client.post(
+        "/api/v1/subscriptions/monthly",
+        json={"email": "a@example.com"},
+    )
+    assert resp.status_code == 404

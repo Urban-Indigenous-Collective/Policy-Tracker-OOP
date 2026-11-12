@@ -26,6 +26,7 @@ class DiscoveryRunStats:
     rejected: int = 0
     analyzed: int = 0
     errors: int = 0
+    llm_errors: int = 0
     slack_items: list[dict[str, Any]] = field(default_factory=list)
     by_state: dict[str, Any] = field(default_factory=dict)
     sources_attempted: dict[str, Any] = field(default_factory=dict)
@@ -187,6 +188,8 @@ class DiscoveryPipeline:
         is_relevant, relevance_result, stage = self.relevance_gate.evaluate(candidate, excerpt)
         if not is_relevant:
             verdict = stage
+            if stage in ("llm_error", "llm_fail"):
+                stats.llm_errors += 1
             confidence = relevance_result.confidence if relevance_result else None
             self.seen_store.upsert(
                 url,

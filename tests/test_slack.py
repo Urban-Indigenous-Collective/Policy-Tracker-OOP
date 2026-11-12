@@ -30,6 +30,26 @@ def test_slack_quiet_run_no_notification(monkeypatch):
         mock_post.assert_not_called()
 
 
+def test_slack_llm_down_bypasses_quiet(monkeypatch):
+    monkeypatch.setenv("DISCOVERY_SLACK_ALWAYS", "false")
+    notifier = SlackNotifier(webhook_url="https://hooks.slack.com/test", quiet_runs=True)
+    with patch.object(notifier, "_post", return_value=True) as mock_post:
+        assert notifier.notify_run_complete(
+            analyzed=0, rejected=0, skipped=400, errors=0, discovered=400, llm_ok=False
+        )
+        text = mock_post.call_args[0][0]["text"]
+        assert "LLM health: DOWN" in text
+
+    with patch.object(notifier, "_post", return_value=True) as mock_post:
+        assert notifier.notify_llm_health(
+            ok=False,
+            base_url="http://host.docker.internal:8080/v1",
+            model="Qwen3.6",
+            error="couldn't bind",
+        )
+        assert "LLM is down" in mock_post.call_args[0][0]["text"]
+
+
 def test_slack_always_posts_empty_run_summary(monkeypatch):
     monkeypatch.setenv("DISCOVERY_SLACK_ALWAYS", "true")
     notifier = SlackNotifier(webhook_url="https://hooks.slack.com/test", quiet_runs=True)

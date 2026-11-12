@@ -314,6 +314,35 @@ class SlackNotifier:
             }
         )
 
+    def notify_llm_health(
+        self,
+        *,
+        ok: bool,
+        base_url: str = "",
+        model: str = "",
+        error: str = "",
+        llm_errors: int = 0,
+        checked_at: str = "",
+    ) -> bool:
+        """Dedicated morning banner when the LLM is down or failing in-run."""
+        if ok and llm_errors <= 0:
+            return False
+        lines = [
+            ":rotating_light: *MMIP LLM is down or failing* — new candidate analysis is blocked.",
+        ]
+        if base_url or model:
+            lines.append(f"Endpoint: `{base_url or '?'}` model=`{model or '?'}`")
+        if error:
+            lines.append(f"Probe error: {error}")
+        if llm_errors > 0:
+            lines.append(f"In-run LLM failures: {llm_errors}")
+        if checked_at:
+            lines.append(f"Checked: {checked_at}")
+        lines.append(
+            "A quiet night (0 analyzed / all skipped) does *not* mean the model is healthy."
+        )
+        return self._post({"text": "\n".join(lines)})
+
     def notify_run_complete(
         self,
         analyzed: int = 0,
@@ -322,6 +351,8 @@ class SlackNotifier:
         errors: int = 0,
         *,
         discovered: int | None = None,
+        llm_errors: int = 0,
+        llm_ok: bool | None = None,
         by_state: dict[str, Any] | None = None,
         run_started_at: str = "",
         run_finished_at: str = "",
@@ -331,7 +362,14 @@ class SlackNotifier:
     ) -> bool:
         if always_notify is None:
             always_notify = _discovery_slack_always()
-        if self.quiet_runs and not always_notify and analyzed == 0 and errors == 0:
+        llm_unhealthy = llm_ok is False or llm_errors > 0
+        if (
+            self.quiet_runs
+            and not always_notify
+            and analyzed == 0
+            and errors == 0
+            and not llm_unhealthy
+        ):
             return False
 
         parts = [
@@ -343,6 +381,12 @@ class SlackNotifier:
                 f"MMIP discovery run complete: {discovered} discovered, {analyzed} analyzed, "
                 f"{rejected} rejected, {skipped} skipped, {errors} errors"
             )
+        if llm_ok is False:
+            parts.append("LLM health: DOWN (probe failed before/during nightly)")
+        elif llm_ok is True:
+            parts.append("LLM health: ok")
+        if llm_errors > 0:
+            parts.append(f"LLM in-run failures: {llm_errors}")
         if run_started_at:
             parts.append(f"Started: {run_started_at}")
         if run_finished_at:

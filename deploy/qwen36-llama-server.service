@@ -1,5 +1,7 @@
 [Unit]
 Description=Qwen3.6-27B Q8 multimodal llama-server (Policy Tracker LLM)
+# Bind 0.0.0.0:8080 in WSL. With networkingMode=mirrored do NOT Windows-portproxy
+# :8080 to a WSL NAT IP — see deploy/fix-llm-portproxy.sh.
 After=network-online.target
 Wants=network-online.target
 

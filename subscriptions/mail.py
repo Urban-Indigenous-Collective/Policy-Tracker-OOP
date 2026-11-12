@@ -31,6 +31,7 @@ from subscriptions.email_brand import (
 from subscriptions.templates import (
     render_digest_email,
     render_manage_otp_email,
+    render_monthly_digest_email,
     render_welcome_email,
 )
 
@@ -327,23 +328,40 @@ def send_email(*, to: str, subject: str, html: str) -> None:
     )
 
 
+def manage_link_url(magic_token: str) -> str:
+    """Public URL for the one-time manage magic link."""
+    from urllib.parse import quote
+
+    return f"{_public_origin()}/subscribe/manage?token={quote(magic_token, safe='')}"
+
+
+def issue_manage_url(email: str, *, state: str = "") -> str:
+    """Mint a one-time manage magic link for ``email`` and return its URL.
+
+    Reuses the OTP store entry (code is unused for digest/welcome deep links).
+    """
+    from subscriptions.store import create_otp, get_states
+
+    context_state = (state or "").strip()
+    if not context_state:
+        states = get_states(email)
+        context_state = states[0] if states else "manage"
+    _code, magic = create_otp(email, context_state)
+    return manage_link_url(magic)
+
+
 def send_subscription_welcome(email: str, state: str) -> None:
-    """Confirm a new signup with a welcome template."""
-    manage_url = None
+    """Confirm a new signup with a welcome template + manage magic link."""
+    manage_url = issue_manage_url(email, state=state)
     subject, html = render_welcome_email(
         state_label=state,
         manage_url=manage_url,
         public_origin=_public_origin(),
         **_template_logo_kwargs(),
     )
+    if _mail_provider() in ("", "log", "none", "stdout"):
+        logger.info("state_subscribe welcome magic link for %s: %s", email, manage_url)
     send_email(to=email, subject=subject, html=html)
-
-
-def manage_link_url(magic_token: str) -> str:
-    """Public URL for the one-time manage magic link."""
-    from urllib.parse import quote
-
-    return f"{_public_origin()}/subscribe/manage?token={quote(magic_token, safe='')}"
 
 
 def send_subscription_code(
@@ -381,11 +399,41 @@ def send_subscription_digest(
     state_labels: Sequence[str],
     items: Sequence[dict[str, str]],
 ) -> None:
-    """Send a digest email (Phase 3 entry point)."""
+    """Send a digest email with a one-time manage / unsubscribe magic link."""
+    manage_url = issue_manage_url(
+        email,
+        state=str(state_labels[0]) if state_labels else "",
+    )
     subject, html = render_digest_email(
         state_labels=state_labels,
         items=items,
+        manage_url=manage_url,
         public_origin=_public_origin(),
         **_template_logo_kwargs(),
     )
+    if _mail_provider() in ("", "log", "none", "stdout"):
+        logger.info("state_subscribe digest magic link for %s: %s", email, manage_url)
+    send_email(to=email, subject=subject, html=html)
+
+
+def send_monthly_subscription_digest(
+    email: str,
+    *,
+    period_label: str,
+    overview: str,
+    items: Sequence[dict[str, str]],
+    manage_url: str | None = None,
+) -> None:
+    """Send the tracker-wide monthly digest email with a manage magic link."""
+    url = manage_url or issue_manage_url(email, state="manage")
+    subject, html = render_monthly_digest_email(
+        period_label=period_label,
+        overview=overview,
+        items=items,
+        manage_url=url,
+        public_origin=_public_origin(),
+        **_template_logo_kwargs(),
+    )
+    if _mail_provider() in ("", "log", "none", "stdout"):
+        logger.info("state_subscribe monthly magic link for %s: %s", email, url)
     send_email(to=email, subject=subject, html=html)

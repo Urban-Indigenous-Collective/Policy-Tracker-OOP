@@ -153,3 +153,24 @@ export async function unsubscribeFromState(
   });
   return parseSubscribeJson(res);
 }
+
+export type MonthlyDigestSignupResponse = {
+  ok: boolean;
+  status: "subscribed";
+  email: string;
+  monthlyDigest: boolean;
+  added: boolean;
+  alreadySubscribed: boolean;
+  message: string;
+};
+
+export async function signupForMonthlyDigest(
+  email: string,
+): Promise<MonthlyDigestSignupResponse> {
+  const res = await fetch(apiUrl("/api/v1/subscriptions/monthly"), {
+    method: "POST",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  return parseSubscribeJson(res);
+}

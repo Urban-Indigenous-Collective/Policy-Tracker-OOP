@@ -21,6 +21,7 @@ from subscriptions.mail import _build_raw_mime, _email_logo_path
 from subscriptions.templates import (
     render_digest_email,
     render_manage_otp_email,
+    render_monthly_digest_email,
     render_welcome_email,
 )
 from subscriptions.templates.render import bill_status_variant, _logo_img_src
@@ -42,6 +43,26 @@ def test_welcome_email_uses_brand_tokens():
     assert "#000000" in html
     assert LOGO_PATH in html
     assert DEFAULT_PUBLIC_ORIGIN in html
+
+
+def test_email_shell_forces_black_background_for_apple_mail():
+    """Apple Mail remaps CSS-only backgrounds; shell must use bgcolor + light-only."""
+    _, html = render_welcome_email(state_label="Washington")
+    assert 'name="color-scheme" content="light only"' in html
+    assert 'name="supported-color-schemes" content="light only"' in html
+    assert 'bgcolor="#000000"' in html
+    assert "background-color:#000000" in html
+
+
+def test_welcome_email_includes_manage_magic_link():
+    _, html = render_welcome_email(
+        state_label="Washington",
+        manage_url="https://policy.urbanindigenouscollective.org/subscribe/manage?token=abc",
+    )
+    assert "Manage or unsubscribe" in html
+    assert "/subscribe/manage?token=abc" in html
+    assert f'color:{ACCENT}' in html
+    assert "Manage or unsubscribe" in html.split("Urban Indigenous Collective")[-1]
 
 
 def test_email_logo_ignores_localhost_public_origin():
@@ -100,7 +121,7 @@ def test_otp_email_includes_code_and_magic_link():
     assert "123456" in html
     assert "Oregon" in html
     assert "/subscribe/manage?token=abc" in html
-    assert "Manage subscriptions" in html
+    assert "Manage or unsubscribe" in html
 
 
 def test_email_shell_omits_confidentiality_notice():
@@ -108,6 +129,11 @@ def test_email_shell_omits_confidentiality_notice():
         render_welcome_email(state_label="Washington")[1],
         render_manage_otp_email(code="123456", state_label="Oregon")[1],
         render_digest_email(state_labels=["WA"], items=[])[1],
+        render_monthly_digest_email(
+            period_label="November 2026",
+            overview="Quiet month.",
+            items=[],
+        )[1],
     ]
     for html in templates:
         upper = html.upper()
@@ -126,6 +152,7 @@ def test_digest_email_lists_items():
                 "summary": "Short summary",
             }
         ],
+        manage_url="https://policy.urbanindigenouscollective.org/subscribe/manage?token=dig",
     )
     assert "Policy updates" in subject
     assert "Example Act" in html
@@ -133,6 +160,8 @@ def test_digest_email_lists_items():
     assert "New or changed policies for Washington, Oregon." in html
     assert "Washington" in html
     assert ">WA<" not in html
+    assert "Manage or unsubscribe" in html
+    assert "/subscribe/manage?token=dig" in html
 
 
 def test_digest_email_spells_out_state_codes_and_keeps_national():
@@ -213,3 +242,46 @@ def test_digest_email_status_pills_use_token_colors():
     assert "#000000" in html
     assert STATUS_FAILED == STATUS_PENDING  # mirrors tokens.css
     assert STATUS_NEUTRAL == "#a3a3a3"
+
+
+def test_monthly_digest_email_includes_overview_and_period():
+    subject, html = render_monthly_digest_email(
+        period_label="November 2026",
+        overview=(
+            "Activity concentrated in North Carolina and National.\n\n"
+            "Two new bills were added; one status moved to Passed."
+        ),
+        items=[
+            {
+                "title": "Example Act",
+                "url": "https://policy.urbanindigenouscollective.org/states/WA/bills/x",
+                "state": "WA",
+                "status": "Pending",
+                "summary": "Short summary",
+            }
+        ],
+        manage_url="https://policy.urbanindigenouscollective.org/subscribe/manage?token=abc",
+    )
+    assert subject == f"Monthly digest — November 2026 — {SITE_NAME}"
+    assert "Monthly digest" in html
+    assert "November 2026" in html
+    assert "This month at a glance" in html
+    assert "Activity concentrated in North Carolina and National." in html
+    assert "Updates this month" in html
+    assert "Example Act" in html
+    assert "Short summary" in html
+    assert "Washington" in html
+    assert "Manage or unsubscribe" in html
+    assert "/subscribe/manage?token=abc" in html
+    assert ACCENT in html
+    assert "Manage or unsubscribe" in html.split("Urban Indigenous Collective")[-1]
+
+
+def test_monthly_digest_email_empty_items_copy():
+    _, html = render_monthly_digest_email(
+        period_label="October 2026",
+        overview="",
+        items=[],
+    )
+    assert "No new policies in this period." in html
+    assert "quiet month" in html.lower()
