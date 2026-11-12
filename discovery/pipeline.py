@@ -187,9 +187,16 @@ class DiscoveryPipeline:
         excerpt = self._get_excerpt(candidate)
         is_relevant, relevance_result, stage = self.relevance_gate.evaluate(candidate, excerpt)
         if not is_relevant:
-            verdict = stage
+            # LLM infrastructure failures: leave seen untouched so next run retries
+            # (same pattern as Airtable rate-limit). Do not write terminal rejected.
             if stage in ("llm_error", "llm_fail"):
                 stats.llm_errors += 1
+                logger.warning(
+                    "LLM relevance failure for %s (stage=%s); leaving unseen for retry",
+                    url,
+                    stage,
+                )
+                return
             confidence = relevance_result.confidence if relevance_result else None
             self.seen_store.upsert(
                 url,
@@ -199,7 +206,7 @@ class DiscoveryPipeline:
                 change_hash=candidate.change_hash,
                 content_hash=candidate.content_hash,
                 status="rejected",
-                verdict=verdict,
+                verdict=stage,
                 confidence=confidence,
             )
             stats.rejected += 1

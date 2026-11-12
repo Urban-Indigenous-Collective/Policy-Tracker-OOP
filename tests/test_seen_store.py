@@ -31,6 +31,44 @@ def test_seen_store_rejected_skipped(store):
     assert reason == "already_rejected"
 
 
+def test_seen_store_genuine_llm_reject_stays_terminal(store):
+    """verdict=llm means not-MMIP — must not retry."""
+    store.upsert(
+        "https://example.com/bill/1",
+        "legiscan",
+        status="rejected",
+        verdict="llm",
+    )
+    should, reason = store.should_process("https://example.com/bill/1")
+    assert should is False
+    assert reason == "already_rejected"
+
+
+@pytest.mark.parametrize("verdict", ["llm_error", "llm_fail"])
+def test_seen_store_llm_infra_failure_retries(store, verdict):
+    store.upsert(
+        "https://example.com/bill/1",
+        "legiscan",
+        status="rejected",
+        verdict=verdict,
+    )
+    should, reason = store.should_process("https://example.com/bill/1")
+    assert should is True
+    assert reason == f"retry_{verdict}"
+
+
+def test_seen_store_error_status_retries(store):
+    store.upsert(
+        "https://example.com/bill/1",
+        "legiscan",
+        status="error",
+        verdict="RuntimeError: boom",
+    )
+    should, reason = store.should_process("https://example.com/bill/1")
+    assert should is True
+    assert reason == "retry_error"
+
+
 def test_seen_store_change_hash_requeue(store):
     store.upsert(
         "https://example.com/bill/1",

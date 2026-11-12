@@ -8,6 +8,10 @@ VALID_STATUSES = frozenset(
     {"discovered", "rejected", "analyzed", "pending", "approved", "error"}
 )
 
+# Infrastructure failures that must not permanently suppress rediscovery.
+# Genuine "not MMIP" rejects use verdict="llm" and stay terminal.
+RETRYABLE_VERDICTS = frozenset({"llm_error", "llm_fail"})
+
 
 class SeenStore:
     """SQLite persistence for discovery candidates and Airtable move audit log."""
@@ -104,6 +108,13 @@ class SeenStore:
         if not existing:
             return True, "new"
         status = existing.get("status", "")
+        verdict = (existing.get("verdict") or "").strip()
+        # Historical LLM infra failures were written as rejected; still retry them.
+        # Do not retry genuine verdict="llm" (not MMIP) rejects.
+        if verdict in RETRYABLE_VERDICTS:
+            return True, f"retry_{verdict}"
+        if status == "error":
+            return True, "retry_error"
         if status in ("rejected", "approved"):
             return False, f"already_{status}"
         if status in ("pending", "analyzed"):
