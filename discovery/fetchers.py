@@ -19,7 +19,7 @@ import requests
 from bs4 import BeautifulSoup
 from pypdf import PdfReader
 
-from discovery.browser_fetcher import looks_like_bot_wall
+from discovery.browser_fetcher import JUSTICE_GOV_WAIT_SELECTOR, looks_like_bot_wall
 from discovery.models import Candidate, utc_now_iso
 from discovery.queries import keyword_prescreen
 from discovery.federal_schema import (
@@ -576,10 +576,16 @@ def fetch_justice_gov_content(
     if not needs_browser:
         return body, content_hash, content_type
 
+    wait = JUSTICE_GOV_WAIT_SELECTOR if is_justice_gov_url(url) else None
     if browser is not None:
-        html, browser_hash = browser.fetch(url, user_agent=ua, settle_ms=2500)
+        html, browser_hash = browser.fetch(
+            url,
+            user_agent=ua,
+            wait_selector=wait,
+            settle_ms=2500,
+        )
     else:
-        html, browser_hash = _fetch_justice_gov_via_browser(url, ua)
+        html, browser_hash = _fetch_justice_gov_via_browser(url, ua, wait_selector=wait)
     if html:
         return html.encode("utf-8", errors="replace"), browser_hash or content_hash, "text/html"
     return b"", content_hash, content_type
@@ -588,6 +594,7 @@ def fetch_justice_gov_content(
 def _fetch_justice_gov_via_browser(
     url: str,
     user_agent: str,
+    wait_selector: str | None = None,
 ) -> tuple[str, str]:
     """Run Playwright in a worker thread (safe after httpx/async LLM calls)."""
     import concurrent.futures
@@ -597,7 +604,12 @@ def _fetch_justice_gov_via_browser(
 
         owned = BrowserRenderer(user_agent)
         try:
-            return owned.fetch(url, user_agent=user_agent, settle_ms=2500)
+            return owned.fetch(
+                url,
+                user_agent=user_agent,
+                wait_selector=wait_selector,
+                settle_ms=2500,
+            )
         finally:
             owned.stop()
 

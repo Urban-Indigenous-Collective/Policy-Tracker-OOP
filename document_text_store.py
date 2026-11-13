@@ -18,6 +18,16 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_DB_PATH = "data/document_text.db"
 
+# Cache entries shorter than this are treated as bot-wall / empty shells and
+# must not poison retries. Aligns with content_guard.HARD_MIN_DOC_CHARS.
+MIN_USABLE_CACHE_CHARS = 40
+
+
+def is_usable_cached_text(text: str, *, min_chars: int = MIN_USABLE_CACHE_CHARS) -> bool:
+    """False for empty/whitespace/nbsp shells that should not be cache hits."""
+    stripped = (text or "").replace("\xa0", " ").strip()
+    return len(stripped) >= min_chars
+
 
 def url_key(url: str) -> str:
     """Normalize a URL for cache lookup (dedup-friendly, lowercase)."""
@@ -96,6 +106,25 @@ class DocumentTextStore:
             ).fetchone()
             return dict(row) if row else None
 
+    def get_usable(self, url: str) -> Optional[dict[str, Any]]:
+        """Return a cache row only when decoded text is long enough to be real content.
+
+        Deletes poisoned short/empty shell rows so retries re-fetch instead of
+        looping on ~12-char nbsp Akamai leftovers.
+        """
+        row = self.get(url)
+        if not row:
+            return None
+        if is_usable_cached_text(row.get("decoded_text") or ""):
+            return row
+        logger.info(
+            "Busting unusable document_text cache for %s (char_len=%s)",
+            url_key(url)[:80],
+            row.get("char_len"),
+        )
+        self.delete(url)
+        return None
+
     def put(
         self,
         url: str,
@@ -109,6 +138,25 @@ class DocumentTextStore:
         if not key:
             raise ValueError("URL required for document text cache")
         text = decoded_text or ""
+        if not is_usable_cached_text(text):
+            # Never persist bot-wall shells; drop any prior poison for this URL.
+            self.delete(url)
+            logger.info(
+                "Refusing to cache unusable document text for %s (%d chars)",
+                key[:80],
+                len(text),
+            )
+            return {
+                "url": key,
+                "decoded_text": text,
+                "content_hash": content_hash(text),
+                "fetched_at": datetime.now(timezone.utc).isoformat(),
+                "source_type": source_type or infer_source_type(url),
+                "char_len": len(text),
+                "bill_id": str(bill_id) if bill_id else None,
+                "doc_id": str(doc_id) if doc_id else None,
+                "cached": False,
+            }
         digest = content_hash(text)
         now = datetime.now(timezone.utc).isoformat()
         row = {

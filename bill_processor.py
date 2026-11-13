@@ -103,7 +103,8 @@ class BillProcessor:
             print(f"Getting document text from URL: {url}")
             store = get_document_text_store()
             if store and not refresh:
-                cached = store.get(url)
+                # get_usable busts short/nbsp bot-wall shells so retries re-fetch.
+                cached = store.get_usable(url)
                 if cached and cached.get("decoded_text"):
                     seen_hash = self._seen_content_hash(url)
                     if seen_hash and seen_hash != cached.get("content_hash"):

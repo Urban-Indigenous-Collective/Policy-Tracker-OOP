@@ -150,7 +150,8 @@ def test_state_site_fetch_page_text_mass_gov_bot_wall_fallback(monkeypatch):
 
 
 def test_fetch_justice_gov_content_empty_extract_triggers_browser():
-    from discovery.fetchers import HttpFetcher, fetch_justice_gov_content
+    from discovery.browser_fetcher import JUSTICE_GOV_WAIT_SELECTOR
+    from discovery.fetchers import fetch_justice_gov_content
 
     shell_html = b"<html><body><nav>Department of Justice</nav></body></html>"
     article_html = (
@@ -162,18 +163,57 @@ def test_fetch_justice_gov_content_empty_extract_triggers_browser():
             return shell_html, "shellhash", "text/html"
 
     class FakeBrowser:
+        def __init__(self):
+            self.kwargs = None
+
         def fetch(self, url, **kwargs):
+            self.kwargs = kwargs
             return article_html.decode(), "articlehash"
 
         def stop(self):
             pass
 
+    browser = FakeBrowser()
     body, content_hash, content_type = fetch_justice_gov_content(
         ShellHttp(),
         "https://www.justice.gov/usao-nm/pr/mmip-update",
-        browser=FakeBrowser(),
+        browser=browser,
     )
     assert content_hash == "articlehash"
     assert content_type == "text/html"
     assert b"Missing and Murdered Indigenous Persons" in body
+    assert browser.kwargs is not None
+    assert browser.kwargs.get("wait_selector") == JUSTICE_GOV_WAIT_SELECTOR
+
+
+def test_fetch_justice_gov_content_bot_wall_shell_triggers_browser():
+    from discovery.fetchers import fetch_justice_gov_content
+
+    wall = (
+        "<!DOCTYPE html><html><head>"
+        "<meta http-equiv=\"refresh\" content=\"5; URL='/pr?bm-verify=AAQ'\">"
+        "<title>\xa0</title></head><body></body></html>"
+    ).encode()
+    real = (
+        "<html><body><h1>Tribal Response Plan</h1>"
+        "<article>Oregon USAO announces tribal community response plan.</article>"
+        "</body></html>"
+    )
+
+    class WallHttp:
+        def fetch_content(self, url, verify=True, ignore_robots=False, user_agent=""):
+            return wall, "wallhash", "text/html"
+
+    class FakeBrowser:
+        def fetch(self, url, **kwargs):
+            assert kwargs.get("wait_selector")
+            return real, "realhash"
+
+    body, content_hash, _ct = fetch_justice_gov_content(
+        WallHttp(),
+        "https://www.justice.gov/usao-or/pr/tribal-response",
+        browser=FakeBrowser(),
+    )
+    assert content_hash == "realhash"
+    assert b"Tribal Response Plan" in body
 

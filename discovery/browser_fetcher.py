@@ -13,21 +13,36 @@ _STEALTH_ARGS = [
     "--disable-dev-shm-usage",
 ]
 
+# DOJ press releases render these after Akamai bm-verify clears.
+JUSTICE_GOV_WAIT_SELECTOR = "h1, article, .usa-prose"
 
-def looks_like_bot_wall(html: str) -> bool:
-    """True when HTML is an Akamai/EdgeSuite challenge or Access Denied page."""
+
+def looks_like_hard_bot_deny(html: str) -> bool:
+    """True for hard Access Denied / EdgeSuite blocks that will not recover."""
     if not html:
         return False
     lowered = html.lower()
     if "<title>access denied</title>" in lowered or "errors.edgesuite.net" in lowered:
         return True
-    # Bot Manager interstitial is tiny and redirects via bm-verify.
-    if len(html) < 8000 and (
-        "bm-verify" in lowered
-        or ("access denied" in lowered and "permission to access" in lowered)
-    ):
+    if "access denied" in lowered and "permission to access" in lowered:
         return True
     return False
+
+
+def looks_like_soft_bot_challenge(html: str) -> bool:
+    """True for Akamai Bot Manager interstitials that may clear after JS/meta-refresh."""
+    if not html:
+        return False
+    lowered = html.lower()
+    # ~2.5KB shell with meta-refresh to ?bm-verify=...
+    if len(html) < 8000 and "bm-verify" in lowered:
+        return True
+    return False
+
+
+def looks_like_bot_wall(html: str) -> bool:
+    """True when HTML is an Akamai/EdgeSuite challenge or Access Denied page."""
+    return looks_like_hard_bot_deny(html) or looks_like_soft_bot_challenge(html)
 
 
 class BrowserRenderer:
@@ -95,6 +110,16 @@ class BrowserRenderer:
         )
         return context, page
 
+    def _wait_out_soft_challenge(self, page, url: str, timeout_ms: int) -> None:
+        """Wait for bm-verify interstitial to navigate away (meta-refresh ~5s + JS)."""
+        try:
+            page.wait_for_function(
+                "() => !document.documentElement.outerHTML.toLowerCase().includes('bm-verify')",
+                timeout=min(timeout_ms, 20000),
+            )
+        except Exception as exc:
+            logger.warning("Browser soft challenge wait timed out for %s: %s", url, exc)
+
     def fetch(
         self,
         url: str,
@@ -110,17 +135,26 @@ class BrowserRenderer:
         context, page = self._new_page(ignore_https, user_agent)
         html = ""
         try:
-            wait_until = "networkidle" if wait_selector else "domcontentloaded"
-            page.goto(url, wait_until=wait_until, timeout=timeout_ms)
-            # Early exit on Akamai deny — don't burn the full wait_selector timeout.
+            # Soft challenges need network activity (meta-refresh / XHR); hard pages
+            # with wait_selector can use networkidle once past the interstitial.
+            page.goto(url, wait_until="domcontentloaded", timeout=timeout_ms)
             early = page.content()
-            if looks_like_bot_wall(early):
-                logger.warning("Browser hit bot wall for %s (len=%s)", url, len(early))
+            # Hard Access Denied never recovers — bail early.
+            if looks_like_hard_bot_deny(early):
+                logger.warning("Browser hit hard bot deny for %s (len=%s)", url, len(early))
                 return "", ""
+            # Soft bm-verify shells often clear after JS + ~5s meta-refresh. Do NOT
+            # treat them as final failure before waiting (prod Docker early-exit bug).
+            if looks_like_soft_bot_challenge(early):
+                logger.info(
+                    "Browser soft bot challenge for %s (len=%s); waiting for real content",
+                    url,
+                    len(early),
+                )
+                self._wait_out_soft_challenge(page, url, timeout_ms)
             if wait_selector:
                 try:
-                    # Cap wait so a soft-block does not stall the crawl for 45s+.
-                    page.wait_for_selector(wait_selector, timeout=min(timeout_ms, 15000))
+                    page.wait_for_selector(wait_selector, timeout=min(timeout_ms, 20000))
                 except Exception as exc:
                     logger.warning("Browser wait selector timed out for %s: %s", url, exc)
             elif settle_ms:
@@ -159,10 +193,13 @@ class BrowserRenderer:
         context, page = self._new_page(ignore_https, user_agent)
         html = ""
         try:
-            page.goto(url, wait_until="networkidle", timeout=timeout_ms)
-            if looks_like_bot_wall(page.content()):
-                logger.warning("Browser search hit bot wall for %s", url)
+            page.goto(url, wait_until="domcontentloaded", timeout=timeout_ms)
+            early = page.content()
+            if looks_like_hard_bot_deny(early):
+                logger.warning("Browser search hit hard bot deny for %s", url)
                 return "", ""
+            if looks_like_soft_bot_challenge(early):
+                self._wait_out_soft_challenge(page, url, timeout_ms)
             if click_selector:
                 page.locator(click_selector).click()
             page.locator(input_selector).fill(query)

@@ -5,7 +5,11 @@ import json
 
 import pytest
 
-from discovery.browser_fetcher import looks_like_bot_wall
+from discovery.browser_fetcher import (
+    looks_like_bot_wall,
+    looks_like_hard_bot_deny,
+    looks_like_soft_bot_challenge,
+)
 from discovery.fetchers import (
     ApiFetcher,
     HttpFetcher,
@@ -29,6 +33,8 @@ def test_looks_like_bot_wall_akamai_interstitial():
         "</head><body></body></html>"
     )
     assert looks_like_bot_wall(html) is True
+    assert looks_like_soft_bot_challenge(html) is True
+    assert looks_like_hard_bot_deny(html) is False
 
 
 def test_looks_like_bot_wall_access_denied():
@@ -40,11 +46,15 @@ def test_looks_like_bot_wall_access_denied():
         "<p>https://errors.edgesuite.net/18.cd623417</p></body></html>"
     )
     assert looks_like_bot_wall(html) is True
+    assert looks_like_hard_bot_deny(html) is True
+    assert looks_like_soft_bot_challenge(html) is False
 
 
 def test_looks_like_bot_wall_real_page():
     html = "<html><body>" + ("press release " * 500) + "</body></html>"
     assert looks_like_bot_wall(html) is False
+    assert looks_like_hard_bot_deny(html) is False
+    assert looks_like_soft_bot_challenge(html) is False
 
 
 HTML = """
