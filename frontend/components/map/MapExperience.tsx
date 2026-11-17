@@ -152,7 +152,7 @@ function MapExperienceInner({
           />
         ) : null}
         {embed ? (
-          <div className="mt-2 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 sm:mt-3">
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-x-12 gap-y-3 sm:mt-3 sm:gap-x-16">
             <MapSummaryStats
               summary={resolvedStates?.summary}
               loading={statsLoading}
