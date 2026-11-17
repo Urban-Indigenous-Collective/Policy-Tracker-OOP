@@ -82,3 +82,27 @@ def notify_state_unsubscribed(
 def notify_monthly_subscribed(email: str) -> bool:
     """Alert when someone newly opts into the tracker-wide monthly digest."""
     return _post(f":calendar: New monthly digest subscription — *{email}*")
+
+
+def notify_monthly_digest_run(stats: dict[str, Any]) -> bool:
+    """Alert after the scheduled monthly digest fan-out completes."""
+    month = str(stats.get("month") or "").strip() or "unknown"
+    events = int(stats.get("events") or 0)
+    subscribers = int(stats.get("subscribers") or 0)
+    sent = int(stats.get("emails_sent") or 0)
+    failed = int(stats.get("emails_failed") or 0)
+    skipped = int(stats.get("emails_skipped") or 0)
+
+    if int(stats.get("skipped_empty") or 0):
+        return _post(
+            f":mailbox_with_no_mail: Monthly digest skipped — *{month}* "
+            f"(no archived events; {subscribers} subscriber"
+            f"{'' if subscribers == 1 else 's'})"
+        )
+
+    return _post(
+        f":mailbox_with_mail: Monthly digest sent — *{month}* — "
+        f"{events} event{'' if events == 1 else 's'} → "
+        f"{subscribers} subscriber{'' if subscribers == 1 else 's'} "
+        f"({sent} sent, {failed} failed, {skipped} already sent)"
+    )

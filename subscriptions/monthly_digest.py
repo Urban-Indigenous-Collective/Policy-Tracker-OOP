@@ -15,6 +15,7 @@ from subscriptions.monthly_archive import (
     remove_events_for_month,
 )
 from subscriptions.monthly_summarize import summarize_month
+from subscriptions.slack_alerts import notify_monthly_digest_run
 from subscriptions.store import (
     filter_unnotified_monthly_keys,
     list_monthly_subscribers,
@@ -81,6 +82,10 @@ def send_monthly_digests(*, month_key: str | None = None) -> dict[str, int | str
             "Monthly digests skipped — no archived events for %s",
             target_month,
         )
+        try:
+            notify_monthly_digest_run(stats)
+        except Exception:
+            logger.exception("subscriber Slack alert failed after monthly digest skip")
         return stats
 
     overview, overrides = summarize_month(period_label=period_label, events=events)
@@ -129,4 +134,8 @@ def send_monthly_digests(*, month_key: str | None = None) -> dict[str, int | str
         stats["emails_skipped"],
         stats["events_cleared"],
     )
+    try:
+        notify_monthly_digest_run(stats)
+    except Exception:
+        logger.exception("subscriber Slack alert failed after monthly digest run")
     return stats

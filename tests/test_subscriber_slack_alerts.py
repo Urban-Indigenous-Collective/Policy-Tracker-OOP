@@ -56,6 +56,19 @@ def test_notify_helpers_post_expected_copy(monkeypatch):
         )
         assert "Unsubscribed" in mock_post.call_args[0][0]
 
+        assert slack_alerts.notify_monthly_digest_run(
+            {
+                "month": "2026-10",
+                "events": 3,
+                "subscribers": 2,
+                "emails_sent": 2,
+                "emails_failed": 0,
+                "emails_skipped": 0,
+            }
+        )
+        assert "Monthly digest sent" in mock_post.call_args[0][0]
+        assert "2026-10" in mock_post.call_args[0][0]
+
 
 def test_notify_skipped_without_webhook(monkeypatch):
     monkeypatch.delenv("SLACK_SUBSCRIBERS_WEBHOOK_URL", raising=False)

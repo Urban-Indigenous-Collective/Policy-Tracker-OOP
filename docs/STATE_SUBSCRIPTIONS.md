@@ -77,6 +77,7 @@ Signup / unsubscribe events post to a **second** incoming webhook so they stay o
 | State or National subscribe | New opt-in via `/signup` or session `/subscribe` (not duplicate) |
 | State or National unsubscribe | `/unsubscribe` for one state/National or `all` |
 | Monthly digest subscribe | New opt-in via `/monthly` |
+| Monthly digest send | After the scheduled monthly fan-out (sent / failed / empty) |
 
 Set `SLACK_SUBSCRIBERS_WEBHOOK_URL` to the Incoming Webhook URL for `#mmiwr-subscribers`. Unset = silent no-op. Failures are logged and never fail the HTTP subscribe response.
 
