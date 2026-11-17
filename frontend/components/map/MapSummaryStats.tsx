@@ -35,7 +35,8 @@ export function MapSummaryStats({
   );
 
   if (align === "center") {
-    return <div className="mt-section-sm sm:mt-section">{counts}</div>;
+    // Embed crop: keep counts tight so a ~750–900px iframe still shows the map.
+    return <div className="mt-2 sm:mt-3">{counts}</div>;
   }
 
   return (

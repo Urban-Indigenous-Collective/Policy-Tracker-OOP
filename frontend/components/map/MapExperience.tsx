@@ -130,8 +130,10 @@ function MapExperienceInner({
       ? prefetch.bills
       : null;
 
+  const embed = variant === "embed";
+
   return (
-    <div className={variant === "embed" ? "pb-section" : "pb-map-content-pb"}>
+    <div className={embed ? "pb-2" : "pb-map-content-pb"}>
       {children}
       {showIntro ? (
         <MapIntro
@@ -142,7 +144,7 @@ function MapExperienceInner({
       <MapSummaryStats
         summary={resolvedStates?.summary}
         loading={statsLoading}
-        align={variant === "embed" ? "center" : "intro"}
+        align={embed ? "center" : "intro"}
       />
 
       {isError ? (
@@ -153,7 +155,10 @@ function MapExperienceInner({
         </p>
       ) : null}
 
-      <section className="mt-section lg:mt-section-lg" aria-label="Policy map">
+      <section
+        className={embed ? "mt-4" : "mt-section lg:mt-section-lg"}
+        aria-label="Policy map"
+      >
         <MapAndLegend
           stateCategories={stateCategories}
           selectedState={mapHighlightedState}
@@ -162,7 +167,11 @@ function MapExperienceInner({
       </section>
 
       <section
-        className="mt-filter-section-top min-w-0 w-full overflow-x-clip border-t border-surface-border pt-filter-section-pt"
+        className={
+          embed
+            ? "mt-4 min-w-0 w-full overflow-x-clip border-t border-surface-border pt-4"
+            : "mt-filter-section-top min-w-0 w-full overflow-x-clip border-t border-surface-border pt-filter-section-pt"
+        }
         aria-label="Policy type filters"
       >
         <div

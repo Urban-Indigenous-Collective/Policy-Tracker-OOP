@@ -74,12 +74,12 @@ Chrome-free slices for `urbanindigenouscollective.org` (and peers). `noindex`; f
 Prod examples:
 
 ```html
-<!-- Map (≈ screenshot crop). Tweak height for your layout. -->
+<!-- Map (stats + choropleth + filters). Prefer ≥900px tall so filters aren’t clipped. -->
 <iframe
   title="MMIP policy map"
   src="https://policy.urbanindigenouscollective.org/embed/map"
   loading="lazy"
-  style="width:100%;min-height:720px;border:0;background:#000;"
+  style="width:100%;height:900px;border:0;background:#000;"
 ></iframe>
 
 <!-- Policy list -->

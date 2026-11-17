@@ -15,16 +15,15 @@ const nextConfig: NextConfig = {
     },
   },
   async headers() {
-    // Allow UIC marketing site (and peers) to iframe embed slices.
-    // Full app routes keep browser defaults; only `/embed/*` opts into framing.
+    // Public widget routes: allow any parent (GoDaddy editor preview hosts,
+    // marketing site, etc.). Full app routes keep default framing protection.
     return [
       {
         source: "/embed/:path*",
         headers: [
           {
             key: "Content-Security-Policy",
-            value:
-              "frame-ancestors 'self' https://urbanindigenouscollective.org https://*.urbanindigenouscollective.org https://*.squarespace.com https://*.sqsp.net",
+            value: "frame-ancestors *",
           },
         ],
       },
