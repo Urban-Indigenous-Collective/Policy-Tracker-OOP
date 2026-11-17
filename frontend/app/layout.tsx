@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
+import { GoogleTagManager } from "@next/third-parties/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { getSiteUrl } from "@/lib/seo/site-url";
+
+/** GTM container (loads GA4 and other tags configured in Tag Manager). */
+const gtmId = process.env.NEXT_PUBLIC_GTM_ID?.trim() || "";
 
 /**
  * Self-hosted latin files (same families/weights as former next/font/google).
@@ -56,6 +60,7 @@ export default function RootLayout({
       className={`${montserrat.variable} ${roboto.variable} ${robotoMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
+        {gtmId ? <GoogleTagManager gtmId={gtmId} /> : null}
         <QueryProvider>{children}</QueryProvider>
       </body>
     </html>

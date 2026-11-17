@@ -8,7 +8,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ARG NEXT_PUBLIC_SITE_URL=https://policy.urbanindigenouscollective.org
+ARG NEXT_PUBLIC_GTM_ID=GTM-MWLXJZBX
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+ENV NEXT_PUBLIC_GTM_ID=$NEXT_PUBLIC_GTM_ID
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
