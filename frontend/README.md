@@ -91,7 +91,7 @@ Prod examples:
 ></iframe>
 ```
 
-State clicks on the map embed open the drawer inside the iframe; bill rows open analysis in the same iframe. The embed header puts status counts on the left and “VIEW FULL DASHBOARD” on the right.
+State clicks on the map embed open the drawer inside the iframe; bill rows open analysis in the same iframe. The embed header puts status counts on the left and a compact “DASHBOARD ↗” pill on the right.
 
 ## Public API smoke (Phase 2+)
 

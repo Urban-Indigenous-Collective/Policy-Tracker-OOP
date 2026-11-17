@@ -1,10 +1,31 @@
 import { absoluteUrl } from "@/lib/seo/site-url";
 
-/** Same type/tracking as Donate; taller vertical pad so the longer label stays pill-shaped. */
+/** Match Donate pill proportions; short label so it doesn’t dominate the map. */
 const ctaClassName =
-  "inline-flex shrink-0 items-center justify-center rounded-full bg-accent px-10 py-5 font-sans text-label-xs font-bold uppercase leading-none tracking-label text-white no-underline hover:opacity-90";
+  "inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-accent px-10 py-3.5 font-sans text-label-xs font-bold uppercase leading-none tracking-label text-white no-underline hover:opacity-90";
 
-/** Opens the full tracker outside the iframe (used in the embed header row). */
+function ExternalArrowIcon() {
+  return (
+    <svg
+      width={12}
+      height={12}
+      viewBox="0 0 12 12"
+      fill="none"
+      aria-hidden
+      className="shrink-0"
+    >
+      <path
+        d="M3.5 2H10v6.5M10 2 2 10"
+        stroke="currentColor"
+        strokeWidth={1.75}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Opens the full tracker outside the iframe (embed header, right of stats). */
 export function EmbedDashboardCta() {
   return (
     <a
@@ -13,7 +34,8 @@ export function EmbedDashboardCta() {
       rel="noopener noreferrer"
       className={ctaClassName}
     >
-      View full dashboard
+      Dashboard
+      <ExternalArrowIcon />
     </a>
   );
 }
