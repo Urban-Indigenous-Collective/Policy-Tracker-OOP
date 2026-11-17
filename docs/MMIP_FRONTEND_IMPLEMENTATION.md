@@ -138,6 +138,13 @@ Flask ← Airtable Main v3, existing jobs unchanged
 
 **Exit criteria:** https://policy.urbanindigenouscollective.org serves new frontend; old UI retired or redirected.
 
+### Embeds (marketing site iframes)
+
+- [x] `/embed/map` — stats + map + legend + layer toggles (no nav/footer/intro)
+- [x] `/embed/policies` — policy list without nav/footer
+- [x] `frame-ancestors` allowlist + `robots` disallow `/embed/`
+- Snippets: [frontend/README.md](../frontend/README.md#iframe-embeds)
+
 ---
 
 ## Agent workflow (phase chaining)

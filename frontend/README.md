@@ -62,6 +62,37 @@ Production (`--profile tunnel`) serves nginx → Next + Flask via Cloudflare Tun
 FLASK_DEV_URL=http://127.0.0.1:8002 npm run dev
 ```
 
+## Iframe embeds
+
+Chrome-free slices for `urbanindigenouscollective.org` (and peers). `noindex`; framing allowed via `frame-ancestors` on `/embed/*` only.
+
+| Slice | URL | Contents |
+|-------|-----|----------|
+| Map | `/embed/map` | Status counts + choropleth + legend + national/state/DOJ toggles (no nav, footer, or intro hero) |
+| Policy list | `/embed/policies` | Full list toolbar + rows (no nav/footer) |
+
+Prod examples:
+
+```html
+<!-- Map (≈ screenshot crop). Tweak height for your layout. -->
+<iframe
+  title="MMIP policy map"
+  src="https://policy.urbanindigenouscollective.org/embed/map"
+  loading="lazy"
+  style="width:100%;min-height:720px;border:0;background:#000;"
+></iframe>
+
+<!-- Policy list -->
+<iframe
+  title="MMIP policy list"
+  src="https://policy.urbanindigenouscollective.org/embed/policies"
+  loading="lazy"
+  style="width:100%;min-height:900px;border:0;background:#000;"
+></iframe>
+```
+
+State clicks on the map embed open the drawer inside the iframe; bill analysis links open the full tracker in a new tab.
+
 ## Public API smoke (Phase 2+)
 
 With Flask running and Airtable env configured:

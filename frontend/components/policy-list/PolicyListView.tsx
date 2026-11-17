@@ -18,6 +18,8 @@ import { sortPolicyListStateCodes } from "@/lib/policy-list/sort-state-codes";
 type PolicyListViewProps = {
   billsByState: Record<string, PublicBill[]>;
   statesResponse?: PublicStatesResponse | null;
+  /** Embed: drop the large page top pad so the iframe crop matches the list. */
+  compactTop?: boolean;
 };
 
 type BillSelection = {
@@ -30,6 +32,7 @@ type BillSelection = {
 function PolicyListViewInner({
   billsByState,
   statesResponse = null,
+  compactTop = false,
 }: PolicyListViewProps) {
   const { setPrefetch } = useStatePrefetch();
   const queryClient = useQueryClient();
@@ -110,7 +113,9 @@ function PolicyListViewInner({
 
   return (
     <>
-    <div className="mx-auto w-full max-w-policy-list pt-policy-list-top">
+    <div
+      className={`mx-auto w-full max-w-policy-list ${compactTop ? "pt-section" : "pt-policy-list-top"}`}
+    >
       <div className="flex flex-col">
         <PolicyListToolbar
           searchQuery={searchQuery}

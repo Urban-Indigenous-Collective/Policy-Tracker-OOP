@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import { SiteShell } from "@/components/layout/SiteShell";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { getSiteUrl } from "@/lib/seo/site-url";
 
@@ -57,9 +56,7 @@ export default function RootLayout({
       className={`${montserrat.variable} ${roboto.variable} ${robotoMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
-        <QueryProvider>
-          <SiteShell>{children}</SiteShell>
-        </QueryProvider>
+        <QueryProvider>{children}</QueryProvider>
       </body>
     </html>
   );

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { useEmbedChrome } from "@/components/embed/EmbedChromeContext";
 import { StateDrawerBillIdStack } from "@/components/state/StateDrawerBillIdStack";
 import type { PublicBill } from "@/lib/api/types";
 import { stateCodeForUrl } from "@/lib/api/state-code";
@@ -20,6 +21,7 @@ type StateDrawerBillRowProps = {
 };
 
 export function StateDrawerBillRow({ stateCode, bill }: StateDrawerBillRowProps) {
+  const { embed, linkTarget } = useEmbedChrome();
   const href = `/states/${stateCodeForUrl(stateCode)}/bills/${bill.slug}`;
   const billId = bill.billNumber?.trim() || "—";
   const title = bill.name?.trim() || bill.summary?.trim() || "Untitled bill";
@@ -30,6 +32,8 @@ export function StateDrawerBillRow({ stateCode, bill }: StateDrawerBillRowProps)
       <Link
         href={href}
         scroll={false}
+        target={embed ? linkTarget : undefined}
+        rel={embed && linkTarget !== "_self" ? "noopener noreferrer" : undefined}
         className="group grid w-drawer-bill-row min-w-0 max-w-full grid-cols-[minmax(0,var(--width-drawer-bill-col-id))_minmax(0,var(--width-drawer-bill-col-title))] gap-x-drawer-bill-col-gap outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
         <div className="col-start-1 flex min-w-0 max-w-full items-start overflow-visible">

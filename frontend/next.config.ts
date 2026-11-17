@@ -14,6 +14,22 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  async headers() {
+    // Allow UIC marketing site (and peers) to iframe embed slices.
+    // Full app routes keep browser defaults; only `/embed/*` opts into framing.
+    return [
+      {
+        source: "/embed/:path*",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value:
+              "frame-ancestors 'self' https://urbanindigenouscollective.org https://*.urbanindigenouscollective.org https://*.squarespace.com https://*.sqsp.net",
+          },
+        ],
+      },
+    ];
+  },
   async rewrites() {
     return [
       {

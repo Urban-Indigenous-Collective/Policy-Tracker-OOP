@@ -31,11 +31,17 @@ import { useMapSelection } from "@/lib/map/use-map-selection";
 type MapExperienceProps = {
   initialStates?: PublicStatesResponse | null;
   children?: React.ReactNode;
+  /**
+   * `embed` = iframe slice (stats + map + filters; no intro hero).
+   * Selection stays in-memory so the iframe does not navigate to `/states/...`.
+   */
+  variant?: "default" | "embed";
 };
 
 function MapExperienceInner({
   initialStates = null,
   children = null,
+  variant = "default",
 }: MapExperienceProps) {
   const {
     selectedState,
@@ -44,7 +50,8 @@ function MapExperienceInner({
     closeState,
     closeBill,
     selectState,
-  } = useMapSelection();
+  } = useMapSelection(variant === "embed" ? "local" : "url");
+  const showIntro = variant === "default";
   const mapHighlightedState =
     selectedState && isSvgMapStateCode(selectedState) ? selectedState : null;
   const { prefetch } = useStatePrefetch();
@@ -124,15 +131,18 @@ function MapExperienceInner({
       : null;
 
   return (
-    <div className="pb-map-content-pb">
+    <div className={variant === "embed" ? "pb-section" : "pb-map-content-pb"}>
       {children}
-      <MapIntro
-        statusLine={introStatusLine}
-        statusBusy={statsLoading && !introStatusLine}
-      />
+      {showIntro ? (
+        <MapIntro
+          statusLine={introStatusLine}
+          statusBusy={statsLoading && !introStatusLine}
+        />
+      ) : null}
       <MapSummaryStats
         summary={resolvedStates?.summary}
         loading={statsLoading}
+        align={variant === "embed" ? "center" : "intro"}
       />
 
       {isError ? (

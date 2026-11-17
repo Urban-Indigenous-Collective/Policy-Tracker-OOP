@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import {
   isPublicStatePanelCode,
@@ -37,24 +37,41 @@ function stateFromRouteParams(
   return isPublicStatePanelCode(code) ? code : null;
 }
 
-/** Drawer + map highlight follow the URL only (no optimistic override). */
-export function useMapSelection() {
+export type MapSelectionMode = "url" | "local";
+
+/**
+ * Drawer + map highlight.
+ * - `url` (default): syncs to `/states/...` routes on the full site.
+ * - `local`: in-memory only — used by `/embed/map` so iframe clicks stay embedded.
+ */
+export function useMapSelection(mode: MapSelectionMode = "url") {
   const pathname = usePathname();
   const params = useParams();
   const router = useRouter();
+  const [localState, setLocalState] = useState<string | null>(null);
+  const [localBillSlug, setLocalBillSlug] = useState<string | null>(null);
+
   const fromPath = useMemo(() => selectionFromPathname(pathname), [pathname]);
-  const selectedState = fromPath.stateCode ?? stateFromRouteParams(params);
-  const selectedBillSlug = fromPath.stateCode ? fromPath.billSlug : null;
+  const urlState = fromPath.stateCode ?? stateFromRouteParams(params);
+  const urlBillSlug = fromPath.stateCode ? fromPath.billSlug : null;
+
+  const selectedState = mode === "local" ? localState : urlState;
+  const selectedBillSlug = mode === "local" ? localBillSlug : urlBillSlug;
 
   const selectState = useCallback(
     (code: string | null) => {
+      if (mode === "local") {
+        setLocalState(code);
+        setLocalBillSlug(null);
+        return;
+      }
       if (code) {
         router.replace(`/states/${stateCodeForUrl(code)}`, { scroll: false });
       } else {
         router.replace("/", { scroll: false });
       }
     },
-    [router],
+    [mode, router],
   );
 
   const onMapStateClick = useCallback(
@@ -73,9 +90,15 @@ export function useMapSelection() {
   }, [selectState]);
 
   const closeBill = useCallback(() => {
+    if (mode === "local") {
+      setLocalBillSlug(null);
+      return;
+    }
     if (!selectedState) return;
-    router.replace(`/states/${stateCodeForUrl(selectedState)}`, { scroll: false });
-  }, [router, selectedState]);
+    router.replace(`/states/${stateCodeForUrl(selectedState)}`, {
+      scroll: false,
+    });
+  }, [mode, router, selectedState]);
 
   return {
     selectedState,
