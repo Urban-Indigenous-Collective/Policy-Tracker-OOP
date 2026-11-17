@@ -11,8 +11,9 @@ test -f cloudflared/credentials.json || { echo "Missing cloudflared/credentials.
 chmod 644 cloudflared/credentials.json
 
 # tunnel profile also brings nginx + Next (Phase 5: public UI on policy.*).
-docker compose build
-docker compose --profile tunnel up -d --remove-orphans
+# Profiles must be active on `build` too — otherwise frontend/nginx images are skipped.
+docker compose --profile tunnel build
+docker compose --profile tunnel up -d --remove-orphans --force-recreate frontend nginx
 # cloudflared does not hot-reload ingress; force recreate so volume-mounted
 # cloudflared-docker.yml changes take effect even when the service def is unchanged.
 docker compose --profile tunnel up -d --force-recreate tunnel
