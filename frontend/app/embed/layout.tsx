@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 /**
  * Chrome-free shell for iframe embeds on urbanindigenouscollective.org (and peers).
- * Deep links from drawers open the full tracker in a new tab.
+ * Map embed opens bill analysis in the drawer; list embed keeps its own panel.
  */
 export default function EmbedLayout({
   children,
@@ -19,7 +19,7 @@ export default function EmbedLayout({
   children: React.ReactNode;
 }) {
   return (
-    <EmbedChromeProvider value={{ embed: true, linkTarget: "_blank" }}>
+    <EmbedChromeProvider value={{ embed: true, linkTarget: "_self" }}>
       <main className="flex min-h-full flex-1 flex-col">
         <ShellWidth>
           <ContentBand>{children}</ContentBand>

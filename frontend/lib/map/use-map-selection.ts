@@ -100,6 +100,28 @@ export function useMapSelection(mode: MapSelectionMode = "url") {
     });
   }, [mode, router, selectedState]);
 
+  const selectBill = useCallback(
+    (slug: string | null) => {
+      if (mode === "local") {
+        if (!localState) return;
+        setLocalBillSlug(slug);
+        return;
+      }
+      if (!selectedState) return;
+      if (slug) {
+        router.replace(
+          `/states/${stateCodeForUrl(selectedState)}/bills/${encodeURIComponent(slug)}`,
+          { scroll: false },
+        );
+      } else {
+        router.replace(`/states/${stateCodeForUrl(selectedState)}`, {
+          scroll: false,
+        });
+      }
+    },
+    [localState, mode, router, selectedState],
+  );
+
   return {
     selectedState,
     selectedBillSlug,
@@ -107,5 +129,6 @@ export function useMapSelection(mode: MapSelectionMode = "url") {
     closeState,
     closeBill,
     selectState,
+    selectBill,
   };
 }

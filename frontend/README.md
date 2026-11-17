@@ -91,7 +91,7 @@ Prod examples:
 ></iframe>
 ```
 
-State clicks on the map embed open the drawer inside the iframe; bill analysis links open the full tracker in a new tab.
+State clicks on the map embed open the drawer inside the iframe; bill rows open analysis in the same iframe. A “View full dashboard” button under the map links to the full tracker.
 
 ## Public API smoke (Phase 2+)
 

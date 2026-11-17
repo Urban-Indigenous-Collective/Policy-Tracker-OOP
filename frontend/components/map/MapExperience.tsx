@@ -2,10 +2,12 @@
 
 import { useCallback, useMemo } from "react";
 
+import { EmbedDashboardCta } from "@/components/embed/EmbedDashboardCta";
 import { MapAndLegend } from "@/components/map/MapAndLegend";
 import { MapIntro } from "@/components/map/MapIntro";
 import { mapIntroStatusLine } from "@/components/map/map-intro-status";
 import { MapSummaryStats } from "@/components/map/MapSummaryStats";
+import { MapBillNavProvider } from "@/components/map/map-bill-nav-context";
 import {
   StatePrefetchProvider,
   useStatePrefetch,
@@ -50,8 +52,15 @@ function MapExperienceInner({
     closeState,
     closeBill,
     selectState,
+    selectBill,
   } = useMapSelection(variant === "embed" ? "local" : "url");
   const showIntro = variant === "default";
+  const openBillInEmbed = useCallback(
+    (slug: string) => {
+      selectBill(slug);
+    },
+    [selectBill],
+  );
   const mapHighlightedState =
     selectedState && isSvgMapStateCode(selectedState) ? selectedState : null;
   const { prefetch } = useStatePrefetch();
@@ -133,73 +142,77 @@ function MapExperienceInner({
   const embed = variant === "embed";
 
   return (
-    <div className={embed ? "pb-2" : "pb-map-content-pb"}>
-      {children}
-      {showIntro ? (
-        <MapIntro
-          statusLine={introStatusLine}
-          statusBusy={statsLoading && !introStatusLine}
+    <MapBillNavProvider selectBill={embed ? openBillInEmbed : null}>
+      <div className={embed ? "pb-2" : "pb-map-content-pb"}>
+        {children}
+        {showIntro ? (
+          <MapIntro
+            statusLine={introStatusLine}
+            statusBusy={statsLoading && !introStatusLine}
+          />
+        ) : null}
+        <MapSummaryStats
+          summary={resolvedStates?.summary}
+          loading={statsLoading}
+          align={embed ? "center" : "intro"}
         />
-      ) : null}
-      <MapSummaryStats
-        summary={resolvedStates?.summary}
-        loading={statsLoading}
-        align={embed ? "center" : "intro"}
-      />
 
-      {isError ? (
-        <p className="mt-section text-sm text-red-400" role="alert">
-          {error instanceof Error
-            ? error.message
-            : "Could not load policy map data."}
-        </p>
-      ) : null}
+        {isError ? (
+          <p className="mt-section text-sm text-red-400" role="alert">
+            {error instanceof Error
+              ? error.message
+              : "Could not load policy map data."}
+          </p>
+        ) : null}
 
-      <section
-        className={embed ? "mt-4" : "mt-section lg:mt-section-lg"}
-        aria-label="Policy map"
-      >
-        <MapAndLegend
-          stateCategories={stateCategories}
-          selectedState={mapHighlightedState}
-          onStateSelect={handleMapStateSelect}
-        />
-      </section>
-
-      <section
-        className={
-          embed
-            ? "mt-4 min-w-0 w-full overflow-x-clip border-t border-surface-border pt-4"
-            : "mt-filter-section-top min-w-0 w-full overflow-x-clip border-t border-surface-border pt-filter-section-pt"
-        }
-        aria-label="Policy type filters"
-      >
-        <div
-          className="mx-auto flex w-full max-w-full min-w-0 flex-wrap items-center justify-center gap-x-section gap-y-5 xl:flex-nowrap xl:gap-x-nav-gap"
-          role="group"
+        <section
+          className={embed ? "mt-4" : "mt-section lg:mt-section-lg"}
+          aria-label="Policy map"
         >
-          {MAP_FILTER_ROWS.map((key) => (
-            <FilterToggle
-              key={key}
-              label={filterLabelForKey(key)}
-              active={isActive(key)}
-              onToggle={() => toggleMapLayer(key)}
-            />
-          ))}
-        </div>
-      </section>
+          <MapAndLegend
+            stateCategories={stateCategories}
+            selectedState={mapHighlightedState}
+            onStateSelect={handleMapStateSelect}
+          />
+        </section>
 
-      <StatePanelDrawer
-        stateCode={selectedState}
-        billSlug={selectedBillSlug}
-        statesResponse={resolvedStates}
-        mapLayerMode={mapLayerMode}
-        mapPaintFallback={mapPaintFallback}
-        onClose={closeState}
-        onCloseBill={closeBill}
-        initialBills={initialBills}
-      />
-    </div>
+        <section
+          className={
+            embed
+              ? "mt-4 min-w-0 w-full overflow-x-clip border-t border-surface-border pt-4"
+              : "mt-filter-section-top min-w-0 w-full overflow-x-clip border-t border-surface-border pt-filter-section-pt"
+          }
+          aria-label="Policy type filters"
+        >
+          <div
+            className="mx-auto flex w-full max-w-full min-w-0 flex-wrap items-center justify-center gap-x-section gap-y-5 xl:flex-nowrap xl:gap-x-nav-gap"
+            role="group"
+          >
+            {MAP_FILTER_ROWS.map((key) => (
+              <FilterToggle
+                key={key}
+                label={filterLabelForKey(key)}
+                active={isActive(key)}
+                onToggle={() => toggleMapLayer(key)}
+              />
+            ))}
+          </div>
+        </section>
+
+        {embed ? <EmbedDashboardCta /> : null}
+
+        <StatePanelDrawer
+          stateCode={selectedState}
+          billSlug={selectedBillSlug}
+          statesResponse={resolvedStates}
+          mapLayerMode={mapLayerMode}
+          mapPaintFallback={mapPaintFallback}
+          onClose={closeState}
+          onCloseBill={closeBill}
+          initialBills={initialBills}
+        />
+      </div>
+    </MapBillNavProvider>
   );
 }
 
