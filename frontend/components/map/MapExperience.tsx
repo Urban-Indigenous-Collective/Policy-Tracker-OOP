@@ -151,11 +151,22 @@ function MapExperienceInner({
             statusBusy={statsLoading && !introStatusLine}
           />
         ) : null}
-        <MapSummaryStats
-          summary={resolvedStates?.summary}
-          loading={statsLoading}
-          align={embed ? "center" : "intro"}
-        />
+        {embed ? (
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 sm:mt-3">
+            <MapSummaryStats
+              summary={resolvedStates?.summary}
+              loading={statsLoading}
+              align="start"
+            />
+            <EmbedDashboardCta />
+          </div>
+        ) : (
+          <MapSummaryStats
+            summary={resolvedStates?.summary}
+            loading={statsLoading}
+            align="intro"
+          />
+        )}
 
         {isError ? (
           <p className="mt-section text-sm text-red-400" role="alert">
@@ -198,8 +209,6 @@ function MapExperienceInner({
             ))}
           </div>
         </section>
-
-        {embed ? <EmbedDashboardCta /> : null}
 
         <StatePanelDrawer
           stateCode={selectedState}

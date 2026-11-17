@@ -3,8 +3,11 @@ import type { MapSummary } from "@/lib/api/types";
 type MapSummaryStatsProps = {
   summary: MapSummary | null | undefined;
   loading?: boolean;
-  /** Iframe crop: center the counts (no intro title column). */
-  align?: "intro" | "center";
+  /**
+   * `intro` = full-site column under the hero.
+   * `start` = embed header (left, beside dashboard CTA).
+   */
+  align?: "intro" | "start";
 };
 
 function formatStat(value: number | undefined, loading: boolean): string {
@@ -25,7 +28,7 @@ export function MapSummaryStats({
 
   const counts = (
     <div
-      className={`flex flex-wrap gap-x-nav-gap gap-y-2 font-mono text-body font-bold text-accent ${align === "center" ? "justify-center" : ""}`}
+      className="flex flex-wrap gap-x-nav-gap gap-y-2 font-mono text-body font-bold text-accent"
       aria-busy={loading}
     >
       <span>{passed} PASSED</span>
@@ -34,9 +37,8 @@ export function MapSummaryStats({
     </div>
   );
 
-  if (align === "center") {
-    // Embed crop: keep counts tight so a ~750–900px iframe still shows the map.
-    return <div className="mt-2 sm:mt-3">{counts}</div>;
+  if (align === "start") {
+    return counts;
   }
 
   return (
