@@ -11,6 +11,7 @@ from subscriptions.config import subscriptions_enabled
 from subscriptions.digest_queue import load_events, remove_events
 from subscriptions.email_brand import DEFAULT_PUBLIC_ORIGIN
 from subscriptions.mail import MailDeliveryError, send_subscription_digest
+from subscriptions.slack_alerts import notify_morning_digest_run
 from subscriptions.store import (
     filter_unnotified_digest_keys,
     list_subscribers,
@@ -137,6 +138,7 @@ def send_morning_digests() -> dict[str, int]:
     subscribers = list_subscribers()
     sent_keys: set[str] = set()
     matched_keys: set[str] = set()
+    notified_states: set[str] = set()
 
     for email, states in subscribers:
         state_set = set(states)
@@ -151,12 +153,12 @@ def send_morning_digests() -> dict[str, int]:
             key = str(e.get("key") or "")
             if key:
                 matched_keys.add(key)
+        matched_state_codes = sorted(
+            {str(e.get("state") or "") for e in matched if str(e.get("state") or "").strip()}
+        )
         items = [_event_to_email_item(e) for e in matched]
         # Sort by code so order stays stable (NC before National), then spell out names.
-        state_labels = [
-            state_display_name(code)
-            for code in sorted({str(e.get("state") or "") for e in matched})
-        ]
+        state_labels = [state_display_name(code) for code in matched_state_codes]
         try:
             send_subscription_digest(
                 email,
@@ -172,6 +174,7 @@ def send_morning_digests() -> dict[str, int]:
             stats["emails_failed"] += 1
             continue
         stats["emails_sent"] += 1
+        notified_states.update(matched_state_codes)
         for e in matched:
             key = str(e.get("key") or "")
             if key:
@@ -194,4 +197,12 @@ def send_morning_digests() -> dict[str, int]:
         stats["emails_failed"],
         stats["events_cleared"],
     )
+    if stats["emails_sent"] > 0:
+        try:
+            notify_morning_digest_run(
+                emails_sent=stats["emails_sent"],
+                states=sorted(notified_states),
+            )
+        except Exception:
+            logger.exception("subscriber Slack alert failed after morning digests")
     return stats

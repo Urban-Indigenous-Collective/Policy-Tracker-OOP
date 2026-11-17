@@ -69,6 +69,21 @@ def test_notify_helpers_post_expected_copy(monkeypatch):
         assert "Monthly digest sent" in mock_post.call_args[0][0]
         assert "2026-10" in mock_post.call_args[0][0]
 
+        assert slack_alerts.notify_morning_digest_run(
+            emails_sent=50, states=["AK", "FL", "ME"]
+        )
+        text = mock_post.call_args[0][0]
+        assert "*50* community members were just notified" in text
+        assert "Alaska, Florida, and Maine" in text
+
+        assert slack_alerts.notify_morning_digest_run(emails_sent=0, states=["AK"]) is False
+        assert slack_alerts._format_state_list(["AK"]) == "Alaska"
+        assert slack_alerts._format_state_list(["OR", "WA"]) == "Oregon and Washington"
+        assert (
+            slack_alerts._format_state_list(["AK", "FL", "ME"])
+            == "Alaska, Florida, and Maine"
+        )
+
 
 def test_notify_skipped_without_webhook(monkeypatch):
     monkeypatch.delenv("SLACK_SUBSCRIBERS_WEBHOOK_URL", raising=False)

@@ -84,6 +84,40 @@ def notify_monthly_subscribed(email: str) -> bool:
     return _post(f":calendar: New monthly digest subscription — *{email}*")
 
 
+def _format_state_list(states: list[str]) -> str:
+    """Human list: Alaska / Alaska and Florida / Alaska, Florida, and Maine."""
+    labels = [_label_for_state(s) for s in states if str(s or "").strip()]
+    # Dedupe while keeping sorted order from caller
+    seen: set[str] = set()
+    unique: list[str] = []
+    for label in labels:
+        if label in seen:
+            continue
+        seen.add(label)
+        unique.append(label)
+    if not unique:
+        return "their followed states"
+    if len(unique) == 1:
+        return unique[0]
+    if len(unique) == 2:
+        return f"{unique[0]} and {unique[1]}"
+    return f"{', '.join(unique[:-1])}, and {unique[-1]}"
+
+
+def notify_morning_digest_run(
+    *, emails_sent: int, states: list[str] | None = None
+) -> bool:
+    """Alert after morning state/National subscriber emails go out."""
+    count = int(emails_sent or 0)
+    if count <= 0:
+        return False
+    who = "community member" if count == 1 else "community members"
+    where = _format_state_list(states or [])
+    return _post(
+        f":mega: *{count}* {who} were just notified of updates in {where}"
+    )
+
+
 def notify_monthly_digest_run(stats: dict[str, Any]) -> bool:
     """Alert after the scheduled monthly digest fan-out completes."""
     month = str(stats.get("month") or "").strip() or "unknown"
