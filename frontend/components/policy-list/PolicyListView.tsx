@@ -12,6 +12,7 @@ import { PolicyListToolbar } from "@/components/policy-list/PolicyListToolbar";
 import type { PublicBill, PublicStatesResponse } from "@/lib/api/types";
 import { filterDrawerBills } from "@/lib/state/filter-drawer-bills";
 import type { DrawerFilterKey } from "@/lib/state/drawer-eval-filters";
+import type { DrawerTopicFilterKey } from "@/lib/state/drawer-topic-filters";
 import { policyListStateCategory } from "@/lib/policy-list/state-category";
 import { sortPolicyListStateCodes } from "@/lib/policy-list/sort-state-codes";
 
@@ -39,19 +40,25 @@ function PolicyListViewInner({
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [evalFilters, setEvalFilters] = useState<DrawerFilterKey[]>([]);
+  const [topicFilters, setTopicFilters] = useState<DrawerTopicFilterKey[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [billSelection, setBillSelection] = useState<BillSelection | null>(null);
 
   const filteredByState = useMemo(() => {
     const next: Record<string, PublicBill[]> = {};
     for (const [code, bills] of Object.entries(billsByState)) {
-      const filtered = filterDrawerBills(bills, searchQuery, evalFilters);
+      const filtered = filterDrawerBills(
+        bills,
+        searchQuery,
+        evalFilters,
+        topicFilters,
+      );
       if (filtered.length > 0) {
         next[code] = filtered;
       }
     }
     return next;
-  }, [billsByState, evalFilters, searchQuery]);
+  }, [billsByState, evalFilters, topicFilters, searchQuery]);
 
   const stateCodes = useMemo(
     () => sortPolicyListStateCodes(Object.keys(filteredByState)),
@@ -59,7 +66,9 @@ function PolicyListViewInner({
   );
 
   const filtersActive =
-    evalFilters.length > 0 || searchQuery.trim().length > 0;
+    evalFilters.length > 0 ||
+    topicFilters.length > 0 ||
+    searchQuery.trim().length > 0;
 
   const openBill = useCallback(
     (stateCode: string, bill: PublicBill) => {
@@ -124,6 +133,8 @@ function PolicyListViewInner({
           onSearchOpenChange={setSearchOpen}
           evalFilters={evalFilters}
           onEvalFiltersChange={setEvalFilters}
+          topicFilters={topicFilters}
+          onTopicFiltersChange={setTopicFilters}
           filtersOpen={filtersOpen}
           onFiltersOpenChange={setFiltersOpen}
         />

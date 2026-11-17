@@ -20,6 +20,7 @@ import { StateSubscribeBell } from "@/components/state/StateSubscribeBell";
 import { StateSubscribeModal } from "@/components/state/StateSubscribeModal";
 import { emptyStatePoliciesMessage } from "@/lib/state/empty-state-policies-message";
 import type { DrawerFilterKey } from "@/lib/state/drawer-eval-filters";
+import type { DrawerTopicFilterKey } from "@/lib/state/drawer-topic-filters";
 import { filterDrawerBills } from "@/lib/state/filter-drawer-bills";
 import {
   filterBillsForMapLayer,
@@ -64,6 +65,7 @@ export function StatePanel({
   const policiesCountRef = useRef<HTMLParagraphElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [evalFilters, setEvalFilters] = useState<DrawerFilterKey[]>([]);
+  const [topicFilters, setTopicFilters] = useState<DrawerTopicFilterKey[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [subscribeOpen, setSubscribeOpen] = useState(false);
   /** Match Filter→bell gap to Policies→Filter gap. */
@@ -82,6 +84,7 @@ export function StatePanel({
     setPrevResetKey(resetKey);
     setSearchQuery("");
     setEvalFilters([]);
+    setTopicFilters([]);
     setFiltersOpen(false);
     setSubscribeOpen(false);
   }
@@ -128,12 +131,15 @@ export function StatePanel({
     [data?.bills, mapLayerMode],
   );
   const filteredBills = useMemo(
-    () => filterDrawerBills(allBills, searchQuery, evalFilters),
-    [allBills, searchQuery, evalFilters],
+    () => filterDrawerBills(allBills, searchQuery, evalFilters, topicFilters),
+    [allBills, searchQuery, evalFilters, topicFilters],
   );
   const policyCount = allBills.length;
   const hasPolicies = policyCount > 0;
-  const filtersActive = evalFilters.length > 0 || searchQuery.trim().length > 0;
+  const filtersActive =
+    evalFilters.length > 0 ||
+    topicFilters.length > 0 ||
+    searchQuery.trim().length > 0;
   const shownCount = filtersActive ? filteredBills.length : policyCount;
   const titleColorClass = hasPolicies
     ? stateCategoryTitleClass(stateCategory)
@@ -243,7 +249,7 @@ export function StatePanel({
               >
                 <StateDrawerFilterButton
                   open={filtersOpen}
-                  active={evalFilters.length > 0}
+                  active={evalFilters.length > 0 || topicFilters.length > 0}
                   controlsId={filterTrayId}
                   stateCategory={stateCategory}
                   placement="toolbar"
@@ -269,8 +275,10 @@ export function StatePanel({
                 id={filterTrayId}
                 open={filtersOpen}
                 selected={evalFilters}
+                selectedTopics={topicFilters}
                 stateCategory={stateCategory}
                 onChange={setEvalFilters}
+                onTopicsChange={setTopicFilters}
                 onClose={() => setFiltersOpen(false)}
               />
             ) : null}
@@ -307,7 +315,7 @@ export function StatePanel({
                 emptyMessage={
                   searchQuery.trim()
                     ? "No policies match your search."
-                    : evalFilters.length
+                    : evalFilters.length || topicFilters.length
                       ? "No policies match the selected filters."
                       : undefined
                 }

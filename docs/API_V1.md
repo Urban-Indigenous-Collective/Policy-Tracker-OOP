@@ -107,7 +107,7 @@ Full public bill DTO (includes `uicPros`, `uicCons`). 404 if id not in Live snap
 
 ## State subscriptions (optional)
 
-Gated by `STATE_SUBSCRIBE_ENABLED` (default off). When disabled, all routes under `/api/v1/subscriptions` return `404`. Local JSON store (`data/state_subscriptions.json` by default). Signup always adds the requested state immediately (no OTP). If the email already had subscriptions, the response sets `hasExistingSubscriptions` so the UI can offer optional manage. OTP is only sent via `request-code` / magic link when managing. Design-system HTML templates; delivery is `log` (default) or Gmail API as `info@` (`STATE_SUBSCRIBE_MAIL_PROVIDER=gmail`). Full roadmap: [STATE_SUBSCRIPTIONS.md](STATE_SUBSCRIPTIONS.md). Pair with `NEXT_PUBLIC_STATE_SUBSCRIBE_ENABLED` on the Next frontend to show the drawer/list bell.
+Gated by `STATE_SUBSCRIBE_ENABLED` (default off). When disabled, all routes under `/api/v1/subscriptions` return `404`. Local JSON store (`data/state_subscriptions.json` by default). Signup always adds the requested state immediately (no OTP). If the email already had subscriptions, the response sets `hasExistingSubscriptions` so the UI can offer optional manage. OTP is only sent via `request-code` / magic link when managing. Design-system HTML templates; delivery is `log` (default) or Gmail API as `noreply@` (`STATE_SUBSCRIBE_MAIL_PROVIDER=gmail`). Full roadmap: [STATE_SUBSCRIPTIONS.md](STATE_SUBSCRIPTIONS.md). Pair with `NEXT_PUBLIC_STATE_SUBSCRIBE_ENABLED` on the Next frontend to show the drawer/list bell.
 
 | Method | Path | Purpose |
 |--------|------|---------|

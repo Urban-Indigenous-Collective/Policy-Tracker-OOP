@@ -13,7 +13,7 @@ Env-gated feature: visitors subscribe to MMIP policy updates **by state** from t
 | OTP only when user chooses manage / unsubscribe | Done |
 | Magic link on OTP email → `/subscribe/manage` | Done |
 | Design-system HTML email templates (welcome, OTP, digest shell) | Done |
-| Mail delivery | **Gmail as `info@`** (or `log` for local without SA) |
+| Mail delivery | **Gmail as `noreply@`** (or `log` for local without SA) |
 
 **Local enable:** set both flags `true`, put `NEXT_PUBLIC_*` in `frontend/.env.local`, restart Flask + Next.
 
@@ -21,7 +21,7 @@ Env-gated feature: visitors subscribe to MMIP policy updates **by state** from t
 
 ```bash
 STATE_SUBSCRIBE_MAIL_PROVIDER=gmail
-STATE_SUBSCRIBE_MAIL_FROM=Urban Indigenous Collective <info@urbanindigenouscollective.org>
+STATE_SUBSCRIBE_MAIL_FROM=Urban Indigenous Collective <noreply@urbanindigenouscollective.org>
 STATE_SUBSCRIBE_GMAIL_SA_KEY_PATH=~/.config/gmail-migration/service-account.json
 PUBLIC_SITE_URL=http://127.0.0.1:3000   # so magic links hit local Next
 # Optional: HTTP fallback for logo/img src in non-Gmail renders (Gmail CID-inlines the logo)
@@ -30,18 +30,21 @@ PUBLIC_SITE_URL=http://127.0.0.1:3000   # so magic links hit local Next
 
 Gmail delivery attaches `frontend/public/brand/uic-logo-email.png` as an inline `cid:logo` image so the mark shows even when `PUBLIC_SITE_URL` is localhost and prod `/brand` is not yet served by Next.
 
+**Confidentiality footer:** Workspace **Append footer** is OU-scoped and tied to the sending user (JWT `sub` / mailbox), not the HTML template. Keep `noreply@` in an OU **without** Append footer so digests stay free of the CONFIDENTIALITY NOTICE. Do not use an alias on `info@` — aliases inherit the parent mailbox’s footer.
+
 With `log`, OTP codes and magic links appear in the Flask log instead.
 
 ## Phase 2 — send real email
 
-**Goal:** Deliver welcome + manage OTP (and later manage links) through Gmail as `info@urbanindigenouscollective.org`.
+**Goal:** Deliver welcome + manage OTP (and later manage links) through Gmail as `noreply@urbanindigenouscollective.org`.
 
 1. **Template polish** — HTML lives in [`subscriptions/templates/`](../subscriptions/templates/); brand colors in [`subscriptions/email_brand.py`](../subscriptions/email_brand.py) (mirrored from `frontend/lib/design/tokens.css`). Preview by rendering in tests or a small script; adjust copy/spacing against the live site.
 2. **Provider** — Set:
    - `STATE_SUBSCRIBE_MAIL_PROVIDER=gmail`
-   - `STATE_SUBSCRIBE_MAIL_FROM=Urban Indigenous Collective <info@urbanindigenouscollective.org>`
+   - `STATE_SUBSCRIBE_MAIL_FROM=Urban Indigenous Collective <noreply@urbanindigenouscollective.org>`
    - `STATE_SUBSCRIBE_GMAIL_SA_KEY_PATH=~/.config/gmail-migration/service-account.json` (or inline `STATE_SUBSCRIBE_GMAIL_SA_KEY`)
    - Uses the same service account + domain-wide `gmail.send` delegation as UIC-Core-Services `membership/worker/gmail.ts`
+   - Ensure `noreply@` is a real Workspace user (not only an alias) in an OU without Append footer
 3. **Manage link** — OTP email includes a one-time magic URL (`/subscribe/manage?token=…`). Keep OTP as fallback from the bell.
 4. **Airtable (optional)** — Still undecided; if needed for analytics, sync subscriber email + states out of band. Do not block sending on Airtable.
 

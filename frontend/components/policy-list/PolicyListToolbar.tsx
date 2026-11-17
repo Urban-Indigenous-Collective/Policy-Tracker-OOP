@@ -8,6 +8,7 @@ import {
 } from "@/components/state/StateDrawerFilter";
 import { StateDrawerToolbarSearch } from "@/components/state/StateDrawerSearch";
 import type { DrawerFilterKey } from "@/lib/state/drawer-eval-filters";
+import type { DrawerTopicFilterKey } from "@/lib/state/drawer-topic-filters";
 
 type PolicyListToolbarProps = {
   searchQuery: string;
@@ -16,6 +17,8 @@ type PolicyListToolbarProps = {
   onSearchOpenChange: (open: boolean) => void;
   evalFilters: DrawerFilterKey[];
   onEvalFiltersChange: (next: DrawerFilterKey[]) => void;
+  topicFilters: DrawerTopicFilterKey[];
+  onTopicFiltersChange: (next: DrawerTopicFilterKey[]) => void;
   filtersOpen: boolean;
   onFiltersOpenChange: (open: boolean) => void;
 };
@@ -27,12 +30,14 @@ export function PolicyListToolbar({
   onSearchOpenChange,
   evalFilters,
   onEvalFiltersChange,
+  topicFilters,
+  onTopicFiltersChange,
   filtersOpen,
   onFiltersOpenChange,
 }: PolicyListToolbarProps) {
   const filterTrayId = useId();
   const searchId = useId();
-  const filtersActive = evalFilters.length > 0;
+  const filtersActive = evalFilters.length > 0 || topicFilters.length > 0;
 
   return (
     <div className="relative">
@@ -59,7 +64,9 @@ export function PolicyListToolbar({
           id={filterTrayId}
           open={filtersOpen}
           selected={evalFilters}
+          selectedTopics={topicFilters}
           onChange={onEvalFiltersChange}
+          onTopicsChange={onTopicFiltersChange}
           onClose={() => onFiltersOpenChange(false)}
         />
       </div>

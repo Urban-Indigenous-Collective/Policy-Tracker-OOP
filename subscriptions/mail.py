@@ -2,8 +2,9 @@
 
 Providers:
 - ``log`` (default): render HTML and write to the app log (local/dev).
-- ``gmail``: send as ``info@`` via Gmail API + Workspace service account
-  (same pattern as UIC-Core-Services membership).
+- ``gmail``: send as ``noreply@`` via Gmail API + Workspace service account
+  (same pattern as UIC-Core-Services membership; noreply lives in an OU
+  without Admin Append footer / confidentiality notice).
 """
 
 from __future__ import annotations
@@ -41,7 +42,7 @@ GMAIL_SEND_SCOPE = "https://www.googleapis.com/auth/gmail.send"
 GMAIL_TOKEN_URL = "https://oauth2.googleapis.com/token"
 DEFAULT_GMAIL_SA_KEY_PATH = "~/.config/gmail-migration/service-account.json"
 DEFAULT_GMAIL_FROM = (
-    "Urban Indigenous Collective <info@urbanindigenouscollective.org>"
+    "Urban Indigenous Collective <noreply@urbanindigenouscollective.org>"
 )
 
 _token_cache: dict[str, tuple[str, float]] = {}

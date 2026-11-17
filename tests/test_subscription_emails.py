@@ -96,7 +96,7 @@ def test_gmail_mime_inlines_logo_as_cid():
         logo_src=LOGO_CID_SRC,
     )
     raw = _build_raw_mime(
-        sender="info@urbanindigenouscollective.org",
+        sender="noreply@urbanindigenouscollective.org",
         to="reader@example.com",
         subject="Policy updates",
         html=html,

@@ -11,6 +11,10 @@ import {
   DRAWER_FILTERS,
   type DrawerFilterKey,
 } from "@/lib/state/drawer-eval-filters";
+import {
+  DRAWER_TOPIC_FILTERS,
+  type DrawerTopicFilterKey,
+} from "@/lib/state/drawer-topic-filters";
 
 type StateDrawerFilterButtonProps = {
   open: boolean;
@@ -55,12 +59,45 @@ export function StateDrawerFilterButton({
   );
 }
 
+type FilterChipProps = {
+  label: string;
+  checked: boolean;
+  activeClass: string;
+  focusRingClass: string;
+  onToggle: () => void;
+};
+
+function FilterChip({
+  label,
+  checked,
+  activeClass,
+  focusRingClass,
+  onToggle,
+}: FilterChipProps) {
+  return (
+    <button
+      type="button"
+      aria-pressed={checked}
+      onClick={onToggle}
+      className={`uic-drawer-filter-option w-auto cursor-pointer rounded-drawer-filter border bg-transparent px-drawer-filter-option-x py-drawer-filter-option-y font-sans text-drawer-filter font-semibold uppercase outline-none focus-visible:ring-2 ${focusRingClass} ${
+        checked
+          ? activeClass
+          : "border-foreground text-foreground"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
 type StateDrawerFilterMenuProps = {
   id: string;
   open: boolean;
   selected: readonly DrawerFilterKey[];
+  selectedTopics: readonly DrawerTopicFilterKey[];
   stateCategory?: LegendCategory;
   onChange: (next: DrawerFilterKey[]) => void;
+  onTopicsChange: (next: DrawerTopicFilterKey[]) => void;
   onClose: () => void;
 };
 
@@ -69,8 +106,10 @@ export function StateDrawerFilterMenu({
   id,
   open,
   selected,
+  selectedTopics,
   stateCategory,
   onChange,
+  onTopicsChange,
   onClose,
 }: StateDrawerFilterMenuProps) {
   const activeClass = stateCategoryFilterActiveClass(stateCategory);
@@ -98,33 +137,58 @@ export function StateDrawerFilterMenu({
     );
   };
 
+  const toggleTopic = (key: DrawerTopicFilterKey) => {
+    onTopicsChange(
+      selectedTopics.includes(key)
+        ? selectedTopics.filter((item) => item !== key)
+        : [...selectedTopics, key],
+    );
+  };
+
   if (!open) return null;
 
   return (
     <div
       id={id}
       role="group"
-      aria-label="Policy analysis filters"
-      className="absolute top-full right-0 left-0 z-20 mt-drawer-filter-menu flex flex-wrap gap-drawer-filter-stack rounded-drawer-filter border border-surface-border bg-background p-drawer-filter-options-x"
+      aria-label="Policy filters"
+      className="absolute top-full right-0 left-0 z-20 mt-drawer-filter-menu flex flex-col gap-drawer-filter-menu rounded-drawer-filter border border-surface-border bg-background p-drawer-filter-options-x py-drawer-filter-option-y"
     >
-      {DRAWER_FILTERS.map((option) => {
-        const checked = selected.includes(option.key);
-        return (
-          <button
-            key={option.key}
-            type="button"
-            aria-pressed={checked}
-            onClick={() => toggleKey(option.key)}
-            className={`uic-drawer-filter-option w-auto cursor-pointer rounded-drawer-filter border bg-transparent px-drawer-filter-option-x py-drawer-filter-option-y font-sans text-drawer-filter font-semibold uppercase outline-none focus-visible:ring-2 ${focusRingClass} ${
-              checked
-                ? activeClass
-                : "border-foreground text-foreground"
-            }`}
-          >
-            {option.label}
-          </button>
-        );
-      })}
+      <div role="group" aria-label="Topic filters">
+        <p className="uic-drawer-filter-pill-label mb-drawer-filter-stack text-muted">
+          Topic
+        </p>
+        <div className="flex flex-wrap gap-drawer-filter-stack">
+          {DRAWER_TOPIC_FILTERS.map((option) => (
+            <FilterChip
+              key={option.key}
+              label={option.label}
+              checked={selectedTopics.includes(option.key)}
+              activeClass={activeClass}
+              focusRingClass={focusRingClass}
+              onToggle={() => toggleTopic(option.key)}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div role="group" aria-label="Analysis filters">
+        <p className="uic-drawer-filter-pill-label mb-drawer-filter-stack text-muted">
+          Analysis
+        </p>
+        <div className="flex flex-wrap gap-drawer-filter-stack">
+          {DRAWER_FILTERS.map((option) => (
+            <FilterChip
+              key={option.key}
+              label={option.label}
+              checked={selected.includes(option.key)}
+              activeClass={activeClass}
+              focusRingClass={focusRingClass}
+              onToggle={() => toggleKey(option.key)}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
