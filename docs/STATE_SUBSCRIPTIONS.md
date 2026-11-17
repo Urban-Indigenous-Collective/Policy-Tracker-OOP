@@ -68,6 +68,18 @@ Daytime Live approvals queue for the **next** 7:30 digest (no instant email). Ch
 
 See [API_V1.md](API_V1.md#state-subscriptions-optional). Primary entry: `POST /api/v1/subscriptions/signup`.
 
+## Slack ops alerts (`#mmiwr-subscribers`)
+
+Signup / unsubscribe events post to a **second** incoming webhook so they stay out of the discovery channel:
+
+| Event | When |
+|-------|------|
+| State or National subscribe | New opt-in via `/signup` or session `/subscribe` (not duplicate) |
+| State or National unsubscribe | `/unsubscribe` for one state/National or `all` |
+| Monthly digest subscribe | New opt-in via `/monthly` |
+
+Set `SLACK_SUBSCRIBERS_WEBHOOK_URL` to the Incoming Webhook URL for `#mmiwr-subscribers`. Unset = silent no-op. Failures are logged and never fail the HTTP subscribe response.
+
 ## Out of scope (for now)
 
 - User accounts / passwords

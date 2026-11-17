@@ -16,6 +16,11 @@ from subscriptions.mail import (
     send_subscription_code,
     send_subscription_welcome,
 )
+from subscriptions.slack_alerts import (
+    notify_monthly_subscribed,
+    notify_state_subscribed,
+    notify_state_unsubscribed,
+)
 from subscriptions.store import (
     add_state,
     create_otp,
@@ -156,6 +161,12 @@ def signup():
             "This email already has other subscriptions — "
             "verify to manage or unsubscribe."
         )
+
+    if not already_had_state:
+        try:
+            notify_state_subscribed(email, state)
+        except Exception:
+            logger.exception("subscriber Slack alert failed after signup")
 
     return jsonify(
         {
@@ -319,6 +330,10 @@ def signup_monthly():
         message = "You're already subscribed to the monthly digest."
     else:
         message = "You're subscribed to the monthly MMIP policy digest."
+        try:
+            notify_monthly_subscribed(email)
+        except Exception:
+            logger.exception("subscriber Slack alert failed after monthly signup")
     return jsonify(
         {
             "ok": True,
@@ -343,7 +358,14 @@ def subscribe():
     state = _normalize_subscribable_state(body.get("state"))
     if not state:
         return _error("invalid_state", "A valid state code is required", 400)
+    prior = get_states(email)
+    already_had = state in prior
     states = add_state(email, state)
+    if not already_had:
+        try:
+            notify_state_subscribed(email, state)
+        except Exception:
+            logger.exception("subscriber Slack alert failed after subscribe")
     return jsonify({"ok": True, "email": email, "states": states, "added": state})
 
 
@@ -365,12 +387,23 @@ def unsubscribe():
                 "Provide a valid state code or set all=true",
                 400,
             )
+    prior = get_states(email)
+    if remove_all:
+        changed = bool(prior)
+    else:
+        changed = bool(state and state in prior)
     states = remove_state(email, state, remove_all=remove_all)
+    removed = "all" if remove_all else state
+    if changed:
+        try:
+            notify_state_unsubscribed(email, removed=str(removed), remaining=states)
+        except Exception:
+            logger.exception("subscriber Slack alert failed after unsubscribe")
     return jsonify(
         {
             "ok": True,
             "email": email,
             "states": states,
-            "removed": "all" if remove_all else state,
+            "removed": removed,
         }
     )

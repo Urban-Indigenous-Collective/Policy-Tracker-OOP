@@ -116,6 +116,7 @@ State and federal source manifests live in `sources/` (see [docs/STATE_SOURCES.m
 1. Create the **Pending** table and add `Review Status` to **Main v3** — see [docs/AIRTABLE_PENDING_SCHEMA.md](docs/AIRTABLE_PENDING_SCHEMA.md).
 2. Add to `.env`:
    - `SLACK_WEBHOOK_URL` — incoming webhook for the review channel
+   - `SLACK_SUBSCRIBERS_WEBHOOK_URL` — optional second webhook for `#mmiwr-subscribers` (signup / unsubscribe / monthly digest)
    - `AIRTABLE_PENDING_TABLE=Pending`
 3. Bootstrap / merge state website links:
    ```bash
