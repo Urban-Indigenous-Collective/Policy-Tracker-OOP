@@ -26,6 +26,8 @@ services:
     depends_on:
       web:
         condition: service_healthy
+      nginx:
+        condition: service_started
     command: tunnel --no-autoupdate --config /etc/cloudflared/config.yml run
     volumes:
       - ./cloudflared-docker.yml:/etc/cloudflared/config.yml:ro
@@ -69,22 +71,26 @@ services:
         condition: service_healthy
 
   frontend:
-    profiles: ["frontend"]
+    # "frontend" = local nginx+Next without tunnel; "tunnel" = prod public path.
+    profiles: ["frontend", "tunnel"]
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://policy.urbanindigenouscollective.org}
     restart: unless-stopped
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_API_BASE: ""
       NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://policy.urbanindigenouscollective.org}
+      NEXT_PUBLIC_STATE_SUBSCRIBE_ENABLED: ${NEXT_PUBLIC_STATE_SUBSCRIBE_ENABLED:-false}
       INTERNAL_API_BASE: http://web:8000
     depends_on:
       web:
         condition: service_healthy
 
   nginx:
-    profiles: ["frontend"]
+    profiles: ["frontend", "tunnel"]
     image: nginx:alpine
     restart: unless-stopped
     ports:

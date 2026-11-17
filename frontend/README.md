@@ -53,7 +53,7 @@ If 8095 is taken too, set in repo root `.env`: `PUBLIC_HOST_PORT=8888` (or any f
 
 Flask alone is still published as **`${POLICY_HOST_PORT:-8002}`** → container `:8000`. You do not need host `:8000` for compose.
 
-Default deploy (no profile) is unchanged: tunnel → Flask only until Phase 5 cutover.
+Production (`--profile tunnel`) serves nginx → Next + Flask via Cloudflare Tunnel (Phase 5).
 
 ### Local Next dev (without Docker)
 

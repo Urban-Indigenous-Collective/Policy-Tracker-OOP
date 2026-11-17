@@ -129,12 +129,12 @@ Flask ← Airtable Main v3, existing jobs unchanged
 
 ### Phase 5 — Production cutover
 
-**Deferred (2026-10-22):** Not production-ready yet — see [PHASE5_CUTOVER_DEFERRED.md](./PHASE5_CUTOVER_DEFERRED.md) before executing cutover.
+**Completed 2026-11-17:** Tunnel → nginx → Next + Flask. See [PHASE5_CUTOVER_DEFERRED.md](./PHASE5_CUTOVER_DEFERRED.md).
 
-- [ ] GitHub CD builds/deploys nginx + Next + Flask
-- [ ] Cloudflare tunnel → nginx
-- [ ] Redirect legacy Flask template routes when ready
-- [ ] `/policies` list view (P3) if not done earlier
+- [x] GitHub CD builds/deploys nginx + Next + Flask (`scripts/wsl-deploy-remote.sh` `--profile tunnel`)
+- [x] Cloudflare tunnel → nginx (`cloudflared-docker.yml`)
+- [x] Flask `/` no longer the public UI (nginx serves Next; Flask root remains API/legacy when hit directly)
+- [x] `/policies` list view (P3) shipped earlier in frontend
 
 **Exit criteria:** https://policy.urbanindigenouscollective.org serves new frontend; old UI retired or redirected.
 

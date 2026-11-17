@@ -1,22 +1,20 @@
-# Phase 5 production cutover — deferred
+# Phase 5 production cutover
 
-**Status (2026-10-22):** The MMIP Next.js frontend is **not production-ready** for nginx/Cloudflare cutover. **Wait on the Phase 5 plan** until map filters, drawer polish, and remaining P0/P1 UX are signed off.
+**Status (2026-11-17):** Cutover executed. Cloudflare tunnel targets **nginx** (`http://nginx:80`), which serves Next for `/` and proxies `/api/` + webhooks to Flask. GitHub CD (`--profile tunnel`) builds and starts `web` + `frontend` + `nginx` + `tunnel` + `scheduler`.
 
-## Do not yet
+## Live path
 
-- Point Cloudflare tunnel at nginx + Next as the canonical public entry
-- Retire or redirect legacy Flask template routes
-- Treat “deployed to prod host” as “new UI is live for users”
+```text
+Internet → Cloudflare Tunnel → nginx
+                                 ├─ /api/*, /webhooks/*, /health-check, legacy analyzer → Flask
+                                 └─ / → Next.js
+```
 
-## Before cutover (Phase 5 checklist preview)
+## Do not
 
-- [ ] Map policy-type toggles operational (national / state / DOJ layers)
-- [ ] Drawer and map QA on long state names, pills, search, empty states
-- [ ] SEO smoke (`scripts/smoke_sitemap.py`) green against prod API
-- [ ] Lighthouse baseline documented; no regressions on `/` and bill pages
-- [ ] GitHub CD path verified: nginx → Next + Flask on `100.71.124.8`
-- [ ] Explicit user approval to execute cutover
+- Point the tunnel back at `http://web:8000` (that serves Flask JSON at `/`, not the map UI)
+- Treat a successful `web`/`scheduler` restart alone as “frontend deployed” — confirm Next via home HTML or `docker compose ps` showing `frontend` + `nginx`
 
 ## Reference
 
-Full phase list: [MMIP_FRONTEND_IMPLEMENTATION.md](./MMIP_FRONTEND_IMPLEMENTATION.md) — Phase 5 section remains unchecked until cutover is approved.
+[MMIP_FRONTEND_IMPLEMENTATION.md](./MMIP_FRONTEND_IMPLEMENTATION.md) — Phase 5.

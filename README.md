@@ -80,7 +80,7 @@ Dates below come from git history (and, for Qwen3.6, from scripts in `deploy/` t
 | 2026-08-05 | Status refresh, Slack digests, ethnicity enrichment, one sequential nightly pipeline. |
 | Prepared (see `deploy/`) | LLM cutover scripts: Ollama `qwen2.5vl:32b` → **Qwen3.6-27B Q8** on llama-server (`:8080`). |
 
-Hosting today: Internet → Cloudflare Tunnel → Docker (gunicorn) on a private UIC host. Pushes to `main` deploy through GitHub Actions (`.github/workflows/deploy.yml`). Do not use ad-hoc rsync as the ship path.
+Hosting today: Internet → Cloudflare Tunnel → nginx (Next.js UI + Flask `/api`) on a private UIC host. Pushes to `main` deploy through GitHub Actions (`.github/workflows/deploy.yml`). Do not use ad-hoc rsync as the ship path.
 
 ## LLM
 
@@ -150,7 +150,7 @@ docker compose exec scheduler python scripts/register_airtable_webhooks.py
 The pipeline runs enabled steps sequentially: discovery → status refresh → validation refresh, then approval catch-up and webhook refresh. Overnight Slack digests and **subscriber state-update emails** (Live new + Status/Progression changes) send together at `SLACK_SUMMARY_CRON` (default 7:30am ET).
 
 ```bash
-docker compose --profile tunnel up -d   # includes web + tunnel + scheduler
+docker compose --profile tunnel up -d   # web + frontend + nginx + tunnel + scheduler
 ```
 
 | Variable | Default | Purpose |
