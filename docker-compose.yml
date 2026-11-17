@@ -79,6 +79,8 @@ services:
       args:
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://policy.urbanindigenouscollective.org}
         NEXT_PUBLIC_GTM_ID: ${NEXT_PUBLIC_GTM_ID:-GTM-MWLXJZBX}
+        # Client bundle inlines this at build time — must match runtime intent.
+        NEXT_PUBLIC_STATE_SUBSCRIBE_ENABLED: ${NEXT_PUBLIC_STATE_SUBSCRIBE_ENABLED:-false}
     restart: unless-stopped
     environment:
       NODE_ENV: production
