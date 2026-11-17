@@ -13,6 +13,9 @@ chmod 644 cloudflared/credentials.json
 # tunnel profile also brings nginx + Next (Phase 5: public UI on policy.*).
 docker compose build
 docker compose --profile tunnel up -d --remove-orphans
+# cloudflared does not hot-reload ingress; force recreate so volume-mounted
+# cloudflared-docker.yml changes take effect even when the service def is unchanged.
+docker compose --profile tunnel up -d --force-recreate tunnel
 docker compose ps
 
 PUBLIC_PORT="${PUBLIC_HOST_PORT:-8095}"
