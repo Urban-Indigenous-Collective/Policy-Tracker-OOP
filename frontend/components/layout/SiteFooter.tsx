@@ -50,7 +50,7 @@ function FooterLogo() {
 
 export function SiteFooter() {
   return (
-    <footer className="mt-auto bg-footer-surface">
+    <footer id="subscribe" className="mt-auto scroll-mt-4 bg-footer-surface">
       <TopBorder />
       <div className="mx-auto w-full max-w-artboard px-page-x pb-footer-pb pt-footer-pt sm:px-page-x-md lg:px-content-inset lg:pr-content-gutter-right">
         <MonthlyDigestSignup logo={<FooterLogo />} />
