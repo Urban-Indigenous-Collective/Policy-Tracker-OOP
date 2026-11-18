@@ -1,7 +1,9 @@
 /**
- * Push custom events to the GTM dataLayer (GA4 tags listen in Tag Manager).
- * No-ops when GTM is unset or window is unavailable (SSR).
- * Every event includes `surface` (`embed` | `site`) for GA segments.
+ * Product analytics → GA4.
+ *
+ * Always pushes to the GTM dataLayer. Also calls `gtag('event', …)` when the
+ * GTM GA4 Config tag has installed gtag, so custom events reach GA4 without
+ * needing dozens of GTM Data Layer variables / GA4 Event tags.
  */
 
 import { resolveAnalyticsSurface } from "@/lib/analytics/surface";
@@ -13,7 +15,8 @@ export type DataLayerEvent = {
 
 declare global {
   interface Window {
-    dataLayer?: Record<string, unknown>[];
+    dataLayer?: unknown[];
+    gtag?: (...args: unknown[]) => void;
   }
 }
 
@@ -30,6 +33,35 @@ function shouldSend(dedupeKey: string | undefined): boolean {
   return true;
 }
 
+function cleanParams(
+  params: Record<string, string | number | boolean | undefined>,
+): Record<string, string | number | boolean> {
+  const out: Record<string, string | number | boolean> = {};
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined) out[key] = value;
+  }
+  return out;
+}
+
+/** Send via gtag now, or briefly retry while GTM finishes loading GA4. */
+function sendViaGtag(
+  event: string,
+  params: Record<string, string | number | boolean>,
+): void {
+  const fire = () => {
+    if (typeof window.gtag !== "function") return false;
+    window.gtag("event", event, params);
+    return true;
+  };
+  if (fire()) return;
+
+  let tries = 0;
+  const timer = window.setInterval(() => {
+    tries += 1;
+    if (fire() || tries >= 20) window.clearInterval(timer);
+  }, 250);
+}
+
 export function trackEvent(
   event: string,
   params: Record<string, string | number | boolean | undefined> = {},
@@ -38,11 +70,14 @@ export function trackEvent(
   if (typeof window === "undefined") return;
   if (!shouldSend(options?.dedupeKey)) return;
 
-  const payload: DataLayerEvent = {
-    event,
+  const eventParams = cleanParams({
     surface: resolveAnalyticsSurface(),
     ...params,
-  };
+  });
+
+  const payload: DataLayerEvent = { event, ...eventParams };
   window.dataLayer = window.dataLayer ?? [];
   window.dataLayer.push(payload);
+
+  sendViaGtag(event, eventParams);
 }
