@@ -28,7 +28,7 @@ Open [http://localhost:3000](http://localhost:3000). The placeholder page calls 
 |----------|---------|
 | `FLASK_DEV_URL` | Rewrite target for `/api/*` and `/health-check` (default `http://127.0.0.1:5000` = `python app.py`) |
 | `NEXT_PUBLIC_SITE_URL` | Public origin for canonicals, `sitemap.xml`, and `robots.txt` (prod: `https://policy.urbanindigenouscollective.org`) |
-| `NEXT_PUBLIC_GTM_ID` | Google Tag Manager container ID (prod Docker default `GTM-MWLXJZBX`). Unset locally to skip tagging. |
+| `NEXT_PUBLIC_GTM_ID` | Google Tag Manager container ID (prod Docker default `GTM-59N7L9FD`). Unset locally to skip tagging. |
 | `NEXT_PUBLIC_API_BASE` | Browser API prefix; empty = same-origin `/api` behind nginx in prod |
 | `INTERNAL_API_BASE` | Server-side fetch target for SSR (`http://web:8000` in Docker frontend service; Mac dev uses `FLASK_DEV_URL` fallback) |
 | `NEXT_PUBLIC_STATE_SUBSCRIBE_ENABLED` | Show the state-drawer subscribe bell (`true` / unset). Pair with Flask `STATE_SUBSCRIBE_ENABLED`. Restart Next after changing. |
