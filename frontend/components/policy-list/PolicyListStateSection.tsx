@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { PolicyListBillRow } from "@/components/policy-list/PolicyListBillRow";
 import { StateSubscribeBell } from "@/components/state/StateSubscribeBell";
 import { StateSubscribeModal } from "@/components/state/StateSubscribeModal";
+import { trackPolicyListExpand } from "@/lib/analytics/events";
 import { isStateSubscribeEnabled } from "@/lib/api/subscriptions";
 import type { PublicBill } from "@/lib/api/types";
 import type { LegendCategory } from "@/lib/map/legend";
@@ -57,6 +58,13 @@ export function PolicyListStateSection({
   const displayName = policyListStateDisplayName(stateCode);
   const titleColorClass = stateCategoryTitleClass(stateCategory);
 
+  function expandSection() {
+    if (!expanded) {
+      trackPolicyListExpand({ stateCode, hiddenCount });
+    }
+    setExpanded(true);
+  }
+
   const billList = (
     <ul className="flex flex-col gap-drawer-row">
       {visibleBills.map((bill) => (
@@ -99,6 +107,7 @@ export function PolicyListStateSection({
             <StateSubscribeModal
               stateCode={stateCode}
               open={subscribeOpen}
+              source="policy_list"
               onClose={() => setSubscribeOpen(false)}
             />
           </div>
@@ -126,7 +135,7 @@ export function PolicyListStateSection({
         <div className="mt-policy-list-expand-mt flex w-full flex-col items-center gap-policy-list-expand-label-gap lg:col-span-2">
           <button
             type="button"
-            onClick={() => setExpanded(true)}
+            onClick={expandSection}
             className="max-w-full px-2 outline-none transition-opacity hover:opacity-70 focus-visible:ring-2 focus-visible:ring-accent"
           >
             <span className="uic-policy-list-expand-label block max-w-full">
@@ -135,7 +144,7 @@ export function PolicyListStateSection({
           </button>
           <button
             type="button"
-            onClick={() => setExpanded(true)}
+            onClick={expandSection}
             aria-label={`View ${hiddenCount} more policies for ${displayName}`}
             className="flex size-policy-list-expand items-center justify-center rounded-full border border-foreground/25 p-policy-list-expand-chevron-pad text-foreground outline-none transition-opacity hover:opacity-70 focus-visible:ring-2 focus-visible:ring-accent"
           >

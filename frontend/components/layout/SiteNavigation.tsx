@@ -5,11 +5,16 @@ import Link from "next/link";
 import { useCallback, useEffect, useId, useState } from "react";
 import { NavBand } from "@/components/layout/NavBand";
 import { DonateLink } from "@/components/ui/DonateLink";
+import { trackCtaClick, type CtaId } from "@/lib/analytics/events";
 
 const NAV_LINKS = [
-  { href: "/", label: "POLICY MAP" },
-  { href: "/policy-list", label: "POLICY LIST" },
+  { href: "/", label: "POLICY MAP", ctaId: "nav_policy_map" as const },
+  { href: "/policy-list", label: "POLICY LIST", ctaId: "nav_policy_list" as const },
 ] as const;
+
+function onNavCta(ctaId: CtaId, label: string, href: string) {
+  trackCtaClick({ ctaId, label, url: href });
+}
 
 function MenuIcon({ open }: { open: boolean }) {
   if (open) {
@@ -116,7 +121,12 @@ export function SiteNavigation() {
             aria-label="Primary"
           >
             {NAV_LINKS.map((item) => (
-              <Link key={item.label} href={item.href} className="uic-nav-link">
+              <Link
+                key={item.label}
+                href={item.href}
+                className="uic-nav-link"
+                onClick={() => onNavCta(item.ctaId, item.label, item.href)}
+              >
                 {item.label}
               </Link>
             ))}
@@ -134,7 +144,10 @@ export function SiteNavigation() {
                   key={item.label}
                   href={item.href}
                   className="uic-nav-link"
-                  onClick={closeMenu}
+                  onClick={() => {
+                    onNavCta(item.ctaId, item.label, item.href);
+                    closeMenu();
+                  }}
                 >
                   {item.label}
                 </Link>

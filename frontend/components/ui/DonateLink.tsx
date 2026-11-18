@@ -1,5 +1,9 @@
 import Link from "next/link";
 
+import { trackCtaClick } from "@/lib/analytics/events";
+
+const DONATE_HREF = "https://urbanindigenouscollective.org/donate";
+
 const donateClassName =
   "inline-flex shrink-0 items-center justify-center rounded-full bg-accent px-10 py-3.5 font-sans text-label-xs font-bold leading-none tracking-label text-white no-underline hover:opacity-90";
 
@@ -12,9 +16,16 @@ type DonateLinkProps = {
 export function DonateLink({ className = "", onClick }: DonateLinkProps) {
   return (
     <Link
-      href="https://urbanindigenouscollective.org/donate"
+      href={DONATE_HREF}
       className={`${donateClassName} ${className}`.trim()}
-      onClick={onClick}
+      onClick={() => {
+        trackCtaClick({
+          ctaId: "donate",
+          label: "DONATE",
+          url: DONATE_HREF,
+        });
+        onClick?.();
+      }}
     >
       DONATE
     </Link>

@@ -1,7 +1,16 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
+import {
+  trackSubscribeAbandon,
+  trackSubscribeEmailSubmit,
+  trackSubscribeOpen,
+  trackSubscribeOtpSubmit,
+  trackSubscribeOtpSuccess,
+  trackSubscribeSuccess,
+  type SubscribeSource,
+} from "@/lib/analytics/events";
 import { NATIONAL_STATE_CODE } from "@/lib/api/state-code";
 import {
   requestSubscribeCode,
@@ -18,6 +27,7 @@ type StateSubscribeModalProps = {
   stateCode: string;
   open: boolean;
   onClose: () => void;
+  source?: SubscribeSource;
 };
 
 function stateLabel(code: string): string {
@@ -30,6 +40,7 @@ export function StateSubscribeModal({
   stateCode,
   open,
   onClose,
+  source = "state_drawer",
 }: StateSubscribeModalProps) {
   const titleId = useId();
   const emailId = useId();
@@ -43,6 +54,34 @@ export function StateSubscribeModal({
   const [error, setError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [offerManage, setOfferManage] = useState(false);
+  const stepRef = useRef(step);
+  stepRef.current = step;
+
+  useEffect(() => {
+    if (!open) return;
+    trackSubscribeOpen({ stateCode, source });
+  }, [open, stateCode, source]);
+
+  function closeModal() {
+    if (stepRef.current !== "done") {
+      trackSubscribeAbandon({ stateCode, step: stepRef.current });
+    }
+    onClose();
+  }
+
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.stopPropagation();
+      if (stepRef.current !== "done") {
+        trackSubscribeAbandon({ stateCode, step: stepRef.current });
+      }
+      onClose();
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [open, stateCode, onClose]);
 
   if (!open) return null;
 
@@ -51,6 +90,7 @@ export function StateSubscribeModal({
 
   async function onSignup(event: React.FormEvent) {
     event.preventDefault();
+    trackSubscribeEmailSubmit({ stateCode });
     setBusy(true);
     setError(null);
     try {
@@ -74,6 +114,7 @@ export function StateSubscribeModal({
             : `You're already subscribed to updates for ${currentLabel}.`,
         );
       }
+      trackSubscribeSuccess({ stateCode, newlyAdded });
       setStep("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not subscribe");
@@ -113,12 +154,14 @@ export function StateSubscribeModal({
 
   async function onVerify(event: React.FormEvent) {
     event.preventDefault();
+    trackSubscribeOtpSubmit({ stateCode });
     setBusy(true);
     setError(null);
     try {
       const result = await verifySubscribeCode(email, code.trim());
       setSessionToken(result.sessionToken);
       setStates(result.states);
+      trackSubscribeOtpSuccess({ stateCode });
       setStep("manage");
       setStatusMessage(
         "Email verified. Manage your state subscriptions below, or unsubscribe.",
@@ -169,7 +212,7 @@ export function StateSubscribeModal({
       className="fixed inset-0 z-[120] flex items-end justify-center bg-black/60 p-4 sm:items-center"
       role="presentation"
       onClick={(event) => {
-        if (event.target === event.currentTarget) onClose();
+        if (event.target === event.currentTarget) closeModal();
       }}
     >
       <div
@@ -184,7 +227,7 @@ export function StateSubscribeModal({
           </h3>
           <button
             type="button"
-            onClick={onClose}
+            onClick={closeModal}
             className="cursor-pointer text-sm text-muted outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-foreground/25"
           >
             Close
@@ -328,7 +371,7 @@ export function StateSubscribeModal({
             ) : null}
             <button
               type="button"
-              onClick={onClose}
+              onClick={closeModal}
               className="h-10 w-full cursor-pointer border border-surface-border bg-transparent text-xs font-semibold uppercase tracking-wide text-muted outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-foreground/25"
             >
               Done

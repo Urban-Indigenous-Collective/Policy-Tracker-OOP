@@ -9,6 +9,8 @@ import { publicApiKeys } from "@/lib/api/query-keys";
 import { PolicyListBillDrawer } from "@/components/policy-list/PolicyListBillDrawer";
 import { PolicyListStateSection } from "@/components/policy-list/PolicyListStateSection";
 import { PolicyListToolbar } from "@/components/policy-list/PolicyListToolbar";
+import { trackBillOpen, trackFilterChange } from "@/lib/analytics/events";
+import { useDebouncedSearchTrack } from "@/lib/analytics/use-debounced-search-track";
 import type { PublicBill, PublicStatesResponse } from "@/lib/api/types";
 import { filterDrawerBills } from "@/lib/state/filter-drawer-bills";
 import type { DrawerFilterKey } from "@/lib/state/drawer-eval-filters";
@@ -44,6 +46,26 @@ function PolicyListViewInner({
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [billSelection, setBillSelection] = useState<BillSelection | null>(null);
 
+  useDebouncedSearchTrack(searchQuery, "policy_list");
+
+  const onEvalFiltersChange = useCallback((next: DrawerFilterKey[]) => {
+    setEvalFilters(next);
+    trackFilterChange({
+      context: "policy_list",
+      filterType: "eval",
+      filters: next,
+    });
+  }, []);
+
+  const onTopicFiltersChange = useCallback((next: DrawerTopicFilterKey[]) => {
+    setTopicFilters(next);
+    trackFilterChange({
+      context: "policy_list",
+      filterType: "topic",
+      filters: next,
+    });
+  }, []);
+
   const filteredByState = useMemo(() => {
     const next: Record<string, PublicBill[]> = {};
     for (const [code, bills] of Object.entries(billsByState)) {
@@ -72,6 +94,11 @@ function PolicyListViewInner({
 
   const openBill = useCallback(
     (stateCode: string, bill: PublicBill) => {
+      trackBillOpen({
+        stateCode,
+        billSlug: bill.slug,
+        source: compactTop ? "embed" : "policy_list",
+      });
       const bills = billsByState[stateCode];
       if (bills?.length) {
         setPrefetch({
@@ -95,7 +122,7 @@ function PolicyListViewInner({
         bill,
       });
     },
-    [billsByState, queryClient, setPrefetch],
+    [billsByState, compactTop, queryClient, setPrefetch],
   );
 
   const closeBill = useCallback(() => {
@@ -132,9 +159,9 @@ function PolicyListViewInner({
           searchOpen={searchOpen}
           onSearchOpenChange={setSearchOpen}
           evalFilters={evalFilters}
-          onEvalFiltersChange={setEvalFilters}
+          onEvalFiltersChange={onEvalFiltersChange}
           topicFilters={topicFilters}
-          onTopicFiltersChange={setTopicFilters}
+          onTopicFiltersChange={onTopicFiltersChange}
           filtersOpen={filtersOpen}
           onFiltersOpenChange={setFiltersOpen}
         />

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type TransitionEvent } from "react";
 
+import { BillEngageTracker } from "@/components/analytics/BillEngageTracker";
 import { BillAnalysisView } from "@/components/bill/BillAnalysisView";
 import { DrawerTopBorder } from "@/components/state/DrawerTopBorder";
 import { useStatePrefetch } from "@/components/map/state-prefetch-context";
@@ -50,6 +51,7 @@ export function BillPanel({
   fallbackBill = null,
 }: BillPanelProps) {
   const panelRef = useRef<HTMLElement>(null);
+  const scrollRootRef = useRef<HTMLDivElement>(null);
   const { prefetch, billDetail } = useStatePrefetch();
   const listQuery = useStateBills(stateCode, {
     initialData: prefetch?.state === stateCode ? prefetch.bills : null,
@@ -109,7 +111,10 @@ export function BillPanel({
       } ${slideIn ? "translate-x-0" : "translate-x-full"}`}
     >
       <DrawerTopBorder />
-      <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain pt-drawer-header-pt pl-page-x pr-page-x sm:pl-page-x-md sm:pr-page-x-md lg:pl-bill-inset lg:pr-bill-dismiss-end">
+      <div
+        ref={scrollRootRef}
+        className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain pt-drawer-header-pt pl-page-x pr-page-x sm:pl-page-x-md sm:pr-page-x-md lg:pl-bill-inset lg:pr-bill-dismiss-end"
+      >
         <div className="sticky top-drawer-header-pt z-10 ml-auto w-fit">
           <button
             type="button"
@@ -130,7 +135,14 @@ export function BillPanel({
         </div>
 
         {bill ? (
-          <BillAnalysisView key={slug} bill={bill} />
+          <>
+            <BillEngageTracker
+              stateCode={stateCode}
+              billSlug={slug}
+              scrollRootRef={scrollRootRef}
+            />
+            <BillAnalysisView key={slug} bill={bill} />
+          </>
         ) : showMissing ? (
           <p className="uic-bill-title mt-bill-number-mt" role="alert">
             {detailQuery.isError || listQuery.isError

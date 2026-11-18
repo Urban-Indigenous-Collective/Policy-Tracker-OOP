@@ -1,38 +1,11 @@
 import Image from "next/image";
-import Link from "next/link";
 
+import {
+  FooterNavPills,
+  FooterSocialLinks,
+} from "@/components/layout/FooterTrackedLinks";
 import { TopBorder } from "@/components/layout/TopBorder";
 import { MonthlyDigestSignup } from "@/components/subscribe/MonthlyDigestSignup";
-
-const UIC_ORIGIN = "https://urbanindigenouscollective.org";
-
-const FOOTER_LINKS = {
-  connect: `${UIC_ORIGIN}/connect`,
-  about: UIC_ORIGIN,
-} as const;
-
-const SOCIAL_LINKS = [
-  {
-    label: "YouTube",
-    href: "https://www.youtube.com/channel/UCJ9of9c5qSb7fIDsLHHTyng",
-    icon: YouTubeIcon,
-  },
-  {
-    label: "LinkedIn",
-    href: "https://www.linkedin.com/company/19231105",
-    icon: LinkedInIcon,
-  },
-  {
-    label: "Instagram",
-    href: "https://www.instagram.com/urbanindigenouscollective",
-    icon: InstagramIcon,
-  },
-  {
-    label: "Facebook",
-    href: "https://www.facebook.com/1006248109584997",
-    icon: FacebookIcon,
-  },
-] as const;
 
 function FooterLogo() {
   return (
@@ -58,36 +31,15 @@ export function SiteFooter() {
         <hr className="my-footer-divide-y border-0 border-t border-footer-divider" />
 
         <div className="flex flex-col gap-footer-bottom-stack sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap gap-footer-pill-gap">
-            <Link
-              href={FOOTER_LINKS.connect}
-              className="uic-footer-nav-pill shrink-0 border border-footer-pill-border uppercase"
-            >
-              CONNECT
-            </Link>
-            <Link
-              href={FOOTER_LINKS.about}
-              className="uic-footer-nav-pill shrink-0 border border-footer-pill-border uppercase"
-            >
-              ABOUT US
-            </Link>
-          </div>
-
-          <ul className="flex items-center gap-footer-social-gap">
-            {SOCIAL_LINKS.map(({ label, href, icon: Icon }) => (
-              <li key={label}>
-                <Link
-                  href={href}
-                  className="inline-flex size-footer-social-touch items-center justify-center text-foreground transition-colors hover:text-accent"
-                  aria-label={label}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Icon className="size-footer-social" aria-hidden />
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <FooterNavPills />
+          <FooterSocialLinks
+            icons={{
+              YouTube: YouTubeIcon,
+              LinkedIn: LinkedInIcon,
+              Instagram: InstagramIcon,
+              Facebook: FacebookIcon,
+            }}
+          />
         </div>
       </div>
     </footer>

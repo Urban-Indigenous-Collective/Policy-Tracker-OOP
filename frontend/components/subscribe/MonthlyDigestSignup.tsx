@@ -1,9 +1,16 @@
 "use client";
 
-import { useId, useState, type FormEvent, type ReactNode } from "react";
+import { useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 
+import {
+  trackCtaClick,
+  trackDigestError,
+  trackDigestStart,
+  trackDigestSubmit,
+  trackDigestSuccess,
+} from "@/lib/analytics/events";
 import {
   isStateSubscribeEnabled,
   signupForMonthlyDigest,
@@ -24,6 +31,7 @@ type MonthlyDigestSignupProps = {
 export function MonthlyDigestSignup({ logo }: MonthlyDigestSignupProps) {
   const pathname = usePathname();
   const emailId = useId();
+  const digestStarted = useRef(false);
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,8 +39,15 @@ export function MonthlyDigestSignup({ logo }: MonthlyDigestSignupProps) {
 
   const showDigest = isStateSubscribeEnabled() && pathname === "/";
 
+  function onEmailFocus() {
+    if (digestStarted.current) return;
+    digestStarted.current = true;
+    trackDigestStart();
+  }
+
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
+    trackDigestSubmit();
     setBusy(true);
     setError(null);
     setSuccess(null);
@@ -40,7 +55,9 @@ export function MonthlyDigestSignup({ logo }: MonthlyDigestSignupProps) {
       const result = await signupForMonthlyDigest(email.trim());
       setEmail(result.email);
       setSuccess(result.message);
+      trackDigestSuccess();
     } catch (err) {
+      trackDigestError();
       setError(err instanceof Error ? err.message : "Could not subscribe");
     } finally {
       setBusy(false);
@@ -57,7 +74,17 @@ export function MonthlyDigestSignup({ logo }: MonthlyDigestSignupProps) {
           </p>
           {logo}
         </div>
-        <Link href={LEARN_MORE_HREF} className="uic-footer-learn">
+        <Link
+          href={LEARN_MORE_HREF}
+          className="uic-footer-learn"
+          onClick={() =>
+            trackCtaClick({
+              ctaId: "footer_learn_more",
+              label: "learn more",
+              url: LEARN_MORE_HREF,
+            })
+          }
+        >
           learn more
         </Link>
       </div>
@@ -92,6 +119,7 @@ export function MonthlyDigestSignup({ logo }: MonthlyDigestSignupProps) {
                 required
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
+                onFocus={onEmailFocus}
                 disabled={busy}
                 placeholder="Email address"
                 className="w-full border-0 border-b border-footer-divider bg-transparent pb-3 font-sans text-base text-foreground outline-none placeholder:text-muted focus-visible:border-accent disabled:opacity-60"

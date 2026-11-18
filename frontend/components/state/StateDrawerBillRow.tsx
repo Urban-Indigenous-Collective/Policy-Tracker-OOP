@@ -7,6 +7,7 @@ import { useMapBillNav } from "@/components/map/map-bill-nav-context";
 import { StateDrawerBillIdStack } from "@/components/state/StateDrawerBillIdStack";
 import type { PublicBill } from "@/lib/api/types";
 import { stateCodeForUrl } from "@/lib/api/state-code";
+import { setNextSelectionSource } from "@/lib/analytics/selection-source";
 import { billStatusVariant } from "@/lib/bill/status-variant";
 import { formatDrawerSessionYear } from "@/lib/state/format-drawer-session-year";
 
@@ -34,6 +35,10 @@ export function StateDrawerBillRow({ stateCode, bill }: StateDrawerBillRowProps)
   const title = bill.name?.trim() || bill.summary?.trim() || "Untitled bill";
   const session = formatDrawerSessionYear(bill.session);
 
+  function markBillOpenSource() {
+    setNextSelectionSource(embed || selectBill ? "embed" : "drawer");
+  }
+
   const body = (
     <>
       <div className="col-start-1 flex min-w-0 max-w-full items-start overflow-visible">
@@ -58,7 +63,10 @@ export function StateDrawerBillRow({ stateCode, bill }: StateDrawerBillRowProps)
         <button
           type="button"
           className={rowClassName}
-          onClick={() => selectBill(bill.slug)}
+          onClick={() => {
+            markBillOpenSource();
+            selectBill(bill.slug);
+          }}
         >
           {body}
         </button>
@@ -69,6 +77,7 @@ export function StateDrawerBillRow({ stateCode, bill }: StateDrawerBillRowProps)
           target={embed ? linkTarget : undefined}
           rel={embed && linkTarget !== "_self" ? "noopener noreferrer" : undefined}
           className={rowClassName}
+          onClick={markBillOpenSource}
         >
           {body}
         </Link>

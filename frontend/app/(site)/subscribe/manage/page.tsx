@@ -6,6 +6,10 @@ import { Suspense, useEffect, useMemo, useState, useSyncExternalStore } from "re
 import { useRouter, useSearchParams } from "next/navigation";
 
 import {
+  trackManageUnsubscribe,
+  trackManageView,
+} from "@/lib/analytics/events";
+import {
   unsubscribeFromState,
   verifySubscribeMagicLink,
 } from "@/lib/api/subscriptions";
@@ -202,6 +206,11 @@ function ManageSubscriptionsInner() {
 
   const sortedStates = useMemo(() => [...states].sort(), [states]);
 
+  useEffect(() => {
+    if (status === "loading") return;
+    trackManageView({ status, stateCount: states.length });
+  }, [status, states.length]);
+
   async function onUnsubscribe(target: string | "all") {
     if (isPreview || sessionToken === "preview") {
       const nextStates =
@@ -210,6 +219,10 @@ function ManageSubscriptionsInner() {
         sessionToken: "preview",
         email: email || "preview@example.com",
         states: nextStates,
+      });
+      trackManageUnsubscribe({
+        target: String(target),
+        remainingCount: nextStates.length,
       });
       if (nextStates.length === 0) {
         setActionMessage("You are unsubscribed from all state updates.");
@@ -230,6 +243,10 @@ function ManageSubscriptionsInner() {
       };
       writeCachedSession(next);
       setLiveSession(next);
+      trackManageUnsubscribe({
+        target: String(target),
+        remainingCount: result.states.length,
+      });
       if (target === "all" || result.states.length === 0) {
         setActionMessage("You are unsubscribed from all state updates.");
       } else {

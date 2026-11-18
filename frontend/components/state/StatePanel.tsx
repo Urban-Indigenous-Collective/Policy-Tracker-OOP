@@ -18,6 +18,8 @@ import { StateDrawerSearch } from "@/components/state/StateDrawerSearch";
 import { StateBillList } from "@/components/state/StateBillList";
 import { StateSubscribeBell } from "@/components/state/StateSubscribeBell";
 import { StateSubscribeModal } from "@/components/state/StateSubscribeModal";
+import { trackFilterChange } from "@/lib/analytics/events";
+import { useDebouncedSearchTrack } from "@/lib/analytics/use-debounced-search-track";
 import { emptyStatePoliciesMessage } from "@/lib/state/empty-state-policies-message";
 import type { DrawerFilterKey } from "@/lib/state/drawer-eval-filters";
 import type { DrawerTopicFilterKey } from "@/lib/state/drawer-topic-filters";
@@ -75,7 +77,28 @@ export function StatePanel({
   const { data, isLoading, isError, error } = useStateBills(stateCode, {
     initialData: initialBills,
   });
+  useDebouncedSearchTrack(searchQuery, "state_drawer", { stateCode });
   const dismissBillLatch = useRef(false);
+
+  function onEvalFiltersChange(next: DrawerFilterKey[]) {
+    setEvalFilters(next);
+    trackFilterChange({
+      context: "state_drawer",
+      filterType: "eval",
+      filters: next,
+      stateCode,
+    });
+  }
+
+  function onTopicFiltersChange(next: DrawerTopicFilterKey[]) {
+    setTopicFilters(next);
+    trackFilterChange({
+      context: "state_drawer",
+      filterType: "topic",
+      filters: next,
+      stateCode,
+    });
+  }
   const [prevResetKey, setPrevResetKey] = useState(
     () => `${stateCode}:${mapLayerMode}`,
   );
@@ -98,10 +121,8 @@ export function StatePanel({
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
-      if (subscribeOpen) {
-        setSubscribeOpen(false);
-        return;
-      }
+      // Subscribe modal handles Escape itself (and tracks abandon).
+      if (subscribeOpen) return;
       if (filtersOpen) {
         setFiltersOpen(false);
         return;
@@ -277,8 +298,8 @@ export function StatePanel({
                 selected={evalFilters}
                 selectedTopics={topicFilters}
                 stateCategory={stateCategory}
-                onChange={setEvalFilters}
-                onTopicsChange={setTopicFilters}
+                onChange={onEvalFiltersChange}
+                onTopicsChange={onTopicFiltersChange}
                 onClose={() => setFiltersOpen(false)}
               />
             ) : null}
@@ -330,6 +351,7 @@ export function StatePanel({
           key={stateCode}
           stateCode={stateCode}
           open
+          source="state_drawer"
           onClose={() => setSubscribeOpen(false)}
         />
       ) : null}

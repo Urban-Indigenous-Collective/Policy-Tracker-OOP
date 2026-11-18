@@ -1,3 +1,6 @@
+"use client";
+
+import { trackCtaClick } from "@/lib/analytics/events";
 import { absoluteUrl } from "@/lib/seo/site-url";
 
 /** Match Donate pill proportions; short label so it doesn’t dominate the map. */
@@ -27,12 +30,20 @@ function ExternalArrowIcon() {
 
 /** Opens the full tracker outside the iframe (embed header, right of stats). */
 export function EmbedDashboardCta() {
+  const href = absoluteUrl("/");
   return (
     <a
-      href={absoluteUrl("/")}
+      href={href}
       target="_blank"
       rel="noopener noreferrer"
       className={ctaClassName}
+      onClick={() =>
+        trackCtaClick({
+          ctaId: "embed_dashboard",
+          label: "Dashboard",
+          url: href,
+        })
+      }
     >
       Dashboard
       <ExternalArrowIcon />

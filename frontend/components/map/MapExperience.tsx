@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo } from "react";
 
+import { MapSelectionAnalytics } from "@/components/analytics/MapSelectionAnalytics";
 import { EmbedDashboardCta } from "@/components/embed/EmbedDashboardCta";
 import { MapAndLegend } from "@/components/map/MapAndLegend";
 import { MapIntro } from "@/components/map/MapIntro";
@@ -17,6 +18,8 @@ import { FilterToggle } from "@/components/ui/FilterToggle";
 import { usePublicStates, useStateBills } from "@/lib/api/hooks";
 import type { PublicStatesResponse } from "@/lib/api/types";
 import { isSvgMapStateCode, NATIONAL_STATE_CODE } from "@/lib/api/state-code";
+import { trackMapLayerToggle } from "@/lib/analytics/events";
+import { setNextSelectionSource } from "@/lib/analytics/selection-source";
 import { useCloseDrawerOutsideMap } from "@/lib/map/use-close-drawer-outside-map";
 import {
   filterLabelForKey,
@@ -55,8 +58,11 @@ function MapExperienceInner({
     selectBill,
   } = useMapSelection(variant === "embed" ? "local" : "url");
   const showIntro = variant === "default";
+  const embed = variant === "embed";
+  const selectionSource = embed ? "embed" : "map";
   const openBillInEmbed = useCallback(
     (slug: string) => {
+      setNextSelectionSource("embed");
       selectBill(slug);
     },
     [selectBill],
@@ -107,6 +113,7 @@ function MapExperienceInner({
         closeState();
         return;
       }
+      setNextSelectionSource(selectionSource);
       if (!mapLayerMode || mapLayerMode === "stateLegislation") {
         onMapStateClick(code);
         return;
@@ -129,6 +136,7 @@ function MapExperienceInner({
       resolvedStates,
       selectState,
       selectedState,
+      selectionSource,
     ],
   );
 
@@ -139,10 +147,12 @@ function MapExperienceInner({
       ? prefetch.bills
       : null;
 
-  const embed = variant === "embed";
-
   return (
     <MapBillNavProvider selectBill={embed ? openBillInEmbed : null}>
+      <MapSelectionAnalytics
+        selectedState={selectedState}
+        selectedBillSlug={selectedBillSlug}
+      />
       <div className={embed ? "pb-2" : "pb-map-content-pb"}>
         {children}
         {showIntro ? (
@@ -204,7 +214,11 @@ function MapExperienceInner({
                 key={key}
                 label={filterLabelForKey(key)}
                 active={isActive(key)}
-                onToggle={() => toggleMapLayer(key)}
+                onToggle={() => {
+                  const nextActive = !isActive(key);
+                  trackMapLayerToggle({ layer: key, active: nextActive });
+                  toggleMapLayer(key);
+                }}
               />
             ))}
           </div>

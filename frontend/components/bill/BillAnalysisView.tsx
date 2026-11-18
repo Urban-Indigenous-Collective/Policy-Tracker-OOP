@@ -11,6 +11,11 @@ import {
 } from "react";
 
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import {
+  trackOutboundClick,
+  type OutboundLinkType,
+} from "@/lib/analytics/events";
+import { useDebouncedSearchTrack } from "@/lib/analytics/use-debounced-search-track";
 import type { PublicBill } from "@/lib/api/types";
 import {
   countSearchMatchesInText,
@@ -117,10 +122,16 @@ function ExternalLink({
   href,
   label,
   statusVariant,
+  linkType,
+  stateCode,
+  billSlug,
 }: {
   href: string;
   label: ReactNode;
   statusVariant: BillStatusVariant;
+  linkType: OutboundLinkType;
+  stateCode: string;
+  billSlug: string;
 }) {
   return (
     <a
@@ -128,6 +139,14 @@ function ExternalLink({
       target="_blank"
       rel="noopener noreferrer"
       className={billStatusLinkClass(statusVariant)}
+      onClick={() =>
+        trackOutboundClick({
+          linkType,
+          stateCode,
+          billSlug,
+          url: href,
+        })
+      }
     >
       {label}
     </a>
@@ -347,6 +366,10 @@ export function BillAnalysisView({ bill }: BillAnalysisViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeMatchIndex, setActiveMatchIndex] = useState(0);
 
+  useDebouncedSearchTrack(searchQuery, "bill_panel", {
+    stateCode: bill.state,
+  });
+
   const hasMetadata =
     Boolean(progression) ||
     Boolean(chamber) ||
@@ -464,7 +487,10 @@ export function BillAnalysisView({ bill }: BillAnalysisViewProps) {
       </div>
 
       <div ref={contentRef}>
-        <div className="uic-bill-detail-grid mt-bill-summary-mt">
+        <div
+          className="uic-bill-detail-grid mt-bill-summary-mt"
+          data-bill-analysis-anchor
+        >
           <TextRow label="Summary" body={bill.summary} searchQuery={searchQuery} />
           <TextRow label="Pros" body={bill.uicPros} searchQuery={searchQuery} />
           <TextRow label="Cons" body={bill.uicCons} searchQuery={searchQuery} />
@@ -524,6 +550,9 @@ export function BillAnalysisView({ bill }: BillAnalysisViewProps) {
                     <HighlightSearchText text="Open bill text" query={searchQuery} />
                   }
                   statusVariant={statusVariant}
+                  linkType="bill_text"
+                  stateCode={bill.state}
+                  billSlug={bill.slug}
                 />
               </MetaRow>
             ) : null}
@@ -533,6 +562,9 @@ export function BillAnalysisView({ bill }: BillAnalysisViewProps) {
                   href={bill.optionalLink.trim()}
                   label={<HighlightSearchText text="Open link" query={searchQuery} />}
                   statusVariant={statusVariant}
+                  linkType="optional_link"
+                  stateCode={bill.state}
+                  billSlug={bill.slug}
                 />
               </MetaRow>
             ) : null}
@@ -547,6 +579,9 @@ export function BillAnalysisView({ bill }: BillAnalysisViewProps) {
                     />
                   }
                   statusVariant={statusVariant}
+                  linkType="bill_overview"
+                  stateCode={bill.state}
+                  billSlug={bill.slug}
                 />
               </MetaRow>
             ) : null}
