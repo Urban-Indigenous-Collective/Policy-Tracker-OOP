@@ -126,12 +126,16 @@ export function trackOutboundClick(args: {
   billSlug: string;
   url: string;
 }): void {
-  trackEvent("outbound_click", {
-    link_type: args.linkType,
-    state_code: args.stateCode,
-    bill_slug: args.billSlug,
-    link_url: args.url,
-  });
+  trackEvent(
+    "outbound_click",
+    {
+      link_type: args.linkType,
+      state_code: args.stateCode,
+      bill_slug: args.billSlug,
+      link_url: args.url,
+    },
+    { beacon: true },
+  );
 }
 
 export function trackCtaClick(args: {
@@ -139,11 +143,16 @@ export function trackCtaClick(args: {
   label?: string;
   url?: string;
 }): void {
-  trackEvent("cta_click", {
-    cta_id: args.ctaId,
-    cta_label: args.label,
-    link_url: args.url,
-  });
+  trackEvent(
+    "cta_click",
+    {
+      cta_id: args.ctaId,
+      cta_label: args.label,
+      link_url: args.url,
+    },
+    // Donate / footer / embed leave the page before xhr can finish.
+    { beacon: true },
+  );
 }
 
 export function trackMapLayerToggle(args: {

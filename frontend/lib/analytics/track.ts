@@ -47,10 +47,16 @@ function cleanParams(
 function sendViaGtag(
   event: string,
   params: Record<string, string | number | boolean>,
+  transportType?: "beacon",
 ): void {
+  const gtagParams =
+    transportType === "beacon"
+      ? { ...params, transport_type: "beacon" as const }
+      : params;
+
   const fire = () => {
     if (typeof window.gtag !== "function") return false;
-    window.gtag("event", event, params);
+    window.gtag("event", event, gtagParams);
     return true;
   };
   if (fire()) return;
@@ -65,7 +71,7 @@ function sendViaGtag(
 export function trackEvent(
   event: string,
   params: Record<string, string | number | boolean | undefined> = {},
-  options?: { dedupeKey?: string },
+  options?: { dedupeKey?: string; /** Use for clicks that navigate away immediately. */ beacon?: boolean },
 ): void {
   if (typeof window === "undefined") return;
   if (!shouldSend(options?.dedupeKey)) return;
@@ -79,5 +85,5 @@ export function trackEvent(
   window.dataLayer = window.dataLayer ?? [];
   window.dataLayer.push(payload);
 
-  sendViaGtag(event, eventParams);
+  sendViaGtag(event, eventParams, options?.beacon ? "beacon" : undefined);
 }
