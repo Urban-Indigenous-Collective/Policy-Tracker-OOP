@@ -1,3 +1,4 @@
+import ast
 import re
 from enum import Enum
 from typing import List, Optional
@@ -67,7 +68,18 @@ class BillAnalysis(BaseModel):
         if isinstance(value, list):
             raw = value
         else:
-            raw = [part.strip() for part in str(value).split(",")]
+            text = str(value).strip()
+            raw = None
+            if text.startswith("[") and text.endswith("]"):
+                # Python list repr, e.g. "['Day of Recognition', 'US Law Enforcement']"
+                try:
+                    parsed = ast.literal_eval(text)
+                except (ValueError, SyntaxError):
+                    parsed = None
+                if isinstance(parsed, (list, tuple)):
+                    raw = [str(part).strip() for part in parsed]
+            if raw is None:
+                raw = [part.strip() for part in text.split(",")]
         return [part for part in raw if part]
 
 
