@@ -25,7 +25,7 @@ def _escape_formula_value(value: str) -> str:
     return str(value).replace("'", "\\'")
 
 
-def airtable_retry_strategy():
+def airtable_retry_strategy(total: int | None = None):
     """Backoff that respects Airtable's 5 req/s cap instead of hammering 429s.
 
     pyairtable's default is 5 retries at backoff_factor=0.1 (~3s total), which
@@ -34,7 +34,7 @@ def airtable_retry_strategy():
     return retry_strategy(
         status_forcelist=(429, 500, 502, 503, 504),
         backoff_factor=float(os.getenv("AIRTABLE_RETRY_BACKOFF", "2")),
-        total=int(os.getenv("AIRTABLE_RETRY_TOTAL", "6")),
+        total=int(os.getenv("AIRTABLE_RETRY_TOTAL", "6")) if total is None else total,
         allowed_methods=None,
     )
 
@@ -73,7 +73,8 @@ class PacedApi(Api):
 class AirtableClient:
     """Read/write client for Main v3 (live) and Pending review tables."""
 
-    def __init__(self):
+    def __init__(self, *, retry_total: int | None = None):
+        """``retry_total`` overrides ``AIRTABLE_RETRY_TOTAL`` (request paths that must fail fast)."""
         api_key = os.getenv("AIRTABLE_API_KEY")
         base_id = os.getenv("AIRTABLE_BASE_ID")
         live_table_name = os.getenv("AIRTABLE_TABLE", "Main v3")
@@ -87,7 +88,7 @@ class AirtableClient:
         self.api = PacedApi(
             api_key,
             timeout=(10, 60),
-            retry_strategy=airtable_retry_strategy(),
+            retry_strategy=airtable_retry_strategy(retry_total),
         )
         self.live_table = self.api.table(base_id, live_table_name)
         self.pending_table = self.api.table(base_id, pending_table_name)

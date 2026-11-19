@@ -34,6 +34,8 @@ def health():
                 if snap.policy_data_as_of
                 else None,
                 "generatedAt": snap.generated_at.isoformat(),
+                "stale": snap.stale,
+                "upstreamError": snap.upstream_error,
             }
         )
     except UpstreamUnavailableError as exc:

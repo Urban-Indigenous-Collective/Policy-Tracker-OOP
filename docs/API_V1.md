@@ -17,7 +17,11 @@ All v1 handlers read an **in-memory snapshot** refreshed at most once per `PUBLI
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `PUBLIC_API_CACHE_TTL_SECONDS` | `300` | Snapshot TTL |
-| `PUBLIC_API_STALE_ON_ERROR` | `1` | Serve last good snapshot if refresh fails |
+| `PUBLIC_API_STALE_ON_ERROR` | `1` | Serve last good snapshot if refresh fails (memory, else the persisted file after a restart) |
+| `PUBLIC_API_SNAPSHOT_PATH` | `data/public_api_snapshot.json` | Last good Live records, rewritten on every successful refresh |
+| `PUBLIC_API_AIRTABLE_RETRY_TOTAL` | `1` | Airtable retries per refresh; kept low so rate/billing-limit errors fail fast instead of hanging requests past nginx's 60s |
+
+`/api/v1/health` reports `stale: true` and `upstreamError` (e.g. `airtable_limit`) while serving last good data.
 | `PUBLIC_API_REQUIRE_LIVE` | `1` | Require Live review status |
 
 ## Map legend category (per state)
