@@ -170,6 +170,24 @@ docker compose --profile tunnel up -d   # web + frontend + nginx + tunnel + sche
 | `LLM_HEALTH_TIMEOUT_SEC` | `8` | Nightly + morning LLM reachability probe timeout |
 | `LLM_ALERT_EMAIL` / `OPS_ALERT_EMAIL` | `austin@urbanindigenouscollective.org` | Email once/day while the LLM is down (also posts Slack) |
 
+### Automated baseline (gold-set comparisons)
+
+Airtable keeps no field edit history, so every newly created Pending record's automated fields (plus prompt version and LLM model) are appended to `data/automated_baseline/pending-created-YYYYMM.jsonl` the moment it is created, before a reviewer can edit it. On prod this lives in the `discovery_data` volume. Capture never blocks discovery; failures only log a warning.
+
+Compare automated values with the corrected/approved rows (matched by bill URL, since approval creates a new Live record id). Fields that change without human edits (status, progression, workflow, Airtable system columns) and numeral-prefix noise are ignored:
+
+```bash
+# On prod, read-only against Airtable
+docker compose exec scheduler python scripts/compare_automated_vs_corrected.py --fetch --approved-only
+
+# Offline against local snapshots (records created before capture existed)
+python scripts/compare_automated_vs_corrected.py \
+  --baseline-snapshot data/backups/pending-<label>.json \
+  --current data/backups/<airtable-snapshot>.json --approved-only
+```
+
+`baseline_kind=creation` rows are authoritative; `snapshot` rows were seeded from an Airtable snapshot and may already contain reviewer edits. Set `AUTOMATED_BASELINE_ENABLED=false` to disable capture, or `AUTOMATED_BASELINE_DIR` to relocate it.
+
 ## GitHub Actions CD
 
 Pushes to `main` deploy via `.github/workflows/deploy.yml`. Required repository secrets (not needed for a local clone): `DEPLOY_SSH_KEY`, `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_PATH`, `TS_OAUTH_CLIENT_ID`, `TS_OAUTH_SECRET`.

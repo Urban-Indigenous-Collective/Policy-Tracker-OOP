@@ -5,6 +5,7 @@ from typing import Any, Optional
 from pyairtable import Api, Table, retry_strategy
 
 import airtable_pace
+import automated_baseline
 from airtable_coercion import coerce_bill_fields
 from airtable_fields import (
     BILL_OVERVIEW_FIELD,
@@ -191,7 +192,16 @@ class AirtableClient:
         # the mirrored bill column set when present on bill_data.
         if "Validation Warnings" in bill_data and "Validation Warnings" not in fields:
             fields["Validation Warnings"] = bill_data.get("Validation Warnings") or ""
-        return self.create_record(self.pending_table, fields)
+        created = self.create_record(self.pending_table, fields)
+        # Freeze the automated output before a reviewer can edit it (never raises).
+        automated_baseline.record_pending_creation(
+            created,
+            fields,
+            source=source,
+            relevance_confidence=relevance_confidence,
+            discovered_on=discovered_on,
+        )
+        return created
 
     def create_live_record(self, fields: dict[str, Any]) -> dict:
         """Create a Main v3 row. Caller must already map Pending→Live names (Title→Name)."""
