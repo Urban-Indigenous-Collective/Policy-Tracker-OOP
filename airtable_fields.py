@@ -56,3 +56,6 @@ BILL_OVERVIEW_LINK_FIELD = "Bill Overview (Link)"
 
 # Pending table stores overview link here (mirrors parse_bill_object output)
 BILL_OVERVIEW_FIELD = "Bill Overview"
+
+# Source document link (imported by refresh/audit scripts)
+BILL_TEXT_FIELD = "Bill Text"
